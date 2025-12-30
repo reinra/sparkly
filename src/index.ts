@@ -1,5 +1,6 @@
 import { initContract, initClient } from '@ts-rest/core';
 import { z } from 'zod';
+import { closeUdpSocket, sendLedValues } from './udpSend';
 
 const StatusResponseSchema = z.object({
   code: z.number(),
@@ -107,6 +108,9 @@ function expect1000(responseBody: {code: number}): asserts responseBody is {code
     throw new Error('Unexpected response code: ' + responseBody.code);
   }
 }
+
+const UDP_PORT = 7777;
+
 // Sample REST API client implementation using ts-rest properly
 async function callApi() {
   const ip = '192.168.0.105';
@@ -157,15 +161,29 @@ async function callApi() {
       throw new Error('Verification failed with code: ' + verifyResult.body.code);
     }
 
-    console.log('\nSetting device mode to "demo"...');
+    const mode = Mode.rt;
+    console.log(`\nSetting device mode to "${mode}"...`);
     const setModeResult = await client.setMode({
       body: {
-        mode: Mode.demo
+        mode
       }
     });
     expect200(setModeResult);
     expect1000(setModeResult.body);
     console.log('Set Mode Response validated:', JSON.stringify(setModeResult.body, null, 2));
+
+    const color = [255, 0, 255];
+    const ledValues: number[] = [];
+    for (let i = 0; i < statusReult.body.number_of_led; i++) {
+      ledValues.push(...color);
+    }
+    console.log(`\nSending LED values of ${color} to ${ip}...`);    
+    await sendLedValues({
+      authentication_token: loginResult.body.authentication_token,
+      led_count: statusReult.body.number_of_led,
+      led_values: ledValues,
+    }, UDP_PORT, ip);
+    console.log('LED values sent successfully.');
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -174,7 +192,15 @@ async function callApi() {
       console.error('Error:', error);
     }
   }
+  finally {
+    await closeUdpSocket();
+  }
+  
 }
+
+process.on('exit', (code) => {
+  console.log(`\nProgram exiting with code: ${code}`);
+});
 
 console.log('Hello Twinkly Example with ts-rest & Zod\n');
 callApi();
