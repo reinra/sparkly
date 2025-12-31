@@ -1,0 +1,130 @@
+import { initClient } from '@ts-rest/core';
+import { z } from 'zod';
+import { closeUdpSocket, sendLedValues } from './udpSend';
+import { apiContract, Mode } from './apiContract';
+
+const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
+const UDP_PORT = 7777;
+
+function expect200(response: {status: number}): asserts response is {status: 200} {
+  if (response.status !== 200) {
+    throw new Error('Unexpected status code: ' + status);
+  }
+}
+function expect1000(responseBody: {code: number}): asserts responseBody is {code: 1000} {
+  if (responseBody.code !== 1000) {
+    throw new Error('Unexpected response code: ' + responseBody.code);
+  }
+}
+
+const dummyNoAuthClient = initClient(apiContract, {
+    baseUrl: 'http://localhost'
+});
+const dummyClient = initClient(apiContract, {
+    baseUrl: 'http://localhost',
+    baseHeaders: {
+        "x-auth-token": "dummy"
+    }
+});
+
+type ApiNoAuthClientType = typeof dummyNoAuthClient;
+type ApiClientType = typeof dummyClient;
+type StatusResponseType = z.infer<typeof apiContract.getStatus.responses[200]>;
+
+export class TwinklyApiClient {
+    private readonly baseUrl: string;
+    private readonly clientNoAuth: ApiNoAuthClientType;
+    private authenticationToken: string | null = null
+    private client: ApiClientType | null = null;
+    private lastStatusResponse: StatusResponseType | null = null;
+    constructor(private readonly ip: string) {
+        this.baseUrl = 'http://' + ip;
+        this.clientNoAuth = initClient(apiContract, {
+            baseUrl: this.baseUrl,
+            throwOnUnknownStatus: true,
+        });
+    }
+
+    private async ensureStatusFetched() {
+        if (!this.lastStatusResponse) {
+            await this.getStatus();
+        }  
+    }
+    private async ensureAuthenticated() {
+        if (!this.authenticationToken) {
+            await this.login();
+        }
+    }
+
+    async getStatus() {
+        console.log('\nFetching device status...');
+        const statusReult = await this.clientNoAuth.getStatus();
+        expect200(statusReult);
+        expect1000(statusReult.body);
+        console.log('Status Response validated:', JSON.stringify(statusReult.body, null, 2));
+        this.lastStatusResponse = statusReult.body;
+        return statusReult.body;
+    }
+
+    private async login() {
+        console.log('\nSending login request with challenge...');
+        const loginResult = await this.clientNoAuth.login({
+        body: {
+            challenge: challenge 
+        }
+        });
+        expect200(loginResult);
+        expect1000(loginResult.body);
+        console.log('Login Response validated:', JSON.stringify(loginResult.body, null, 2));
+        this.authenticationToken = loginResult.body.authentication_token;
+        const client = initClient(apiContract, {
+        baseUrl: this.baseUrl,
+        throwOnUnknownStatus: true,
+        baseHeaders: {
+            "x-auth-token": loginResult.body.authentication_token
+             },
+        });
+        this.client = client;
+
+        console.log('\nSending verify request...');
+        const verifyResult = await client.verify({
+        body: {
+            "challenge-response": loginResult.body["challenge-response"]
+        }
+        });
+        expect200(verifyResult);
+        expect1000(verifyResult.body);
+        console.log('Verify Response validated:', JSON.stringify(verifyResult.body, null, 2));
+    }
+
+    async setMode(mode: Mode) {
+        await this.ensureAuthenticated();
+
+        console.log(`\nSetting device mode to "${mode}"...`);
+        const setModeResult = await this.client!.setMode({
+        body: {
+            mode
+        }
+        });
+        expect200(setModeResult);
+        expect1000((setModeResult as any).body);
+        console.log('Set Mode Response validated:', JSON.stringify((setModeResult as any).body, null, 2));
+    }
+
+    async sendLedValues(ledValues: number[]) {
+        await
+        await this.ensureAuthenticated();
+
+        console.log(`\nSending LED values over UDP...`);    
+        await sendLedValues({
+        authentication_token: this.authenticationToken!,
+        led_count: this.lastStatusResponse!.number_of_led,
+        led_values: ledValues,
+        }, UDP_PORT, this.ip);
+    }
+
+    async close() {
+        await closeUdpSocket();
+    }
+
+}
