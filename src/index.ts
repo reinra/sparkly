@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Mode } from './apiContract';
 import { TwinklyApiClient } from './apiClient';
+import { SimpleColorEffect, SmoothSameColorEffect } from './effects/Effect';
 
 // Sample REST API client implementation using ts-rest properly
 async function callApi() {
@@ -16,13 +17,20 @@ async function callApi() {
     
     await apiClient.setBrightnessAbsolute(100);
 
-    const color = [255, 255, 0];
-    const ledValues: number[] = [];
-    for (let i = 0; i < status.number_of_led; i++) {
-      ledValues.push(...color);
+    const effect = new SmoothSameColorEffect(new SimpleColorEffect(), 64);
+    const colors = effect.getColors();
+    const iterationCount = 1000;
+    for (let i = 0; i < iterationCount; i++) {
+      await sleep(10);
+      const rgb = colors[Symbol.iterator]().next().value;
+      const ledValues: number[] = [];
+      for (let i = 0; i < status.number_of_led; i++) {
+        ledValues.push(rgb.red, rgb.green, rgb.blue);        
+      }
+      console.log(`\nSending LED values of ${JSON.stringify(rgb)} to ${ip}...`);
+      await apiClient.sendLedValues(ledValues);
     }
-    console.log(`\nSending LED values of ${color} to ${ip}...`);
-    await apiClient.sendLedValues(ledValues);
+
   
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -43,3 +51,8 @@ process.on('exit', (code) => {
 
 console.log('Hello Twinkly Example with ts-rest & Zod\n');
 callApi();
+
+async function sleep(milliseconds: number) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
