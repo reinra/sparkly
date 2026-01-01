@@ -5,7 +5,7 @@ const BasicResponseSchema = z.object({
   code: z.number()
 });
 
-const StatusResponseSchema = BasicResponseSchema.extend({
+const GestaltResponseSchema = BasicResponseSchema.extend({
   product_name: z.string(),
   hardware_version: z.string(),
   bytes_per_led: z.number(),
@@ -56,11 +56,11 @@ const SetModeReqestSchema = z.object({
 
 const c = initContract();
 export const apiContract = c.router({
-  getStatus: {
+  gestalt: {
     method: 'GET',
     path: '/xled/v1/gestalt',
     responses: {
-      200: StatusResponseSchema,
+      200: GestaltResponseSchema,
     },
   },
   login: {

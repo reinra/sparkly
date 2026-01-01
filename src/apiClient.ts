@@ -29,14 +29,14 @@ const dummyClient = initClient(apiContract, {
 
 type ApiNoAuthClientType = typeof dummyNoAuthClient;
 type ApiClientType = typeof dummyClient;
-type StatusResponseType = z.infer<typeof apiContract.getStatus.responses[200]>;
+type GestaltResponseType = z.infer<typeof apiContract.gestalt.responses[200]>;
 
 export class TwinklyApiClient {
     private readonly baseUrl: string;
     private readonly clientNoAuth: ApiNoAuthClientType;
     private authenticationToken: string | null = null
     private client: ApiClientType | null = null;
-    private lastStatusResponse: StatusResponseType | null = null;
+    private lastStatusResponse: GestaltResponseType | null = null;
     constructor(private readonly ip: string) {
         this.baseUrl = 'http://' + ip;
         this.clientNoAuth = initClient(apiContract, {
@@ -47,7 +47,7 @@ export class TwinklyApiClient {
 
     private async ensureStatusFetched() {
         if (!this.lastStatusResponse) {
-            await this.getStatus();
+            await this.gestalt();
         }  
     }
     private async ensureAuthenticated() {
@@ -56,14 +56,14 @@ export class TwinklyApiClient {
         }
     }
 
-    async getStatus() {
+    async gestalt() {
         console.log('\nFetching device status...');
-        const statusReult = await this.clientNoAuth.getStatus();
-        expect200(statusReult);
-        expect1000(statusReult.body);
-        console.log('Status Response validated:', JSON.stringify(statusReult.body, null, 2));
-        this.lastStatusResponse = statusReult.body;
-        return statusReult.body;
+        const result = await this.clientNoAuth.gestalt();
+        expect200(result);
+        expect1000(result.body);
+        console.log('Status Response validated:', JSON.stringify(result.body, null, 2));
+        this.lastStatusResponse = result.body;
+        return result.body;
     }
 
     private async login() {
@@ -101,18 +101,18 @@ export class TwinklyApiClient {
         await this.ensureAuthenticated();
 
         console.log(`\nSetting device mode to "${mode}"...`);
-        const setModeResult = await this.client!.setMode({
+        const result = await this.client!.setMode({
         body: {
             mode
         }
         });
-        expect200(setModeResult);
-        expect1000((setModeResult as any).body);
-        console.log('Set Mode Response validated:', JSON.stringify((setModeResult as any).body, null, 2));
+        expect200(result);
+        expect1000((result as any).body);
+        console.log('Set Mode Response validated:', JSON.stringify((result as any).body, null, 2));
     }
 
     async sendLedValues(ledValues: number[]) {
-        await
+        await this.ensureStatusFetched();
         await this.ensureAuthenticated();
 
         console.log(`\nSending LED values over UDP...`);    
