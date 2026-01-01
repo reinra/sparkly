@@ -1,8 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 
-const StatusResponseSchema = z.object({
-  code: z.number(),
+const BasicResponseSchema = z.object({
+  code: z.number()
+});
+
+const StatusResponseSchema = BasicResponseSchema.extend({
   product_name: z.string(),
   hardware_version: z.string(),
   bytes_per_led: z.number(),
@@ -19,24 +22,27 @@ const StatusResponseSchema = z.object({
   number_of_led: z.number(),
   led_profile: z.string(),
   frame_rate: z.number(),
+  measured_frame_rate: z.number(),
   movie_capacity: z.number(),
+  max_movies: z.number(),
+  wire_type: z.number(),
+  compatibility_mode: z.string(),
   copyright: z.string()
 });
+
 const LoginRequestSchema = z.object({
   challenge: z.string()
 });
-const LoginResponseSchema = z.object({
-  code: z.number(),
+const LoginResponseSchema = BasicResponseSchema.extend({
   authentication_token: z.string(),
   authentication_token_expires_in: z.number(),
   "challenge-response": z.string()
 });
+
 const VerifyRequestSchema = z.object({
   "challenge-response": z.string()
 });
-const BasicResponseSchema = z.object({
-  code: z.number()
-});
+
 export enum Mode {
   off = "off",
   demo = "demo",
