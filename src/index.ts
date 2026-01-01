@@ -9,6 +9,9 @@ async function callApi() {
   const apiClient = new TwinklyApiClient(ip);
   try {
     const status = await apiClient.gestalt();
+
+    await apiClient.getSummary();
+
     await apiClient.setMode(Mode.rt);
     
     const color = [255, 255, 0];

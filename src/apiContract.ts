@@ -43,6 +43,53 @@ const VerifyRequestSchema = z.object({
   "challenge-response": z.string()
 });
 
+const SummaryResponseSchema = BasicResponseSchema.extend({
+  led_mode: z.object({
+    mode: z.string(),
+    detect_mode: z.number(),
+    shop_mode: z.number(),
+    id: z.number(),
+    unique_id: z.string(),
+    name: z.string()
+  }),
+  timer: z.object({
+    time_now: z.number(),
+    time_on: z.number(),
+    time_off: z.number(),
+    tz: z.string()
+  }),
+  music: z.object({
+    enabled: z.number(),
+    active: z.number(),
+    auto: z.string(),
+    auto_mode: z.string(),
+    current_driverset: z.number(),
+    mood_index: z.number()
+  }),
+  filters: z.array(z.object({
+    filter: z.string(),
+    config: z.object({
+      value: z.number(),
+      mode: z.string()
+    })
+  })),
+  group: z.object({
+    mode: z.string(),
+    compat_mode: z.number()
+  }),
+  color: z.object({
+    hue: z.number(),
+    saturation: z.number(),
+    value: z.number(),
+    red: z.number(),
+    green: z.number(),
+    blue: z.number()
+  }),
+  layout: z.object({
+    uuid: z.string()
+  })
+});
+
 export enum Mode {
   off = "off",
   demo = "demo",
@@ -80,6 +127,16 @@ export const apiContract = c.router({
     body: VerifyRequestSchema,
     responses: {
       200: BasicResponseSchema,
+    },
+  },
+  summary: {
+    method: 'GET',
+    path: '/xled/v1/summary',
+    headers: z.object({
+      "x-auth-token": z.string(),
+    }),
+    responses: {
+      200: SummaryResponseSchema,
     },
   },
   setMode: {

@@ -36,7 +36,7 @@ export class TwinklyApiClient {
     private readonly clientNoAuth: ApiNoAuthClientType;
     private authenticationToken: string | null = null
     private client: ApiClientType | null = null;
-    private lastStatusResponse: GestaltResponseType | null = null;
+    private lastGestaltResponse: GestaltResponseType | null = null;
     constructor(private readonly ip: string) {
         this.baseUrl = 'http://' + ip;
         this.clientNoAuth = initClient(apiContract, {
@@ -45,10 +45,10 @@ export class TwinklyApiClient {
         });
     }
 
-    private async ensureStatusFetched() {
-        if (!this.lastStatusResponse) {
+    private async ensureGestaltFetched() {
+        if (!this.lastGestaltResponse) {
             await this.gestalt();
-        }  
+        }
     }
     private async ensureAuthenticated() {
         if (!this.authenticationToken) {
@@ -62,7 +62,17 @@ export class TwinklyApiClient {
         expect200(result);
         expect1000(result.body);
         console.log('Status Response validated:', JSON.stringify(result.body, null, 2));
-        this.lastStatusResponse = result.body;
+        this.lastGestaltResponse = result.body;
+        return result.body;
+    }
+
+    async getSummary() {
+        await this.ensureAuthenticated();   
+        console.log('\nFetching device summary...');
+        const result = await this.client!.summary();
+        expect200(result);
+        expect1000(result.body);
+        console.log('Summary Response validated:', JSON.stringify(result.body, null, 2));
         return result.body;
     }
 
@@ -112,13 +122,13 @@ export class TwinklyApiClient {
     }
 
     async sendLedValues(ledValues: number[]) {
-        await this.ensureStatusFetched();
+        await this.ensureGestaltFetched();
         await this.ensureAuthenticated();
 
         console.log(`\nSending LED values over UDP...`);    
         await sendLedValues({
         authentication_token: this.authenticationToken!,
-        led_count: this.lastStatusResponse!.number_of_led,
+        led_count: this.lastGestaltResponse!.number_of_led,
         led_values: ledValues,
         }, UDP_PORT, this.ip);
     }
