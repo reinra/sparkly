@@ -1,6 +1,17 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 
+export const EnabledDisabledSchema = z.enum(['enabled', 'disabled']);
+export const AbsoluteOrRelativeSchema = z.enum(['A', 'R']);
+
+export enum Mode {
+  off = "off",
+  demo = "demo",
+  effect = "effect",
+  movie = "movie",
+  rt = "rt"
+}
+
 const BasicResponseSchema = z.object({
   code: z.number()
 });
@@ -45,7 +56,7 @@ const VerifyRequestSchema = z.object({
 
 const SummaryResponseSchema = BasicResponseSchema.extend({
   led_mode: z.object({
-    mode: z.string(),
+    mode: z.nativeEnum(Mode),
     detect_mode: z.number(),
     shop_mode: z.number(),
     id: z.number(),
@@ -70,7 +81,7 @@ const SummaryResponseSchema = BasicResponseSchema.extend({
     filter: z.string(),
     config: z.object({
       value: z.number(),
-      mode: z.string()
+      mode: EnabledDisabledSchema
     })
   })),
   group: z.object({
@@ -90,15 +101,18 @@ const SummaryResponseSchema = BasicResponseSchema.extend({
   })
 });
 
-export enum Mode {
-  off = "off",
-  demo = "demo",
-  effect = "effect",
-  movie = "movie",
-  rt = "rt"
-}
 const SetModeReqestSchema = z.object({
   mode: z.nativeEnum(Mode),
+});
+
+const SetBrightnessRequestSchema = z.object({
+  mode: EnabledDisabledSchema,
+  type: AbsoluteOrRelativeSchema,
+  value: z.number().min(-100).max(100)
+});
+
+const authHeaders = z.object({
+  "x-auth-token": z.string(),
 });
 
 const c = initContract();
@@ -121,9 +135,7 @@ export const apiContract = c.router({
   verify: {
     method: 'POST',
     path: '/xled/v1/verify',
-    headers: z.object({
-      "x-auth-token": z.string(),
-    }),
+    headers: authHeaders,
     body: VerifyRequestSchema,
     responses: {
       200: BasicResponseSchema,
@@ -132,9 +144,7 @@ export const apiContract = c.router({
   summary: {
     method: 'GET',
     path: '/xled/v1/summary',
-    headers: z.object({
-      "x-auth-token": z.string(),
-    }),
+    headers: authHeaders,
     responses: {
       200: SummaryResponseSchema,
     },
@@ -142,12 +152,19 @@ export const apiContract = c.router({
   setMode: {
     method: 'POST',
     path: '/xled/v1/led/mode',
-    headers: z.object({
-      "x-auth-token": z.string(),
-    }),
+    headers: authHeaders,
     body: SetModeReqestSchema,
     responses: {
       200: BasicResponseSchema,
     },
   },
+  setBrightness: {
+    method: 'POST',
+    path: '/xled/v1/led/out/brightness',
+    headers: authHeaders,
+    body: SetBrightnessRequestSchema,
+    responses: {
+      200: BasicResponseSchema
+    },
+  }
 });

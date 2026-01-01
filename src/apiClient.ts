@@ -1,7 +1,7 @@
 import { initClient } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
-import { apiContract, Mode } from './apiContract';
+import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
@@ -119,6 +119,21 @@ export class TwinklyApiClient {
         expect200(result);
         expect1000((result as any).body);
         console.log('Set Mode Response validated:', JSON.stringify((result as any).body, null, 2));
+    }
+
+    async setBrightnessAbsolute(value: number) {
+        await this.ensureAuthenticated();
+        console.log(`\nSetting brightness to absolute value ${value}...`);
+        const result = await this.client!.setBrightness({
+            body: {
+                mode: EnabledDisabledSchema.enum.enabled,
+                type: AbsoluteOrRelativeSchema.enum.A,
+                value
+            }
+            });
+        expect200(result);
+        expect1000((result as any).body);
+        console.log('Set Brightness Response validated:', JSON.stringify((result as any).body, null, 2));
     }
 
     async sendLedValues(ledValues: number[]) {

@@ -14,6 +14,8 @@ async function callApi() {
 
     await apiClient.setMode(Mode.rt);
     
+    await apiClient.setBrightnessAbsolute(100);
+
     const color = [255, 255, 0];
     const ledValues: number[] = [];
     for (let i = 0; i < status.number_of_led; i++) {
