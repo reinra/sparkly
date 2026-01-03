@@ -16,6 +16,9 @@ async function callApi(this: any) {
 
     await apiClient.getSummary();
 
+    await apiClient.listMovies();
+    await apiClient.getLayout();
+
     await apiClient.setMode(Mode.rt);
     
     // await apiClient.setBrightnessAbsolute(100);
@@ -31,7 +34,7 @@ async function callApi(this: any) {
       'rotating_gradient_4': new RotatingStrictEffect(gradient4, 400, 3),
     }
 
-    const effect = effects['rotating_gradient_4'];
+    const effect = effects['gradient_3'];
 
     const renderer = new AnyEffectRenderer();
     await renderer.render(effect, apiClient);

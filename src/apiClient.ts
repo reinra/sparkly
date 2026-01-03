@@ -2,6 +2,7 @@ import { initClient } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
+import { resourceLimits } from 'worker_threads';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
@@ -139,6 +140,26 @@ export class TwinklyApiClient {
         expect1000((result as any).body);
         console.log('Set Brightness Response validated:', JSON.stringify((result as any).body, null, 2));
     }
+
+    async listMovies() {
+        await this.ensureAuthenticated();
+        console.log(`\nListing movies...`);
+        const result = await this.client!.listMovies(); 
+        expect200(result);
+        expect1000(result.body);
+        console.log('List Movies Response validated:', JSON.stringify(result.body, null, 2));
+        return result.body;
+    }
+
+    async getLayout() {
+        await this.ensureAuthenticated();
+        console.log(`\nFetching LED layout...`);
+        const result = await this.client!.getLayout();
+        expect200(result);
+        expect1000(result.body);
+        console.log('Get Layout Response validated:', JSON.stringify(result.body, null, 2));
+        return result.body;
+    }   
 
     async sendLedValues(ledValues: number[]) {
         await this.ensureGestaltFetched();

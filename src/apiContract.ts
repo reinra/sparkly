@@ -112,6 +112,34 @@ const SetBrightnessRequestSchema = z.object({
   value: z.number().min(-100).max(100)
 });
 
+const ListMoviesResponseSchema = BasicResponseSchema.extend({
+  movies: z.array(z.object({
+    id: z.number(),
+    name: z.string(),
+    unique_id: z.string(),
+    descriptor_type: z.string(),
+    leds_per_frame: z.number(),
+    frames_number: z.number(),
+    fps: z.number()
+  })),
+  available_frames: z.number(),
+  max_capacity: z.number(),
+  max: z.number()
+});
+
+const GetLayoutResponseSchema = BasicResponseSchema.extend({
+  aspectXY: z.number(),
+  aspectXZ: z.number(),
+  coordinates: z.array(z.object({
+    x: z.number(),
+    y: z.number(),
+    z: z.number()
+  })),
+  source: z.string(),
+  synthesized: z.boolean(),
+  uuid: z.string(),
+});
+
 const authHeaders = z.object({
   "x-auth-token": z.string(),
 });
@@ -167,5 +195,21 @@ export const apiContract = c.router({
     responses: {
       200: BasicResponseSchema
     },
-  }
+  },
+  listMovies: {
+    method: 'GET',
+    path: '/xled/v1/movies',
+    headers: authHeaders,
+    responses: {
+      200: ListMoviesResponseSchema
+    },
+  },
+  getLayout: {
+    method: 'GET',
+    path: '/xled/v1/led/layout/full',
+    headers: authHeaders,
+    responses: {
+      200: GetLayoutResponseSchema
+    },
+  },
 });
