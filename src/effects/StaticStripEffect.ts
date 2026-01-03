@@ -1,17 +1,17 @@
 
-import { addWhiteIfMissing, getGradientColors, LedType, LedValue, RgbValue, RgbwValue } from './Color';
+import { getGradientColors, LedType, LedValue, RgbValue, RgbwValue } from './Color';
 
 export interface FrameInput {
     led_type: LedType;
     led_count: number;
 }
 
-export interface StaticFrameEffect {
+export interface StaticStripEffect {
     getName(): string;
     getFrame(input: FrameInput): LedValue[];
 }
 
-export class GradientStaticFrameEffect implements StaticFrameEffect {
+export class GradientStaticStripEffect implements StaticStripEffect {
     constructor(
         private readonly startColor: LedValue,
         private readonly endColor: LedValue) {

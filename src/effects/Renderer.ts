@@ -2,22 +2,22 @@
 import { TwinklyApiClient } from '../apiClient';
 import { hasWhiteChannel, LedType, LedValue } from './Color';
 import { SameColorEffect } from './SameColorEffect';
-import { StaticFrameEffect } from './StaticFrameEffect';
+import { StaticStripEffect } from './StaticStripEffect';
 
 export interface Renderer<T> {
     render(effect: T, apiClient: TwinklyApiClient): void;
 }
 
-type AnyEffect = SameColorEffect | StaticFrameEffect;
+type AnyEffect = SameColorEffect | StaticStripEffect;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
     private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
-    private readonly staticFrameEffectRenderer = new StaticFrameEffectRenderer();
+    private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
     async render(effect: AnyEffect, apiClient: TwinklyApiClient) {
         if ('getColors' in effect) {
             await this.sameColorEffectRenderer.render(effect, apiClient);
         } else if ('getFrame' in effect) {
-            await this.staticFrameEffectRenderer.render(effect, apiClient);
+            await this.staticStripEffectRenderer.render(effect, apiClient);
         } else {
             throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
         }
@@ -48,8 +48,8 @@ export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
     }
 }
 
-export class StaticFrameEffectRenderer implements Renderer<StaticFrameEffect> {
-    async render(effect: StaticFrameEffect, apiClient: TwinklyApiClient) {
+export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
+    async render(effect: StaticStripEffect, apiClient: TwinklyApiClient) {
         const gestalt = await apiClient.gestalt();
         const numberOfLeds = gestalt.number_of_led;
         const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
