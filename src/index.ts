@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { Mode } from './apiContract';
 import { TwinklyApiClient } from './apiClient';
 import { GradientStaticStripEffect } from './effects/StaticStripEffect';
-import { AnyEffectRenderer } from './effects/Renderer';
+import { AnyEffect, AnyEffectRenderer } from './effects/Renderer';
+import { SimpleColorEffect, SmoothSameColorEffect } from './effects/SameColorEffect';
 
 // Sample REST API client implementation using ts-rest properly
 async function callApi() {
@@ -16,12 +17,16 @@ async function callApi() {
 
     await apiClient.setMode(Mode.rt);
     
-    await apiClient.setBrightnessAbsolute(100);
-
-    const numberOfLeds = status.number_of_led;
+    // await apiClient.setBrightnessAbsolute(100);
     
-    // const effect = new SmoothSameColorEffect(new SimpleColorEffect(), 64);    
-    const effect = new GradientStaticStripEffect({ red: 255, green: 0, blue: 0 }, { red: 255, green: 255, blue: 0 });
+    const effects: Record<string, AnyEffect> = {
+      'simple': new SimpleColorEffect(),
+      'smooth': new SmoothSameColorEffect(new SimpleColorEffect(), 64),
+      'gradient_2': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 255, green: 255, blue: 0 }]),
+      'gradient_3': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }]),
+      'gradient_4': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }, { red: 255, green: 0, blue: 0 }]),
+    }
+    const effect = effects['gradient_4'];
 
     const renderer = new AnyEffectRenderer();
     await renderer.render(effect, apiClient);

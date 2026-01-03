@@ -1,5 +1,5 @@
 
-import { getGradientColors, LedType, LedValue, RgbValue, RgbwValue } from './Color';
+import { getGradientColors, getMultiGradientColors, LedType, LedValue, RgbValue, RgbwValue } from './Color';
 
 export interface FrameInput {
     led_type: LedType;
@@ -12,14 +12,13 @@ export interface StaticStripEffect {
 }
 
 export class GradientStaticStripEffect implements StaticStripEffect {
-    constructor(
-        private readonly startColor: LedValue,
-        private readonly endColor: LedValue) {
-    }
+    constructor(private readonly colors: LedValue[]) {}
     getName(): string {
-        return `Gradient from (${JSON.stringify(this.startColor)}) to (${JSON.stringify(this.endColor)})`;
+        return `Gradient between (${JSON.stringify(this.colors)})`;
     }
     getFrame(input: FrameInput): LedValue[] {
-        return getGradientColors(this.startColor, this.endColor, input.led_count - 1);
+        const result = Array.from(getMultiGradientColors(this.colors, input.led_count / (this.colors.length - 1)));
+        result.splice(input.led_count); // Ensure exact length - may be off due to rounding
+        return result;
     }
 }

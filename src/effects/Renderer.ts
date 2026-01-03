@@ -8,7 +8,7 @@ export interface Renderer<T> {
     render(effect: T, apiClient: TwinklyApiClient): void;
 }
 
-type AnyEffect = SameColorEffect | StaticStripEffect;
+export type AnyEffect = SameColorEffect | StaticStripEffect;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
     private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
@@ -53,11 +53,17 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
         const gestalt = await apiClient.gestalt();
         const numberOfLeds = gestalt.number_of_led;
         const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
+        if (frame.length !== numberOfLeds) {
+            throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${numberOfLeds}`);
+        }
         const ledValues: number[] = [];
+        console.log(`\nSending '${effect.getName()}' ${numberOfLeds} LED values to ${apiClient.getIp()}...`);
+        let i = 0;
         for (const color of frame) {
+            i++;
+            console.log(`  ${i}. ${JSON.stringify(color)}`);
             await copyValues(color, gestalt.led_profile, ledValues);
         }
-        console.log(`\nSending '${effect.getName()}' ${numberOfLeds} LED values to ${apiClient.getIp()}...`);
         await apiClient.sendLedValues(ledValues);
     }
 }

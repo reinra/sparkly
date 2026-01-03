@@ -31,16 +31,21 @@ export function getGradientColors(start: RgbValue, end: RgbValue, steps: number)
 export function getGradientColors(start: RgbwValue, end: RgbValue, steps: number): RgbwValue[];
 export function getGradientColors(start: RgbValue, end: RgbwValue, steps: number): RgbwValue[];
 export function getGradientColors(start: RgbwValue, end: RgbwValue, steps: number): RgbwValue[];
-export function getGradientColors(start: LedValue, end: LedValue, steps: number): LedValue[] {
+export function getGradientColors(start: RgbValue, end: RgbValue, steps: number, skipLast: boolean): RgbValue[];
+export function getGradientColors(start: RgbwValue, end: RgbValue, steps: number, skipLast: boolean): RgbwValue[];
+export function getGradientColors(start: RgbValue, end: RgbwValue, steps: number, skipLast: boolean): RgbwValue[];
+export function getGradientColors(start: RgbwValue, end: RgbwValue, steps: number, skipLast: boolean): RgbwValue[];
+export function getGradientColors(start: LedValue, end: LedValue, steps: number, skipLast: boolean = false): LedValue[] {
+    const colorSteps = skipLast ? steps : steps - 1;
     if (hasWhiteChannel(start) || hasWhiteChannel(end)) {
         const whiteStart = addWhiteIfMissing(start);
         const whiteEnd = addWhiteIfMissing(end);
         const colors: RgbwValue[] = [];
-        const diffR = (whiteEnd.red - whiteStart.red) / steps;
-        const diffG = (whiteEnd.green - whiteStart.green) / steps;
-        const diffB = (whiteEnd.blue - whiteStart.blue) / steps;
-        const diffW = (whiteEnd.white - whiteStart.white) / steps;
-        for (let step = 0; step <= steps; step++) {
+        const diffR = (whiteEnd.red - whiteStart.red) / colorSteps;
+        const diffG = (whiteEnd.green - whiteStart.green) / colorSteps;
+        const diffB = (whiteEnd.blue - whiteStart.blue) / colorSteps;
+        const diffW = (whiteEnd.white - whiteStart.white) / colorSteps;
+        for (let step = 0; step < steps; step++) {
             colors.push({
                 red: Math.round(whiteStart.red + diffR * step),
                 green: Math.round(whiteStart.green + diffG * step),
@@ -52,10 +57,10 @@ export function getGradientColors(start: LedValue, end: LedValue, steps: number)
     }
     else {
         const colors: RgbValue[] = [];
-        const diffR = (end.red - start.red) / steps;
-        const diffG = (end.green - start.green) / steps;
-        const diffB = (end.blue - start.blue) / steps;
-        for (let step = 0; step <= steps; step++) {
+        const diffR = (end.red - start.red) / colorSteps;
+        const diffG = (end.green - start.green) / colorSteps;
+        const diffB = (end.blue - start.blue) / colorSteps;
+        for (let step = 0; step < steps; step++) {
             colors.push({
                 red: Math.round(start.red + diffR * step),
                 green: Math.round(start.green + diffG * step),
@@ -65,3 +70,21 @@ export function getGradientColors(start: LedValue, end: LedValue, steps: number)
         return colors;
     }
 }   
+
+export function getMultiGradientColors(colors: Iterable<RgbValue>, stepsPerColor: number): Iterable<RgbValue>;
+export function getMultiGradientColors(colors: Iterable<RgbwValue>, stepsPerColor: number): Iterable<RgbwValue>;
+export function *getMultiGradientColors(colors: Iterable<LedValue>, stepsPerColor: number): Iterable<LedValue> {
+    if (stepsPerColor < 1) {
+        throw new Error('stepsPerColor must be at least 1');
+    }
+    let previous: LedValue | null = null;
+    for (const color of colors) {
+        if (previous) {
+            const gradientColors = getGradientColors(previous, color, stepsPerColor, true);
+            for (const color of gradientColors) {
+                yield color;
+            }
+        }
+        previous = color;
+    }
+}
