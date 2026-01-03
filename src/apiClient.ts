@@ -6,15 +6,15 @@ import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } fr
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
 
-function expect200(response: {status: number}): asserts response is {status: 200} {
-  if (response.status !== 200) {
-    throw new Error('Unexpected status code: ' + status);
-  }
+function expect200(response: { status: number }): asserts response is { status: 200 } {
+    if (response.status !== 200) {
+        throw new Error('Unexpected status code: ' + status);
+    }
 }
-function expect1000(responseBody: {code: number}): asserts responseBody is {code: 1000} {
-  if (responseBody.code !== 1000) {
-    throw new Error('Unexpected response code: ' + responseBody.code);
-  }
+function expect1000(responseBody: { code: number }): asserts responseBody is { code: 1000 } {
+    if (responseBody.code !== 1000) {
+        throw new Error('Unexpected response code: ' + responseBody.code);
+    }
 }
 
 const dummyNoAuthClient = initClient(apiContract, {
@@ -45,6 +45,10 @@ export class TwinklyApiClient {
         });
     }
 
+    getIp(): string {
+        return this.ip;
+    }
+
     private async ensureGestaltFetched() {
         if (!this.lastGestaltResponse) {
             await this.gestalt();
@@ -67,7 +71,7 @@ export class TwinklyApiClient {
     }
 
     async getSummary() {
-        await this.ensureAuthenticated();   
+        await this.ensureAuthenticated();
         console.log('\nFetching device summary...');
         const result = await this.client!.summary();
         expect200(result);
@@ -79,28 +83,28 @@ export class TwinklyApiClient {
     private async login() {
         console.log('\nSending login request with challenge...');
         const loginResult = await this.clientNoAuth.login({
-        body: {
-            challenge: challenge 
-        }
+            body: {
+                challenge: challenge
+            }
         });
         expect200(loginResult);
         expect1000(loginResult.body);
         console.log('Login Response validated:', JSON.stringify(loginResult.body, null, 2));
         this.authenticationToken = loginResult.body.authentication_token;
         const client = initClient(apiContract, {
-        baseUrl: this.baseUrl,
-        throwOnUnknownStatus: true,
-        baseHeaders: {
-            "x-auth-token": loginResult.body.authentication_token
-             },
+            baseUrl: this.baseUrl,
+            throwOnUnknownStatus: true,
+            baseHeaders: {
+                "x-auth-token": loginResult.body.authentication_token
+            },
         });
         this.client = client;
 
         console.log('\nSending verify request...');
         const verifyResult = await client.verify({
-        body: {
-            "challenge-response": loginResult.body["challenge-response"]
-        }
+            body: {
+                "challenge-response": loginResult.body["challenge-response"]
+            }
         });
         expect200(verifyResult);
         expect1000(verifyResult.body);
@@ -112,9 +116,9 @@ export class TwinklyApiClient {
 
         console.log(`\nSetting device mode to "${mode}"...`);
         const result = await this.client!.setMode({
-        body: {
-            mode
-        }
+            body: {
+                mode
+            }
         });
         expect200(result);
         expect1000((result as any).body);
@@ -130,7 +134,7 @@ export class TwinklyApiClient {
                 type: AbsoluteOrRelativeSchema.enum.A,
                 value
             }
-            });
+        });
         expect200(result);
         expect1000((result as any).body);
         console.log('Set Brightness Response validated:', JSON.stringify((result as any).body, null, 2));
@@ -140,11 +144,11 @@ export class TwinklyApiClient {
         await this.ensureGestaltFetched();
         await this.ensureAuthenticated();
 
-        console.log(`\nSending LED values over UDP...`);    
+        console.log(`\nSending LED values over UDP...`);
         await sendLedValues({
-        authentication_token: this.authenticationToken!,
-        led_count: this.lastGestaltResponse!.number_of_led,
-        led_values: ledValues,
+            authentication_token: this.authenticationToken!,
+            led_count: this.lastGestaltResponse!.number_of_led,
+            led_values: ledValues,
         }, UDP_PORT, this.ip);
     }
 

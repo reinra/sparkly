@@ -1,11 +1,19 @@
 import dgram from 'dgram';
 import { promisify } from 'util';
 
-const client = dgram.createSocket('udp4');
+let client: dgram.Socket | null = null;
+
+function getClient() {
+  if (!client) {
+    client = dgram.createSocket('udp4');
+  }
+  return client;
+}
 
 export async function sendMessage(message: string | Buffer, port: number, address: string) {
   return new Promise<void>((resolve, reject) => {
-    client.send(message, port, address, (err) => {
+    const socket = getClient();
+    socket.send(message, port, address, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -27,9 +35,12 @@ export async function sendLedValues(request: SetLedValuesRequestSchema, port: nu
 }
 
 export async function closeUdpSocket() {
-    const closeAsync = promisify(client.close).bind(client);
-    await closeAsync();
-    console.log('UDP socket closed.');
+    if (client) {
+        const closeAsync = promisify(client.close).bind(client);
+        await closeAsync();
+        client = null;
+        console.log('UDP socket closed.');
+    }
 }
 
 export interface SetLedValuesRequestSchema {
