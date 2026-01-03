@@ -15,16 +15,13 @@ export class SimpleColorEffect implements SameColorEffect {
             yield { red: 255, green: 0, blue: 0 };
             yield { red: 0, green: 255, blue: 0 };
             yield { red: 0, green: 0, blue: 255 };
-            yield { red: 255, green: 255, blue: 0 };
-            yield { red: 0, green: 255, blue: 255 };
-            yield { red: 255, green: 0, blue: 255 };
-            yield { red: 255, green: 255, blue: 255 };
         }
     }
 }
 
 export class SmoothSameColorEffect implements SameColorEffect {
-    constructor(private readonly target: SameColorEffect,
+    constructor(
+        private readonly target: SameColorEffect,
         private readonly steps: number) {
     }
     getName(): string {
@@ -36,11 +33,7 @@ export class SmoothSameColorEffect implements SameColorEffect {
             if (!previous) {
                 yield targetColor;
             } else {
-                const gradientColors = getGradientColors(
-                    addWhiteIfMissing(previous),
-                    addWhiteIfMissing(targetColor),
-                    this.steps
-                );
+                const gradientColors = getGradientColors(previous, targetColor, this.steps);
                 // Skip the first color (index 0) as it's the previous color
                 for (let i = 1; i < gradientColors.length; i++) {
                     yield gradientColors[i];

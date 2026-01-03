@@ -1,5 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
+import { LedType } from './effects/Color';
 
 export const EnabledDisabledSchema = z.enum(['enabled', 'disabled']);
 export const AbsoluteOrRelativeSchema = z.enum(['A', 'R']);
@@ -31,7 +32,7 @@ const GestaltResponseSchema = BasicResponseSchema.extend({
   uuid: z.string(),
   max_supported_led: z.number(),
   number_of_led: z.number(),
-  led_profile: z.string(),
+  led_profile: z.nativeEnum(LedType),
   frame_rate: z.number(),
   measured_frame_rate: z.number(),
   movie_capacity: z.number(),

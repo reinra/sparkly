@@ -1,6 +1,6 @@
 
 import { TwinklyApiClient } from '../apiClient';
-import { LedType } from './Color';
+import { hasWhiteChannel, LedType, LedValue } from './Color';
 import { SameColorEffect } from './SameColorEffect';
 import { StaticFrameEffect } from './StaticFrameEffect';
 
@@ -26,29 +26,36 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
 
 export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
     async render(effect: SameColorEffect, apiClient: TwinklyApiClient) {
-        const numberOfLeds = (await apiClient.gestalt()).number_of_led;
+        const gestalt = await apiClient.gestalt();
+        const numberOfLeds = gestalt.number_of_led;
         const colors = effect.getColors();
-        const iterationCount = 1000;
-        for (let i = 0; i < iterationCount; i++) {
-            await sleep(10);
-            const rgb = colors[Symbol.iterator]().next().value;
+        const maxIterations = 1000;
+        let i = 0;
+        for (const color of colors) {
             const ledValues: number[] = [];
             for (let i = 0; i < numberOfLeds; i++) {
-                ledValues.push(rgb.red, rgb.green, rgb.blue);
+                await copyValues(color, gestalt.led_profile, ledValues);
             }
-            console.log(`\nSending '${effect.getName()}' LED values of ${JSON.stringify(rgb)} to ${apiClient.getIp()}...`);
+            console.log(`\nSending '${effect.getName()}' LED values of ${JSON.stringify(color)} to ${apiClient.getIp()}...`);
             await apiClient.sendLedValues(ledValues);
+
+            i++;
+            if (i >= maxIterations) {
+                break;
+            }
+            await sleep(10);
         }
     }
 }
 
 export class StaticFrameEffectRenderer implements Renderer<StaticFrameEffect> {
     async render(effect: StaticFrameEffect, apiClient: TwinklyApiClient) {
-        const numberOfLeds = (await apiClient.gestalt()).number_of_led;
-        const frame = effect.getFrame({ led_type: LedType.RGB, led_count: numberOfLeds });
+        const gestalt = await apiClient.gestalt();
+        const numberOfLeds = gestalt.number_of_led;
+        const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
         const ledValues: number[] = [];
         for (const color of frame) {
-            ledValues.push(color.red, color.green, color.blue);
+            await copyValues(color, gestalt.led_profile, ledValues);
         }
         console.log(`\nSending '${effect.getName()}' ${numberOfLeds} LED values to ${apiClient.getIp()}...`);
         await apiClient.sendLedValues(ledValues);
@@ -57,4 +64,17 @@ export class StaticFrameEffectRenderer implements Renderer<StaticFrameEffect> {
 
 async function sleep(milliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function copyValues(color: LedValue, targetType: LedType, output: number[]) {
+    if (targetType === LedType.RGB) {
+        // Ignore white even if provided
+        output.push(color.red, color.green, color.blue);
+    }
+    else if (hasWhiteChannel(color)) {
+        output.push(color.white, color.red, color.green, color.blue);
+    }
+    else {
+        output.push(0, color.red, color.green, color.blue);
+    }
 }

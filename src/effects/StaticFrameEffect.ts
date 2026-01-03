@@ -12,13 +12,9 @@ export interface StaticFrameEffect {
 }
 
 export class GradientStaticFrameEffect implements StaticFrameEffect {
-    private readonly startColor: RgbwValue;
-    private readonly endColor: RgbwValue
     constructor(
-        startColor: RgbValue,
-        endColor: RgbValue) {
-        this.startColor = addWhiteIfMissing(startColor);
-        this.endColor = addWhiteIfMissing(endColor);
+        private readonly startColor: LedValue,
+        private readonly endColor: LedValue) {
     }
     getName(): string {
         return `Gradient from (${JSON.stringify(this.startColor)}) to (${JSON.stringify(this.endColor)})`;
