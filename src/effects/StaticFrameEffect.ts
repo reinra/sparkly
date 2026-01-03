@@ -1,5 +1,5 @@
 
-import { addWhiteIfMissing, LedType, LedValue, RgbValue, RgbwValue } from './Color';
+import { addWhiteIfMissing, getGradientColors, LedType, LedValue, RgbValue, RgbwValue } from './Color';
 
 export interface FrameInput {
     led_type: LedType;
@@ -24,15 +24,6 @@ export class GradientStaticFrameEffect implements StaticFrameEffect {
         return `Gradient from (${JSON.stringify(this.startColor)}) to (${JSON.stringify(this.endColor)})`;
     }
     getFrame(input: FrameInput): LedValue[] {
-        const frame: LedValue[] = [];
-        for (let i = 0; i < input.led_count; i++) {
-            const ratio = i / (input.led_count - 1);
-            const red = Math.round(this.startColor.red + (this.endColor.red - this.startColor.red) * ratio);
-            const green = Math.round(this.startColor.green + (this.endColor.green - this.startColor.green) * ratio);
-            const blue = Math.round(this.startColor.blue + (this.endColor.blue - this.startColor.blue) * ratio);
-            const white = Math.round(this.startColor.white + (this.endColor.white - this.startColor.white) * ratio);
-            frame.push({ red, green, blue, white });
-        }
-        return frame;
+        return getGradientColors(this.startColor, this.endColor, input.led_count - 1);
     }
 }

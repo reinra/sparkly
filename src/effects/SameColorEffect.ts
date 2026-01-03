@@ -1,4 +1,4 @@
-import { hasWhiteChannel, LedValue, RgbValue } from "./Color";
+import { addWhiteIfMissing, getGradientColors, hasWhiteChannel, LedValue, RgbValue } from "./Color";
 
 export interface SameColorEffect {
     getName(): string;
@@ -35,29 +35,15 @@ export class SmoothSameColorEffect implements SameColorEffect {
         for (const targetColor of this.target.getColors()) {
             if (!previous) {
                 yield targetColor;
-            }
-            else {
-                const diffR = (targetColor.red - previous.red) / this.steps;
-                const diffG = (targetColor.green - previous.green) / this.steps
-                const diffB = (targetColor.blue - previous.blue) / this.steps;
-                if (hasWhiteChannel(targetColor) && hasWhiteChannel(previous)) {
-                    const diffW = (targetColor.white - previous.white) / this.steps;
-                    for (let step = 1; step <= this.steps; step++) {
-                        yield {
-                            red: Math.round(previous.red + diffR * step),
-                            green: Math.round(previous.green + diffG * step),
-                            blue: Math.round(previous.blue + diffB * step),
-                            white: Math.round(previous.white + diffW * step),
-                        };
-                    }
-                } else {
-                    for (let step = 1; step <= this.steps; step++) {
-                        yield {
-                            red: Math.round(previous.red + diffR * step),
-                            green: Math.round(previous.green + diffG * step),
-                            blue: Math.round(previous.blue + diffB * step),
-                        };
-                    }
+            } else {
+                const gradientColors = getGradientColors(
+                    addWhiteIfMissing(previous),
+                    addWhiteIfMissing(targetColor),
+                    this.steps
+                );
+                // Skip the first color (index 0) as it's the previous color
+                for (let i = 1; i < gradientColors.length; i++) {
+                    yield gradientColors[i];
                 }
             }
             previous = targetColor;
