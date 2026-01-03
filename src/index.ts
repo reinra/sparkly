@@ -20,13 +20,15 @@ async function callApi(this: any) {
     
     // await apiClient.setBrightnessAbsolute(100);
     
+    const gradient4 = new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }, { red: 255, green: 0, blue: 0 }]);
+
     const effects: Record<string, AnyEffect> = {
       'simple': new SimpleColorEffect(),
       'smooth': new SmoothSameColorEffect(new SimpleColorEffect(), 64),
       'gradient_2': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 255, green: 255, blue: 0 }]),
       'gradient_3': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }]),
-      'gradient_4': new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }, { red: 255, green: 0, blue: 0 }]),
-      'rotating_gradient_4': new RotatingStrictEffect(new GradientStaticStripEffect([{ red: 255, green: 0, blue: 0 }, { red: 0, green: 255, blue: 0 }, { red: 0, green: 0, blue: 255 }, { red: 255, green: 0, blue: 0 }]), 100),
+      'gradient_4': gradient4,
+      'rotating_gradient_4': new RotatingStrictEffect(gradient4, 400, 3),
     }
 
     const effect = effects['rotating_gradient_4'];
