@@ -3,21 +3,25 @@ import { TwinklyApiClient } from '../apiClient';
 import { hasWhiteChannel, LedType, LedValue } from './Color';
 import { SameColorEffect } from './SameColorEffect';
 import { StaticStripEffect } from './StaticStripEffect';
+import { StripEffect } from './StripEffect';
 
 export interface Renderer<T> {
     render(effect: T, apiClient: TwinklyApiClient): void;
 }
 
-export type AnyEffect = SameColorEffect | StaticStripEffect;
+export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
     private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
     private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
+    private readonly stripEffectRenderer = new StripEffectRenderer();
     async render(effect: AnyEffect, apiClient: TwinklyApiClient) {
         if ('getColors' in effect) {
             await this.sameColorEffectRenderer.render(effect, apiClient);
         } else if ('getFrame' in effect) {
             await this.staticStripEffectRenderer.render(effect, apiClient);
+        } else if ('getFrames' in effect) {
+            await this.stripEffectRenderer.render(effect, apiClient);
         } else {
             throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
         }
@@ -65,6 +69,33 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
             await copyValues(color, gestalt.led_profile, ledValues);
         }
         await apiClient.sendLedValues(ledValues);
+    }
+}
+
+
+export class StripEffectRenderer implements Renderer<StripEffect> {
+    async render(effect: StripEffect, apiClient: TwinklyApiClient) {
+        const gestalt = await apiClient.gestalt();
+        const numberOfLeds = gestalt.number_of_led;
+        const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
+        const maxIterations = 1000;
+        let i = 0;
+        for (const frame of frames) {
+            if (frame.length !== numberOfLeds) {
+                throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${numberOfLeds}`);
+            }
+            const ledValues: number[] = [];
+            for (const color of frame) {
+                await copyValues(color, gestalt.led_profile, ledValues);
+            }
+            console.log(`Sending '${effect.getName()}' LED values to ${apiClient.getIp()}...`);
+            await apiClient.sendLedValues(ledValues);   
+            i++;
+            if (i >= maxIterations) {
+                break;
+            }
+            await sleep(10);
+        }
     }
 }
 
