@@ -1,11 +1,12 @@
 import { TwinklyApiClient } from '../apiClient';
 import { hasWhiteChannel, LedType, LedValue } from './Color';
+import { LedMapper } from './LedMapper';
 import { SameColorEffect } from './SameColorEffect';
 import { StaticStripEffect } from './StaticStripEffect';
 import { StripEffect } from './StripEffect';
 
 export interface Renderer<T> {
-  render(effect: T, apiClient: TwinklyApiClient): void;
+  render(effect: T, apiClient: TwinklyApiClient, mapper: LedMapper): void;
 }
 
 export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect;
@@ -14,13 +15,13 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
   private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
   private readonly stripEffectRenderer = new StripEffectRenderer();
-  async render(effect: AnyEffect, apiClient: TwinklyApiClient) {
+  async render(effect: AnyEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
     if ('getColors' in effect) {
-      await this.sameColorEffectRenderer.render(effect, apiClient);
+      await this.sameColorEffectRenderer.render(effect, apiClient, mapper);
     } else if ('getFrame' in effect) {
-      await this.staticStripEffectRenderer.render(effect, apiClient);
+      await this.staticStripEffectRenderer.render(effect, apiClient, mapper);
     } else if ('getFrames' in effect) {
-      await this.stripEffectRenderer.render(effect, apiClient);
+      await this.stripEffectRenderer.render(effect, apiClient, mapper);
     } else {
       throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
     }
@@ -28,7 +29,7 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
 }
 
 export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
-  async render(effect: SameColorEffect, apiClient: TwinklyApiClient) {
+  async render(effect: SameColorEffect, apiClient: TwinklyApiClient, _mapper: LedMapper) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const colors = effect.getColors();
@@ -52,17 +53,18 @@ export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
 }
 
 export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
-  async render(effect: StaticStripEffect, apiClient: TwinklyApiClient) {
+  async render(effect: StaticStripEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
     if (frame.length !== numberOfLeds) {
       throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${numberOfLeds}`);
     }
+    const mappedFrame = applyMapper(frame, mapper);
     const ledValues: number[] = [];
     console.log(`\nSending '${effect.getName()}' ${numberOfLeds} LED values to ${apiClient.getIp()}...`);
     let i = 0;
-    for (const color of frame) {
+    for (const color of mappedFrame) {
       i++;
       console.log(`  ${i}. ${JSON.stringify(color)}`);
       await copyValues(color, gestalt.led_profile, ledValues);
@@ -72,7 +74,7 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
 }
 
 export class StripEffectRenderer implements Renderer<StripEffect> {
-  async render(effect: StripEffect, apiClient: TwinklyApiClient) {
+  async render(effect: StripEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
@@ -82,8 +84,9 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
       if (frame.length !== numberOfLeds) {
         throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${numberOfLeds}`);
       }
+      const mappedFrame = applyMapper(frame, mapper);
       const ledValues: number[] = [];
-      for (const color of frame) {
+      for (const color of mappedFrame) {
         await copyValues(color, gestalt.led_profile, ledValues);
       }
       console.log(`Sending '${effect.getName()}' LED values to ${apiClient.getIp()}...`);
@@ -92,13 +95,25 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
       if (i >= maxIterations) {
         break;
       }
-      await sleep(100);
+      await sleep(10);
     }
   }
 }
 
 async function sleep(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function applyMapper(frame: LedValue[], mapper: LedMapper): LedValue[] {
+  const result: LedValue[] = new Array(frame.length);
+  for (let i = 0; i < frame.length; i++) {
+    const mappedIndex = mapper.mapLedIndex(i);
+    if (mappedIndex < 0 || mappedIndex >= frame.length) {
+      throw new Error(`Mapped LED index ${mappedIndex} is out of bounds for frame length ${frame.length}`);
+    }
+    result[mappedIndex] = frame[i];
+  }
+  return result;
 }
 
 async function copyValues(color: LedValue, targetType: LedType, output: number[]) {

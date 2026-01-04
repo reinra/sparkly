@@ -6,6 +6,7 @@ import { AnyEffect, AnyEffectRenderer } from './effects/Renderer';
 import { SimpleColorEffect, SmoothSameColorEffect } from './effects/SameColorEffect';
 import { RotatingStrictEffect, TestPerLedEffect } from './effects/StripEffect';
 import { loadConfig } from './config';
+import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 
 // Sample REST API client implementation using ts-rest properly
 async function callApi(this: any) {
@@ -21,7 +22,7 @@ async function callApi(this: any) {
 
     await apiClient.listMovies();
     await apiClient.getLayout();
-    await apiClient.getLedConfig();
+    const ledConfig = await apiClient.getLedConfig();
 
     await apiClient.setMode(Mode.rt);
 
@@ -51,10 +52,19 @@ async function callApi(this: any) {
       test_per_led: new TestPerLedEffect(),
     };
 
-    const effect = effects['test_per_led'];
+    const effect = effects['rotating_gradient_4'];
+
+    let mapper: LedMapper = new IdentityLedMapper();
+    if (ledConfig.strings.length === 2) {
+      const halfLength = ledConfig.strings[0].length;
+      mapper = new SegmentedLedMapper([
+        { startIndex: 0, mapper: new ReverseLedMapper(halfLength) },
+        { startIndex: halfLength, mapper: new IdentityLedMapper() },
+      ]);
+    }
 
     const renderer = new AnyEffectRenderer();
-    await renderer.render(effect, apiClient);
+    await renderer.render(effect, apiClient, mapper);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Validation error:', JSON.stringify(error.errors, null, 2));
