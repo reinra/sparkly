@@ -1,6 +1,6 @@
 # twinkly-ts
 
-A simple Node.js TypeScript hello world project.
+A Twinkly LED controller with TypeScript backend and SvelteKit frontend.
 
 ## Getting Started
 
@@ -8,6 +8,7 @@ A simple Node.js TypeScript hello world project.
 
 - Node.js (v18 or higher)
 - npm
+- A Twinkly LED device on your network
 
 ### Installation
 
@@ -17,24 +18,61 @@ Install dependencies:
 npm install
 ```
 
+### Configuration
+
+1. Copy `config.toml.example` to `config.toml`
+2. Update the IP address of your Twinkly device in `config.toml`
+
 ### Running the Project
 
-Run in development mode:
+#### Option 1: Run backend CLI (original functionality)
 
 ```bash
 npm run dev
 ```
 
-Build and run:
+#### Option 2: Run backend server + frontend (new web interface)
+
+In one terminal, start the backend server:
 
 ```bash
-npm run build
-npm start
+npm run dev:server
 ```
+
+In another terminal, start the frontend:
+
+```bash
+npm run dev:frontend
+```
+
+Then open your browser to http://localhost:5173
+
+### Available Scripts
+
+- `npm run dev` - Run the original CLI application
+- `npm run dev:server` - Start the Express backend API server on port 3001
+- `npm run dev:frontend` - Start the SvelteKit frontend on port 5173
+- `npm run build` - Build the TypeScript backend
+- `npm run build:frontend` - Build the SvelteKit frontend
+- `npm start` - Run the compiled CLI application
+- `npm start:server` - Run the compiled backend server
 
 ## Project Structure
 
-- `src/` - Source TypeScript files
+- `src/` - Backend TypeScript source files
+  - `server.ts` - Express API server
+  - `index.ts` - Original CLI application
+  - `apiClient.ts` - Twinkly API client
+  - `effects/` - LED effect implementations
+  - `routes/` - SvelteKit frontend pages
+  - `app.html` - HTML template for frontend
+  - `app.d.ts` - TypeScript declarations for frontend
 - `dist/` - Compiled JavaScript files (generated after build)
-- `tsconfig.json` - TypeScript configuration
-- `package.json` - Project dependencies and scripts
+- `svelte.config.js` - SvelteKit configuration
+- `vite.config.mjs` - Vite build configuration
+
+## API Endpoints
+
+- `GET /api/hello` - Simple hello world endpoint
+- `GET /api/status` - Get Twinkly device status
+- `POST /api/mode` - Set device mode

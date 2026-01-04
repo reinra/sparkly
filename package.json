@@ -5,19 +5,32 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "build:frontend": "vite build",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "start:server": "ts-node src/server.ts",
+    "start:frontend": "vite dev",
+    "dev": "ts-node src/index.ts",
+    "dev:server": "ts-node src/server.ts",
+    "dev:frontend": "vite dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@sveltejs/adapter-node": "^5.4.0",
+    "@sveltejs/kit": "^2.49.2",
     "@types/node": "^20.10.0",
+    "svelte": "^5.46.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^7.3.0"
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
     "smol-toml": "^1.6.0",
     "zod": "^3.25.76"
   }
