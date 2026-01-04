@@ -7,9 +7,20 @@ const HelloResponseSchema = z.object({
   message: z.string(),
 });
 
+const LedConfigResponseSchema = z.object({
+  code: z.number(),
+  strings: z.array(
+    z.object({
+      first_led_id: z.number(),
+      length: z.number(),
+    })
+  ),
+});
+
 const StatusResponseSchema = z.object({
   device: GestaltResponseSchema,
   summary: SummaryResponseSchema,
+  ledConfig: LedConfigResponseSchema,
 });
 
 const SetModeRequestSchema = z.object({

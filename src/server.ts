@@ -29,10 +29,12 @@ app.get('/api/status', async (req, res) => {
   try {
     const gestalt = await apiClient.gestalt();
     const summary = await apiClient.getSummary();
+    const ledConfig = await apiClient.getLedConfig();
 
     const response = backendApiContract.status.responses[200].parse({
       device: gestalt,
       summary: summary,
+      ledConfig: ledConfig,
     });
     res.json(response);
   } catch (error) {

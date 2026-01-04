@@ -75,6 +75,8 @@
         <pre>{JSON.stringify(status.device, null, 2)}</pre>
         <h3>Summary</h3>
         <pre>{JSON.stringify(status.summary, null, 2)}</pre>
+        <h3>LED Configuration</h3>
+        <pre>{JSON.stringify(status.ledConfig, null, 2)}</pre>
       </div>
     {:else if error && !status}
       <p class="error">{error}</p>
