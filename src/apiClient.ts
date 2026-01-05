@@ -1,4 +1,4 @@
-import { initClient } from '@ts-rest/core';
+import { initClient, ApiFetcher } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
@@ -36,14 +36,93 @@ export class TwinklyApiClient {
   private readonly baseUrl: string;
   private readonly clientNoAuth: ApiNoAuthClientType;
   private authenticationToken: string | null = null;
-  private client: ApiClientType | null = null;
+  private readonly client: ApiClientType;
   private lastGestaltResponse: GestaltResponseType | null = null;
+
   constructor(private readonly ip: string) {
     this.baseUrl = 'http://' + ip;
     this.clientNoAuth = initClient(apiContract, {
       baseUrl: this.baseUrl,
       throwOnUnknownStatus: true,
     });
+    // Initialize authenticated client with custom fetcher
+    // Note: We don't use baseHeaders because the custom fetcher adds the token dynamically
+    this.client = initClient(apiContract, {
+      baseUrl: this.baseUrl,
+      throwOnUnknownStatus: true,
+      api: this.createApiFetcherWithRetry(),
+      jsonQuery: true,
+    });
+  }
+
+  /**
+   * Custom API fetcher that handles 401 responses by clearing token, re-logging in, and retrying once
+   */
+  private createApiFetcherWithRetry(): ApiFetcher {
+    return async (args) => {
+      const { path, method, headers, body } = args;
+
+      // Build the full URL
+      const url = path;
+
+      // Add auth token to headers if available
+      const requestHeaders = {
+        ...headers,
+        ...(this.authenticationToken ? { 'x-auth-token': this.authenticationToken } : {}),
+      } as Record<string, string>;
+
+      // Make the initial request
+      console.log(`Making request to ${method} ${url} with body: ${JSON.stringify(body)}`);
+      const response = await fetch(url, {
+        method,
+        headers: requestHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      // If we get a 401, attempt to recover by re-authenticating and retrying once
+      if (response.status === 401) {
+        console.log('Received 401 Unauthorized. Clearing token and re-authenticating...');
+
+        // Clear the invalid token
+        this.authenticationToken = null;
+
+        // Re-authenticate
+        await this.login();
+
+        // Retry the original request with the new token
+        console.log('Retrying request with new token...');
+        const newHeaders = {
+          ...headers,
+          'x-auth-token': this.authenticationToken!,
+        } as Record<string, string>;
+
+        const retryResponse = await fetch(url, {
+          method,
+          headers: newHeaders,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+
+        return {
+          status: retryResponse.status,
+          body: await retryResponse.json(),
+          headers: retryResponse.headers as any,
+        };
+      }
+
+      // Parse response body
+      let responseBody;
+      try {
+        responseBody = await response.json();
+      } catch {
+        responseBody = null;
+      }
+
+      return {
+        status: response.status,
+        body: responseBody,
+        headers: response.headers as any,
+      };
+    };
   }
 
   getIp(): string {
@@ -74,7 +153,7 @@ export class TwinklyApiClient {
   async getSummary() {
     await this.ensureAuthenticated();
     console.log('\nFetching device summary...');
-    const result = await this.client!.summary();
+    const result = await this.client.summary();
     expect200(result);
     expect1000(result.body);
     console.log('Summary Response validated:', JSON.stringify(result.body, null, 2));
@@ -92,17 +171,9 @@ export class TwinklyApiClient {
     expect1000(loginResult.body);
     console.log('Login Response validated:', JSON.stringify(loginResult.body, null, 2));
     this.authenticationToken = loginResult.body.authentication_token;
-    const client = initClient(apiContract, {
-      baseUrl: this.baseUrl,
-      throwOnUnknownStatus: true,
-      baseHeaders: {
-        'x-auth-token': loginResult.body.authentication_token,
-      },
-    });
-    this.client = client;
 
     console.log('\nSending verify request...');
-    const verifyResult = await client.verify({
+    const verifyResult = await this.client.verify({
       body: {
         'challenge-response': loginResult.body['challenge-response'],
       },
@@ -116,7 +187,7 @@ export class TwinklyApiClient {
     await this.ensureAuthenticated();
 
     console.log(`\nSetting device mode to "${mode}"...`);
-    const result = await this.client!.setMode({
+    const result = await this.client.setMode({
       body: {
         mode,
       },
@@ -129,7 +200,7 @@ export class TwinklyApiClient {
   async setBrightnessAbsolute(value: number) {
     await this.ensureAuthenticated();
     console.log(`\nSetting brightness to absolute value ${value}...`);
-    const result = await this.client!.setBrightness({
+    const result = await this.client.setBrightness({
       body: {
         mode: EnabledDisabledSchema.enum.enabled,
         type: AbsoluteOrRelativeSchema.enum.A,
@@ -144,7 +215,7 @@ export class TwinklyApiClient {
   async listMovies() {
     await this.ensureAuthenticated();
     console.log(`\nListing movies...`);
-    const result = await this.client!.listMovies();
+    const result = await this.client.listMovies();
     expect200(result);
     expect1000(result.body);
     console.log('List Movies Response validated:', JSON.stringify(result.body, null, 2));
@@ -154,7 +225,7 @@ export class TwinklyApiClient {
   async getLayout() {
     await this.ensureAuthenticated();
     console.log(`\nFetching LED layout...`);
-    const result = await this.client!.getLayout();
+    const result = await this.client.getLayout();
     expect200(result);
     expect1000(result.body);
     console.log('Get Layout Response validated:', JSON.stringify(result.body, null, 2));
@@ -164,7 +235,7 @@ export class TwinklyApiClient {
   async getLedConfig() {
     await this.ensureAuthenticated();
     console.log(`\nFetching LED config...`);
-    const result = await this.client!.getLedConfig();
+    const result = await this.client.getLedConfig();
     expect200(result);
     expect1000(result.body);
     console.log('Get LED Config Response validated:', JSON.stringify(result.body, null, 2));

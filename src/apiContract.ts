@@ -156,7 +156,7 @@ const GetLedConfigResponseSchema = BasicResponseSchema.extend({
 });
 
 const authHeaders = z.object({
-  'x-auth-token': z.string(),
+  'x-auth-token': z.string().optional(),
 });
 
 const c = initContract();
