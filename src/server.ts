@@ -9,6 +9,19 @@ import { z } from 'zod';
 const config = loadConfig();
 const apiClient = new TwinklyApiClient(config.device.ip);
 
+interface Device {
+  id: string;
+  alias: string;
+  apiClient: TwinklyApiClient;
+}
+const devices: Record<string, Device> = {
+  'twinkly-1': {
+    id: 'twinkly-1',
+    alias: 'My Twinkly Device',
+    apiClient: apiClient,
+  },
+};
+
 const app = express();
 const PORT = 3001;
 
@@ -20,6 +33,18 @@ app.use(express.json());
 app.get('/api/hello', (req, res) => {
   const response = backendApiContract.hello.responses[200].parse({
     message: 'Hello from Twinkly Backend!',
+  });
+  res.json(response);
+});
+
+app.get('/api/info', (req, res) => {
+  const deviceList = Object.values(devices).map((device) => ({
+    id: device.id,
+    alias: device.alias,
+  }));
+
+  const response = backendApiContract.getInfo.responses[200].parse({
+    devices: deviceList,
   });
   res.json(response);
 });

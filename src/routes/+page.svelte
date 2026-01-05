@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { backendClient, type HelloResponse, type StatusResponse } from '../frontendApiClient';
+  import { backendClient, type HelloResponse, type StatusResponse, type GetInfoResponse } from '../frontendApiClient';
 
   let message = '';
+  let info: GetInfoResponse | null = null;
   let status: StatusResponse | null = null;
   let loading = false;
   let error = '';
@@ -20,6 +21,26 @@
       }
     } catch (e) {
       error = 'Failed to connect to backend. Make sure the backend server is running on port 3001.';
+      console.error('Error:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function fetchInfo() {
+    try {
+      loading = true;
+      error = '';
+      const response = await backendClient.getInfo();
+      if (response.status === 200) {
+        info = response.body;
+      } else if (response.status === 500) {
+        error = response.body.error;
+      } else {
+        error = 'Unexpected response from server';
+      }
+    } catch (e) {
+      error = 'Failed to get info. Make sure config.toml is properly configured.';
       console.error('Error:', e);
     } finally {
       loading = false;
@@ -49,6 +70,7 @@
 
   onMount(() => {
     fetchHello();
+    fetchInfo();
   });
 </script>
 
@@ -65,6 +87,23 @@
       <p class="success">{message}</p>
     {/if}
     <button on:click={fetchHello} disabled={loading}>Refresh Hello</button>
+  </div>
+
+  <div class="card">
+    <h2>Twinkly devices</h2>
+    {#if loading && !message}
+      <p class="loading">Loading...</p>
+    {:else if error && !message}
+      <p class="error">{error}</p>
+    {:else if message}
+      <p class="success">
+        {#each info?.devices as device}
+          <li><strong>{device.alias}</strong></li>
+        {/each}
+      </p>
+    {/if}
+    <ul></ul>
+    <button on:click={fetchInfo} disabled={loading}>Refresh</button>
   </div>
 
   <div class="card">

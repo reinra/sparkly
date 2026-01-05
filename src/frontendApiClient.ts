@@ -10,5 +10,11 @@ export const backendClient = initClient(backendApiContract, {
 });
 
 // Export types for convenience
-export type { HelloResponse, StatusResponse, SetModeRequest, SetModeResponse } from './backendApiContract';
+export type {
+  HelloResponse,
+  GetInfoResponse,
+  StatusResponse,
+  SetModeRequest,
+  SetModeResponse,
+} from './backendApiContract';
 export { Mode } from './apiContract';

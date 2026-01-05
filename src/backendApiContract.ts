@@ -7,6 +7,15 @@ const HelloResponseSchema = z.object({
   message: z.string(),
 });
 
+const GetInfoResponseSchema = z.object({
+  devices: z.array(
+    z.object({
+      id: z.string(),
+      alias: z.string(),
+    })
+  ),
+});
+
 const LedConfigResponseSchema = z.object({
   code: z.number(),
   strings: z.array(
@@ -38,6 +47,7 @@ const ErrorResponseSchema = z.object({
 
 // Export types
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
+export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;
 export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
@@ -51,6 +61,14 @@ export const backendApiContract = c.router({
     path: '/api/hello',
     responses: {
       200: HelloResponseSchema,
+    },
+  },
+  getInfo: {
+    method: 'GET',
+    path: '/api/info',
+    responses: {
+      200: GetInfoResponseSchema,
+      500: ErrorResponseSchema,
     },
   },
   status: {
