@@ -107,6 +107,23 @@
   </div>
 
   <div class="card">
+    <h2>Effect library</h2>
+    {#if loading && !message}
+      <p class="loading">Loading...</p>
+    {:else if error && !message}
+      <p class="error">{error}</p>
+    {:else if message}
+      <p class="success">
+        {#each info?.effects as effect}
+          <li><strong>{effect.name}</strong></li>
+        {/each}
+      </p>
+    {/if}
+    <ul></ul>
+    <button on:click={fetchInfo} disabled={loading}>Refresh</button>
+  </div>
+
+  <div class="card">
     <h2>Device Status</h2>
     {#if status}
       <div class="status">

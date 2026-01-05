@@ -14,6 +14,12 @@ const GetInfoResponseSchema = z.object({
       alias: z.string(),
     })
   ),
+  effects: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
 });
 
 const LedConfigResponseSchema = z.object({

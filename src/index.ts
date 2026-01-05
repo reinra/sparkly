@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import { Mode } from './apiContract';
 import { TwinklyApiClient } from './apiClient';
-import { GradientStaticStripEffect } from './effects/StaticStripEffect';
-import { AnyEffect, AnyEffectRenderer } from './effects/Renderer';
-import { SimpleColorEffect, SmoothSameColorEffect } from './effects/SameColorEffect';
-import { RotatingStrictEffect, TestPerLedEffect } from './effects/StripEffect';
+import { AnyEffectRenderer } from './effects/Renderer';
 import { loadConfig } from './config';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
+import { effects } from './effects/EffectLibrary';
 
 // Sample REST API client implementation using ts-rest properly
 async function callApi(this: any) {
@@ -27,30 +25,6 @@ async function callApi(this: any) {
     await apiClient.setMode(Mode.rt);
 
     // await apiClient.setBrightnessAbsolute(100);
-
-    const gradient4 = new GradientStaticStripEffect([
-      { red: 255, green: 0, blue: 0 },
-      { red: 0, green: 255, blue: 0 },
-      { red: 0, green: 0, blue: 255 },
-      { red: 255, green: 0, blue: 0 },
-    ]);
-
-    const effects: Record<string, AnyEffect> = {
-      simple: new SimpleColorEffect(),
-      smooth: new SmoothSameColorEffect(new SimpleColorEffect(), 64),
-      gradient_2: new GradientStaticStripEffect([
-        { red: 255, green: 0, blue: 0 },
-        { red: 255, green: 255, blue: 0 },
-      ]),
-      gradient_3: new GradientStaticStripEffect([
-        { red: 255, green: 0, blue: 0 },
-        { red: 0, green: 255, blue: 0 },
-        { red: 0, green: 0, blue: 255 },
-      ]),
-      gradient_4: gradient4,
-      rotating_gradient_4: new RotatingStrictEffect(gradient4, 400, 3),
-      test_per_led: new TestPerLedEffect(),
-    };
 
     const effect = effects['rotating_gradient_4'];
 

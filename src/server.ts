@@ -5,6 +5,7 @@ import { loadConfig } from './config';
 import { Mode } from './apiContract';
 import { backendApiContract } from './backendApiContract';
 import { z } from 'zod';
+import { effects } from './effects/EffectLibrary';
 
 const config = loadConfig();
 const apiClient = new TwinklyApiClient(config.device.ip);
@@ -45,6 +46,10 @@ app.get('/api/info', (req, res) => {
 
   const response = backendApiContract.getInfo.responses[200].parse({
     devices: deviceList,
+    effects: Object.entries(effects).map(([id, effect]) => ({
+      id,
+      name: effect.getName(),
+    })),
   });
   res.json(response);
 });
