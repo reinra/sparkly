@@ -55,7 +55,7 @@
 
       if (response.status === 200) {
         status = response.body;
-      } else if (response.status === 500) {
+      } else if (response.status === 500 || response.status === 503) {
         error = response.body.error;
       } else {
         error = 'Unexpected response from server';

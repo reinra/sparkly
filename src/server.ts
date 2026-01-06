@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { TwinklyApiClient } from './apiClient';
+import { TwinklyApiClient, DeviceUnreachableError } from './apiClient';
 import { loadConfig } from './config';
 import { Mode } from './apiContract';
 import { backendApiContract } from './backendApiContract';
@@ -70,8 +70,17 @@ app.get('/api/status', async (req, res) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Zod validation error:', error.errors);
+    } else if (error instanceof DeviceUnreachableError) {
+      console.error('Device unreachable:', error.message);
+      const errorResponse = backendApiContract.status.responses[500].parse({
+        error: error.message,
+      });
+      return res.status(503).json(errorResponse);
     } else {
       console.error('Error getting device status:', error instanceof Error ? error.message : String(error));
+      if (error instanceof Error && error.stack) {
+        console.error('Stack trace:', error.stack);
+      }
     }
     const errorResponse = backendApiContract.status.responses[500].parse({
       error: 'Failed to get device status',
@@ -101,6 +110,11 @@ app.post('/api/mode', async (req, res) => {
         error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
       });
       res.status(400).json(errorResponse);
+    } else if (error instanceof DeviceUnreachableError) {
+      const errorResponse = backendApiContract.setMode.responses[500].parse({
+        error: error.message,
+      });
+      res.status(503).json(errorResponse);
     } else {
       const errorResponse = backendApiContract.setMode.responses[500].parse({
         error: 'Failed to set mode',

@@ -6,6 +6,15 @@ import { resourceLimits } from 'worker_threads';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
+const REQUEST_TIMEOUT_MS = 1000; // 1 second timeout for device requests
+const NETWORK_ERROR_KEYWORDS = [
+  'fetch failed',
+  'econnrefused',
+  'etimedout',
+  'enotfound',
+  'enetunreach',
+  'ehostunreach',
+];
 
 function expect200(response: { status: number }): asserts response is { status: 200 } {
   if (response.status !== 200) {
@@ -15,6 +24,19 @@ function expect200(response: { status: number }): asserts response is { status: 
 function expect1000(responseBody: { code: number }): asserts responseBody is { code: 1000 } {
   if (responseBody.code !== 1000) {
     throw new Error('Unexpected response code: ' + responseBody.code);
+  }
+}
+
+/**
+ * Custom error class for device connectivity issues
+ */
+export class DeviceUnreachableError extends Error {
+  public readonly cause?: Error;
+  
+  constructor(public readonly deviceIp: string, cause?: Error) {
+    super(`Twinkly device unreachable at ${deviceIp}. Please check if the device is powered on and connected to the network.`);
+    this.name = 'DeviceUnreachableError';
+    this.cause = cause;
   }
 }
 
@@ -44,6 +66,7 @@ export class TwinklyApiClient {
     this.clientNoAuth = initClient(apiContract, {
       baseUrl: this.baseUrl,
       throwOnUnknownStatus: true,
+      api: this.createApiFetcherWithErrorHandling(),
     });
     // Initialize authenticated client with custom fetcher
     // Note: We don't use baseHeaders because the custom fetcher adds the token dynamically
@@ -56,7 +79,68 @@ export class TwinklyApiClient {
   }
 
   /**
+   * Helper to make a fetch request and wrap network errors with DeviceUnreachableError
+   */
+  private async fetchWithErrorHandling(
+    url: string,
+    method: string,
+    headers: Record<string, string>,
+    body: any
+  ): Promise<Response> {
+    try {
+      return await fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      // Wrap network errors with DeviceUnreachableError
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (
+          message.includes('aborted') ||
+          NETWORK_ERROR_KEYWORDS.some(keyword => message.includes(keyword))
+        ) {
+          throw new DeviceUnreachableError(this.ip, error);
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Helper to parse response body as JSON, returning null if parsing fails
+   */
+  private async parseResponseBody(response: Response): Promise<any> {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Simple API fetcher that wraps network errors with DeviceUnreachableError
+   */
+  private createApiFetcherWithErrorHandling(): ApiFetcher {
+    return async (args) => {
+      const { path, method, headers, body } = args;
+
+      console.log(`Making request to ${method} ${path} with body: ${JSON.stringify(body)}`);
+      const response = await this.fetchWithErrorHandling(path, method, headers as Record<string, string>, body);
+
+      return {
+        status: response.status,
+        body: await this.parseResponseBody(response),
+        headers: response.headers as any,
+      };
+    };
+  }
+
+  /**
    * Custom API fetcher that handles 401 responses by clearing token, re-logging in, and retrying once
+   * Also wraps network errors with DeviceUnreachableError for better error handling
    */
   private createApiFetcherWithRetry(): ApiFetcher {
     return async (args) => {
@@ -73,11 +157,7 @@ export class TwinklyApiClient {
 
       // Make the initial request
       console.log(`Making request to ${method} ${url} with body: ${JSON.stringify(body)}`);
-      const response = await fetch(url, {
-        method,
-        headers: requestHeaders,
-        body: body ? JSON.stringify(body) : undefined,
-      });
+      const response = await this.fetchWithErrorHandling(url, method, requestHeaders, body);
 
       // If we get a 401, attempt to recover by re-authenticating and retrying once
       if (response.status === 401) {
@@ -96,30 +176,18 @@ export class TwinklyApiClient {
           'x-auth-token': this.authenticationToken!,
         } as Record<string, string>;
 
-        const retryResponse = await fetch(url, {
-          method,
-          headers: newHeaders,
-          body: body ? JSON.stringify(body) : undefined,
-        });
+        const retryResponse = await this.fetchWithErrorHandling(url, method, newHeaders, body);
 
         return {
           status: retryResponse.status,
-          body: await retryResponse.json(),
+          body: await this.parseResponseBody(retryResponse),
           headers: retryResponse.headers as any,
         };
       }
 
-      // Parse response body
-      let responseBody;
-      try {
-        responseBody = await response.json();
-      } catch {
-        responseBody = null;
-      }
-
       return {
         status: response.status,
-        body: responseBody,
+        body: await this.parseResponseBody(response),
         headers: response.headers as any,
       };
     };
