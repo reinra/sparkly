@@ -1,4 +1,4 @@
-import { initClient, ApiFetcher } from '@ts-rest/core';
+import { initClient, ApiFetcher, tsRestFetchApi } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
@@ -79,20 +79,18 @@ export class TwinklyApiClient {
   }
 
   /**
-   * Helper to make a fetch request and wrap network errors with DeviceUnreachableError
+   * Helper to make a request using tsRestFetchApi and wrap network errors with DeviceUnreachableError
    */
   private async fetchWithErrorHandling(
-    url: string,
-    method: string,
-    headers: Record<string, string>,
-    body: any
-  ): Promise<Response> {
+    args: Parameters<ApiFetcher>[0]
+  ): Promise<{ status: number; body: any; headers: any }> {
     try {
-      return await fetch(url, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      return await tsRestFetchApi({
+        ...args,
+        fetchOptions: {
+          ...args.fetchOptions,
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        },
       });
     } catch (error) {
       // Wrap network errors with DeviceUnreachableError
@@ -110,31 +108,12 @@ export class TwinklyApiClient {
   }
 
   /**
-   * Helper to parse response body as JSON, returning null if parsing fails
-   */
-  private async parseResponseBody(response: Response): Promise<any> {
-    try {
-      return await response.json();
-    } catch {
-      return null;
-    }
-  }
-
-  /**
    * Simple API fetcher that wraps network errors with DeviceUnreachableError
    */
   private createApiFetcherWithErrorHandling(): ApiFetcher {
     return async (args) => {
-      const { path, method, headers, body } = args;
-
-      console.log(`Making request to ${method} ${path} with body: ${JSON.stringify(body)}`);
-      const response = await this.fetchWithErrorHandling(path, method, headers as Record<string, string>, body);
-
-      return {
-        status: response.status,
-        body: await this.parseResponseBody(response),
-        headers: response.headers as any,
-      };
+      console.log(`Making request to ${args.method} ${args.path} with body: ${JSON.stringify(args.body)}`);
+      return await this.fetchWithErrorHandling(args);
     };
   }
 
@@ -144,20 +123,18 @@ export class TwinklyApiClient {
    */
   private createApiFetcherWithRetry(): ApiFetcher {
     return async (args) => {
-      const { path, method, headers, body } = args;
-
-      // Build the full URL
-      const url = path;
-
       // Add auth token to headers if available
-      const requestHeaders = {
-        ...headers,
-        ...(this.authenticationToken ? { 'x-auth-token': this.authenticationToken } : {}),
-      } as Record<string, string>;
+      const argsWithAuth = {
+        ...args,
+        headers: {
+          ...args.headers,
+          ...(this.authenticationToken ? { 'x-auth-token': this.authenticationToken } : {}),
+        },
+      };
 
       // Make the initial request
-      console.log(`Making request to ${method} ${url} with body: ${JSON.stringify(body)}`);
-      const response = await this.fetchWithErrorHandling(url, method, requestHeaders, body);
+      console.log(`Making request to ${args.method} ${args.path} with body: ${JSON.stringify(args.body)}`);
+      const response = await this.fetchWithErrorHandling(argsWithAuth);
 
       // If we get a 401, attempt to recover by re-authenticating and retrying once
       if (response.status === 401) {
@@ -171,25 +148,18 @@ export class TwinklyApiClient {
 
         // Retry the original request with the new token
         console.log('Retrying request with new token...');
-        const newHeaders = {
-          ...headers,
-          'x-auth-token': this.authenticationToken!,
-        } as Record<string, string>;
-
-        const retryResponse = await this.fetchWithErrorHandling(url, method, newHeaders, body);
-
-        return {
-          status: retryResponse.status,
-          body: await this.parseResponseBody(retryResponse),
-          headers: retryResponse.headers as any,
+        const retryArgs = {
+          ...args,
+          headers: {
+            ...args.headers,
+            'x-auth-token': this.authenticationToken!,
+          },
         };
+
+        return await this.fetchWithErrorHandling(retryArgs);
       }
 
-      return {
-        status: response.status,
-        body: await this.parseResponseBody(response),
-        headers: response.headers as any,
-      };
+      return response;
     };
   }
 
