@@ -1,16 +1,17 @@
 {
   "name": "twinkly-ts",
   "version": "1.0.0",
+  "type": "module",
   "description": "A simple Node.js TypeScript hello world project",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "build:frontend": "vite build",
     "start": "node dist/index.js",
-    "start:server": "ts-node src/server.ts",
+    "start:server": "tsx src/server.ts",
     "start:frontend": "vite dev",
-    "dev": "ts-node src/index.ts",
-    "dev:server": "ts-node src/server.ts",
+    "dev": "tsx src/index.ts",
+    "dev:server": "tsx src/server.ts",
     "dev:frontend": "vite dev"
   },
   "keywords": [],
@@ -21,7 +22,7 @@
     "@sveltejs/kit": "^2.49.2",
     "@types/node": "^20.10.0",
     "svelte": "^5.46.1",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.3",
     "vite": "^7.3.0"
   },

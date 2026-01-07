@@ -1,8 +1,8 @@
-import { initClient, ApiFetcher, tsRestFetchApi } from '@ts-rest/core';
+import { initClient, tsRestFetchApi } from '@ts-rest/core';
+import type { ApiFetcher } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
-import { resourceLimits } from 'worker_threads';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;

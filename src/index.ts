@@ -3,7 +3,8 @@ import { Mode } from './apiContract';
 import { TwinklyApiClient } from './apiClient';
 import { AnyEffectRenderer } from './effects/Renderer';
 import { loadConfig } from './config';
-import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
+import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
+import type { LedMapper } from './effects/LedMapper';
 import { effects } from './effects/EffectLibrary';
 
 // Sample REST API client implementation using ts-rest properly

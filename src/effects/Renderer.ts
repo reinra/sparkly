@@ -1,9 +1,10 @@
 import { TwinklyApiClient } from '../apiClient';
-import { hasWhiteChannel, LedType, LedValue } from './Color';
-import { LedMapper } from './LedMapper';
-import { SameColorEffect } from './SameColorEffect';
-import { StaticStripEffect } from './StaticStripEffect';
-import { StripEffect } from './StripEffect';
+import { hasWhiteChannel, LedType } from './Color';
+import type { LedValue } from './Color';
+import type { LedMapper } from './LedMapper';
+import type { SameColorEffect } from './SameColorEffect';
+import type { StaticStripEffect } from './StaticStripEffect';
+import type { StripEffect } from './StripEffect';
 
 export interface Renderer<T> {
   render(effect: T, apiClient: TwinklyApiClient, mapper: LedMapper): void;
