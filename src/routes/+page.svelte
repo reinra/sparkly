@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { backendClient, type HelloResponse, type StatusResponse, type GetInfoResponse } from '../frontendApiClient';
 
-  let message = '';
-  let info: GetInfoResponse | null = null;
-  let status: StatusResponse | null = null;
-  let loading = false;
-  let error = '';
+  let message = $state('');
+  let info = $state<GetInfoResponse | null>(null);
+  let status = $state<StatusResponse | null>(null);
+  let loading = $state(false);
+  let error = $state('');
 
   async function fetchHello() {
     try {
@@ -68,7 +67,7 @@
     }
   }
 
-  onMount(() => {
+  $effect(() => {
     fetchHello();
     fetchInfo();
   });
@@ -86,7 +85,7 @@
     {:else if message}
       <p class="success">{message}</p>
     {/if}
-    <button on:click={fetchHello} disabled={loading}>Refresh Hello</button>
+    <button onclick={fetchHello} disabled={loading}>Refresh Hello</button>
   </div>
 
   <div class="card">
@@ -103,7 +102,7 @@
       </p>
     {/if}
     <ul></ul>
-    <button on:click={fetchInfo} disabled={loading}>Refresh</button>
+    <button onclick={fetchInfo} disabled={loading}>Refresh</button>
   </div>
 
   <div class="card">
@@ -120,7 +119,7 @@
       </p>
     {/if}
     <ul></ul>
-    <button on:click={fetchInfo} disabled={loading}>Refresh</button>
+    <button onclick={fetchInfo} disabled={loading}>Refresh</button>
   </div>
 
   <div class="card">
@@ -137,7 +136,7 @@
     {:else if error && !status}
       <p class="error">{error}</p>
     {/if}
-    <button on:click={fetchStatus} disabled={loading}>Get Device Status</button>
+    <button onclick={fetchStatus} disabled={loading}>Get Device Status</button>
   </div>
 </main>
 
