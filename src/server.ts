@@ -8,20 +8,25 @@ import { z } from 'zod';
 import { effects } from './effects/EffectLibrary';
 
 const config = loadConfig();
-const apiClient = new TwinklyApiClient(config.device.ip);
+// Use the first device for now
+const apiClient = new TwinklyApiClient(config.device[0].ip);
 
 interface Device {
   id: string;
   alias: string;
   apiClient: TwinklyApiClient;
 }
-const devices: Record<string, Device> = {
-  'twinkly-1': {
-    id: 'twinkly-1',
-    alias: 'My Twinkly Device',
-    apiClient: apiClient,
-  },
-};
+// Initialize devices from config
+const devices: Record<string, Device> = Object.fromEntries(
+  config.device.map((device, index) => [
+    `twinkly-${index + 1}`,
+    {
+      id: `twinkly-${index + 1}`,
+      alias: `Twinkly Device ${index + 1}`,
+      apiClient: new TwinklyApiClient(device.ip),
+    },
+  ])
+);
 
 const app = express();
 const PORT = 3001;
@@ -38,11 +43,25 @@ app.get('/api/hello', (req, res) => {
   res.json(response);
 });
 
-app.get('/api/info', (req, res) => {
-  const deviceList = Object.values(devices).map((device) => ({
-    id: device.id,
-    alias: device.alias,
-  }));
+app.get('/api/info', async (req, res) => {
+  const deviceList = [];
+  for (const device of Object.values(devices)) {
+    let gestalt = null;
+    try {
+      gestalt = await device.apiClient.gestalt();
+    }
+    catch (error) {
+      console.error(`Error fetching gestalt for device ${device.id}:`, error);
+    }
+
+    deviceList.push({
+      id: device.id,
+      alias: device.alias,
+      ip: device.apiClient.getIp(),
+      name: gestalt?.device_name,
+      led_count: gestalt?.number_of_led,
+    });
+  }
 
   const response = backendApiContract.getInfo.responses[200].parse({
     devices: deviceList,

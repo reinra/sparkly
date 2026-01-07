@@ -12,6 +12,9 @@ const GetInfoResponseSchema = z.object({
     z.object({
       id: z.string(),
       alias: z.string(),
+      ip: z.string().ip(),
+      name: z.string().optional(),
+      led_count: z.number().optional(),
     })
   ),
   effects: z.array(

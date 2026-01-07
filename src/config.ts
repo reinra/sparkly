@@ -9,9 +9,9 @@ const __dirname = dirname(__filename);
 
 // Define config schema with Zod
 const ConfigSchema = z.object({
-  device: z.object({
+  device: z.array(z.object({
     ip: z.string().ip(),
-  }),
+  })),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

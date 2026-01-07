@@ -11,7 +11,7 @@ import { effects } from './effects/EffectLibrary';
 async function callApi(this: any) {
   // Load configuration from TOML file
   const config = loadConfig();
-  const ip = config.device.ip;
+  const ip = config.device[0].ip;
 
   const apiClient = new TwinklyApiClient(ip);
   try {

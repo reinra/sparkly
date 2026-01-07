@@ -42,6 +42,16 @@
       {#each info.devices as device}
         <div class="device-card">
           <h3>{device.alias}</h3>
+            <div class="device-info">
+                <p><strong>ID:</strong> {device.id}</p>
+                <p><strong>IP:</strong> {device.ip}</p>
+                {#if device.name}
+                <p><strong>Name:</strong> {device.name}</p>
+                {/if}
+                {#if device.led_count}
+                <p><strong>LED Count:</strong> {device.led_count}</p>
+                {/if}                
+            </div>
         </div>
       {/each}
     </div>
