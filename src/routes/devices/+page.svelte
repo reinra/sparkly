@@ -32,7 +32,7 @@
 
 <div class="devices-page">
   <h2>Twinkly Devices</h2>
-  
+
   {#if loading}
     <p class="loading">Loading devices...</p>
   {:else if error}
@@ -42,16 +42,18 @@
       {#each info.devices as device}
         <div class="device-card">
           <h3>{device.alias}</h3>
-            <div class="device-info">
-                <p><strong>ID:</strong> {device.id}</p>
-                <p><strong>IP:</strong> {device.ip}</p>
-                {#if device.name}
-                <p><strong>Name:</strong> {device.name}</p>
-                {/if}
-                {#if device.led_count}
-                <p><strong>LED Count:</strong> {device.led_count}</p>
-                {/if}                
-            </div>
+          <div class="device-info">
+            <p><strong>ID:</strong> {device.id}</p>
+            <p><strong>IP:</strong> {device.ip}</p>
+            {#if device.name}
+              <p><strong>Name:</strong> {device.name}</p>
+            {/if}
+            {#if device.led_count}
+              <p><strong>LED Count:</strong> {device.led_count}</p>
+            {/if}
+            <p><strong>Brightness:</strong> {device.brightness}%</p>
+            <input type="range" min="0" max="100" value={device.brightness} disabled />
+          </div>
         </div>
       {/each}
     </div>
@@ -59,9 +61,7 @@
     <p class="no-devices">No devices configured</p>
   {/if}
 
-  <button onclick={fetchDevices} disabled={loading}>
-    Refresh Devices
-  </button>
+  <button onclick={fetchDevices} disabled={loading}> Refresh Devices </button>
 </div>
 
 <style>
@@ -87,7 +87,9 @@
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
   }
 
   .device-card:hover {

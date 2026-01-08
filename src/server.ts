@@ -49,9 +49,14 @@ app.get('/api/info', async (req, res) => {
     let gestalt = null;
     try {
       gestalt = await device.apiClient.gestalt();
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`Error fetching gestalt for device ${device.id}:`, error);
+    }
+    let summary = null;
+    try {
+      summary = await device.apiClient.getSummary();
+    } catch (error) {
+      console.error(`Error fetching summary for device ${device.id}:`, error);
     }
 
     deviceList.push({
@@ -60,6 +65,7 @@ app.get('/api/info', async (req, res) => {
       ip: device.apiClient.getIp(),
       name: gestalt?.device_name,
       led_count: gestalt?.number_of_led,
+      brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
     });
   }
 
@@ -137,6 +143,45 @@ app.post('/api/mode', async (req, res) => {
     } else {
       const errorResponse = backendApiContract.setMode.responses[500].parse({
         error: 'Failed to set mode',
+      });
+      res.status(500).json(errorResponse);
+    }
+  }
+});
+
+app.post('/api/brightness', async (req, res) => {
+  try {
+    // Validate request body
+    const validatedBody = backendApiContract.setBrightness.body.parse(req.body);
+    const { device_id, brightness } = validatedBody;
+    const device = devices[device_id];
+    if (!device) {
+      const errorResponse = backendApiContract.setBrightness.responses[500].parse({
+        error: `Device with ID ${device_id} not found`,
+      });
+      return res.status(404).json(errorResponse);
+    }
+    await device.apiClient.setBrightnessAbsolute(brightness);
+
+    const response = backendApiContract.setBrightness.responses[200].parse({
+      success: true,
+    });
+    res.json(response);
+  } catch (error) {
+    console.error('Error setting brightness:', error);
+    if (error instanceof z.ZodError) {
+      const errorResponse = backendApiContract.setBrightness.responses[500].parse({
+        error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
+      });
+      res.status(400).json(errorResponse);
+    } else if (error instanceof DeviceUnreachableError) {
+      const errorResponse = backendApiContract.setBrightness.responses[500].parse({
+        error: error.message,
+      });
+      res.status(503).json(errorResponse);
+    } else {
+      const errorResponse = backendApiContract.setBrightness.responses[500].parse({
+        error: 'Failed to set brightness',
       });
       res.status(500).json(errorResponse);
     }

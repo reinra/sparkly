@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { GestaltResponseSchema, SummaryResponseSchema, Mode } from './apiContract';
+import { set } from 'zod/v4';
 
 // Request/Response schemas for backend API
 const HelloResponseSchema = z.object({
@@ -15,6 +16,7 @@ const GetInfoResponseSchema = z.object({
       ip: z.string().ip(),
       name: z.string().optional(),
       led_count: z.number().optional(),
+      brightness: z.number().min(0).max(100).optional(),
     })
   ),
   effects: z.array(
@@ -48,6 +50,15 @@ const SetModeRequestSchema = z.object({
 const SetModeResponseSchema = z.object({
   success: z.boolean(),
   mode: z.nativeEnum(Mode),
+});
+
+const SetBrightnessRequestSchema = z.object({
+  device_id: z.string(),
+  brightness: z.number().min(0).max(100),
+});
+
+const GenericSuccessResponseSchema = z.object({
+  success: z.boolean(),
 });
 
 const ErrorResponseSchema = z.object({
@@ -94,6 +105,15 @@ export const backendApiContract = c.router({
     body: SetModeRequestSchema,
     responses: {
       200: SetModeResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  setBrightness: {
+    method: 'POST',
+    path: '/api/brightness',
+    body: SetBrightnessRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
       500: ErrorResponseSchema,
     },
   },

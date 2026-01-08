@@ -32,9 +32,11 @@ function expect1000(responseBody: { code: number }): asserts responseBody is { c
  */
 export class DeviceUnreachableError extends Error {
   public readonly cause?: Error;
-  
+
   constructor(public readonly deviceIp: string, cause?: Error) {
-    super(`Twinkly device unreachable at ${deviceIp}. Please check if the device is powered on and connected to the network.`);
+    super(
+      `Twinkly device unreachable at ${deviceIp}. Please check if the device is powered on and connected to the network.`
+    );
     this.name = 'DeviceUnreachableError';
     this.cause = cause;
   }
@@ -96,10 +98,7 @@ export class TwinklyApiClient {
       // Wrap network errors with DeviceUnreachableError
       if (error instanceof Error) {
         const message = error.message.toLowerCase();
-        if (
-          message.includes('aborted') ||
-          NETWORK_ERROR_KEYWORDS.some(keyword => message.includes(keyword))
-        ) {
+        if (message.includes('aborted') || NETWORK_ERROR_KEYWORDS.some((keyword) => message.includes(keyword))) {
           throw new DeviceUnreachableError(this.ip, error);
         }
       }
