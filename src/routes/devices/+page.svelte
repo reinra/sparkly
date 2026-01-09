@@ -1,5 +1,6 @@
 <script lang="ts">
   import { backendClient, type GetInfoResponse } from '../../frontendApiClient';
+  import DeviceCard from '../../components/DeviceCard.svelte';
 
   let info = $state<GetInfoResponse | null>(null);
   let loading = $state(false);
@@ -40,21 +41,7 @@
   {:else if info?.devices && info.devices.length > 0}
     <div class="devices-grid">
       {#each info.devices as device}
-        <div class="device-card">
-          <h3>{device.alias}</h3>
-          <div class="device-info">
-            <p><strong>ID:</strong> {device.id}</p>
-            <p><strong>IP:</strong> {device.ip}</p>
-            {#if device.name}
-              <p><strong>Name:</strong> {device.name}</p>
-            {/if}
-            {#if device.led_count}
-              <p><strong>LED Count:</strong> {device.led_count}</p>
-            {/if}
-            <p><strong>Brightness:</strong> {device.brightness}%</p>
-            <input type="range" min="0" max="100" value={device.brightness} disabled />
-          </div>
-        </div>
+        <DeviceCard {device} />
       {/each}
     </div>
   {:else}
@@ -80,32 +67,6 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
-  }
-
-  .device-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
-  }
-
-  .device-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .device-card h3 {
-    color: #ff3e00;
-    margin: 0 0 1rem 0;
-    font-size: 1.3rem;
-  }
-
-  .device-info p {
-    margin: 0.5rem 0;
-    color: #666;
   }
 
   button {
