@@ -17,6 +17,7 @@ const GetInfoResponseSchema = z.object({
       name: z.string().optional(),
       led_count: z.number().optional(),
       brightness: z.number().min(0).max(100).optional(),
+      mode: z.nativeEnum(Mode).optional(),
     })
   ),
   effects: z.array(
@@ -44,6 +45,7 @@ const StatusResponseSchema = z.object({
 });
 
 const SetModeRequestSchema = z.object({
+  device_id: z.string(),
   mode: z.nativeEnum(Mode),
 });
 

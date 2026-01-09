@@ -66,6 +66,7 @@ app.get('/api/info', async (req, res) => {
       name: gestalt?.device_name,
       led_count: gestalt?.number_of_led,
       brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
+      mode: summary?.led_mode?.mode,
     });
   }
 
@@ -119,9 +120,15 @@ app.post('/api/mode', async (req, res) => {
   try {
     // Validate request body
     const validatedBody = backendApiContract.setMode.body.parse(req.body);
-    const { mode } = validatedBody;
-
-    await apiClient.setMode(mode);
+    const { device_id, mode } = validatedBody;
+    const device = devices[device_id];
+    if (!device) {
+      const errorResponse = backendApiContract.setBrightness.responses[500].parse({
+        error: `Device with ID ${device_id} not found`,
+      });
+      return res.status(404).json(errorResponse);
+    }
+    await device.apiClient.setMode(mode);
 
     const response = backendApiContract.setMode.responses[200].parse({
       success: true,

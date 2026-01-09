@@ -7,6 +7,7 @@
 
   let { device }: Props = $props();
   let brightness = $state(device.brightness);
+  let mode = $state(device.mode);
   let updating = $state(false);
 
   async function updateBrightness(value: number) {
@@ -36,6 +37,34 @@
       updating = false;
     }
   }
+
+  async function updateMode(value: string) {
+    if (updating || value === device.mode) return;
+
+    try {
+      updating = true;
+      const response = await backendClient.setMode({
+        body: {
+          device_id: device.id,
+          mode: value as any,
+        },
+      });
+
+      if (response.status === 200) {
+        device.mode = value;
+      } else if (response.status === 500) {
+        console.error('Failed to set mode:', response.body.error);
+        // Revert to original value
+        mode = device.mode;
+      }
+    } catch (e) {
+      console.error('Error setting mode:', e);
+      // Revert to original value
+      mode = device.mode;
+    } finally {
+      updating = false;
+    }
+  }
 </script>
 
 <div class="device-card">
@@ -58,6 +87,18 @@
       onchange={() => updateBrightness(brightness)}
       disabled={updating}
     />
+    {#if device.mode}
+      <p>
+        <strong>Mode:</strong>
+        <select bind:value={mode} onchange={() => updateMode(mode)} disabled={updating}>
+          <option value="off">Off</option>
+          <option value="demo">Demo</option>
+          <option value="effect">Effect</option>
+          <option value="movie">Movie</option>
+          <option value="rt">RT</option>
+        </select>
+      </p>
+    {/if}
   </div>
 </div>
 
