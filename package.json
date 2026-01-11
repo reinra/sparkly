@@ -11,7 +11,7 @@
     "start:server": "tsx src/server.ts",
     "start:frontend": "vite dev",
     "dev": "tsx src/index.ts",
-    "dev:server": "tsx src/server.ts",
+    "dev:server": "nodemon --watch src --ext ts,js,json --exec tsx src/server.ts",
     "dev:frontend": "vite dev"
   },
   "keywords": [],
@@ -21,6 +21,7 @@
     "@sveltejs/adapter-node": "^5.4.0",
     "@sveltejs/kit": "^2.49.2",
     "@types/node": "^20.10.0",
+    "nodemon": "^3.1.9",
     "svelte": "^5.46.1",
     "tsx": "^4.21.0",
     "typescript": "^5.3.3",
