@@ -1,5 +1,6 @@
 <script lang="ts">
   import { backendClient, type GetInfoResponse } from '../../frontendApiClient';
+  import { handleApiCall } from '../../utils/apiHelper';
   import DeviceCard from '../../components/DeviceCard.svelte';
 
   let info = $state<GetInfoResponse | null>(null);
@@ -7,20 +8,15 @@
   let error = $state('');
 
   async function fetchDevices() {
+    loading = true;
+    error = '';
     try {
-      loading = true;
-      error = '';
-      const response = await backendClient.getInfo();
-      if (response.status === 200) {
-        info = response.body;
-      } else if (response.status === 500) {
-        error = response.body.error;
-      } else {
-        error = 'Unexpected response from server';
-      }
+      info = await handleApiCall(
+        () => backendClient.getInfo(),
+        'Failed to get info. Make sure config.toml is properly configured.'
+      );
     } catch (e) {
-      error = 'Failed to get info. Make sure config.toml is properly configured.';
-      console.error('Error:', e);
+      error = (e as Error).message;
     } finally {
       loading = false;
     }

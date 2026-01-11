@@ -1,5 +1,6 @@
 <script lang="ts">
   import { backendClient, type GetInfoResponse } from '../frontendApiClient';
+  import { handleApiUpdate } from '../utils/apiHelper';
 
   interface Props {
     device: GetInfoResponse['devices'][0];
@@ -15,85 +16,67 @@
   async function updateBrightness(value: number) {
     if (updating || value === device.brightness) return;
 
-    try {
-      updating = true;
-      const response = await backendClient.setBrightness({
-        body: {
-          device_id: device.id,
-          brightness: value,
-        },
-      });
-
-      if (response.status === 200) {
+    updating = true;
+    const success = await handleApiUpdate(
+      () =>
+        backendClient.setBrightness({
+          body: {
+            device_id: device.id,
+            brightness: value,
+          },
+        }),
+      () => {
         device.brightness = value;
-      } else if (response.status === 500) {
-        console.error('Failed to set brightness:', response.body.error);
-        // Revert to original value
+      },
+      () => {
         brightness = device.brightness;
       }
-    } catch (e) {
-      console.error('Error setting brightness:', e);
-      // Revert to original value
-      brightness = device.brightness;
-    } finally {
-      updating = false;
-    }
+    );
+    updating = false;
   }
 
   async function updateMode(value: string) {
     if (updating || value === device.mode) return;
 
-    try {
-      updating = true;
-      const response = await backendClient.setMode({
-        body: {
-          device_id: device.id,
-          mode: value as any,
-        },
-      });
-
-      if (response.status === 200) {
+    updating = true;
+    const success = await handleApiUpdate(
+      () =>
+        backendClient.setMode({
+          body: {
+            device_id: device.id,
+            mode: value as any,
+          },
+        }),
+      () => {
         device.mode = value;
-      } else if (response.status === 500) {
-        console.error('Failed to set mode:', response.body.error);
-        // Revert to original value
+      },
+      () => {
         mode = device.mode;
       }
-    } catch (e) {
-      console.error('Error setting mode:', e);
-      // Revert to original value
-      mode = device.mode;
-    } finally {
-      updating = false;
-    }
+    );
+    updating = false;
   }
 
   async function updateEffect(value: string | null) {
     if (updating || value === device.effect_id) return;
 
-    try {
-      updating = true;
-      const response = await backendClient.chooseEffect({
-        body: {
-          device_id: device.id,
-          effect_id: value,
-        },
-      });
-
-      if (response.status === 200) {
+    updating = true;
+    const success = await handleApiUpdate(
+      () =>
+        backendClient.chooseEffect({
+          body: {
+            device_id: device.id,
+            effect_id: value,
+          },
+        }),
+      () => {
         device.effect_id = value;
-      } else if (response.status === 500) {
-        console.error('Failed to set effect:', response.body.error);
-        // Revert to original value
-        device.effect_id = device.effect_id;
+      },
+      () => {
+        effect_id = device.effect_id;
       }
-    } catch (e) {
-      console.error('Error setting effect:', e);
-      // Revert to original value
-      device.effect_id = device.effect_id;
-    } finally {
-      updating = false;
-    }
+    );
+    updating = false;
   }
 </script>
 

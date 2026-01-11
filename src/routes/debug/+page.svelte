@@ -5,6 +5,7 @@
     type StatusResponse,
     type GetInfoResponse,
   } from '../../frontendApiClient';
+  import { handleApiCall } from '../../utils/apiHelper';
 
   let message = $state('');
   let info = $state<GetInfoResponse | null>(null);
@@ -13,60 +14,46 @@
   let error = $state('');
 
   async function fetchHello() {
+    loading = true;
+    error = '';
     try {
-      loading = true;
-      error = '';
-      const response = await backendClient.hello();
-
-      if (response.status === 200) {
-        message = response.body.message;
-      } else {
-        error = 'Unexpected response from server';
-      }
+      const result = await handleApiCall(
+        () => backendClient.hello(),
+        'Failed to connect to backend. Make sure the backend server is running on port 3001.'
+      );
+      message = result.message;
     } catch (e) {
-      error = 'Failed to connect to backend. Make sure the backend server is running on port 3001.';
-      console.error('Error:', e);
+      error = (e as Error).message;
     } finally {
       loading = false;
     }
   }
 
   async function fetchInfo() {
+    loading = true;
+    error = '';
     try {
-      loading = true;
-      error = '';
-      const response = await backendClient.getInfo();
-      if (response.status === 200) {
-        info = response.body;
-      } else if (response.status === 500) {
-        error = response.body.error;
-      } else {
-        error = 'Unexpected response from server';
-      }
+      info = await handleApiCall(
+        () => backendClient.getInfo(),
+        'Failed to get info. Make sure config.toml is properly configured.'
+      );
     } catch (e) {
-      error = 'Failed to get info. Make sure config.toml is properly configured.';
-      console.error('Error:', e);
+      error = (e as Error).message;
     } finally {
       loading = false;
     }
   }
 
   async function fetchStatus() {
+    loading = true;
+    error = '';
     try {
-      loading = true;
-      error = '';
-      const response = await backendClient.status();
-
-      if (response.status === 200) {
-        status = response.body;
-      } else if (response.status === 500 || response.status === 503) {
-        error = response.body.error;
-      } else {
-        error = 'Unexpected response from server';
-      }
+      status = await handleApiCall(
+        () => backendClient.status(),
+        'Failed to get device status. Make sure config.toml is properly configured.'
+      );
     } catch (e) {
-      error = 'Failed to get device status. Make sure config.toml is properly configured.';
-      console.error('Error:', e);
+      error = (e as Error).message;
     } finally {
       loading = false;
     }
