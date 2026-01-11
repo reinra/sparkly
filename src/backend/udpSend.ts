@@ -1,5 +1,6 @@
 import dgram from 'dgram';
 import { promisify } from 'util';
+import { logger } from './logger';
 
 let client: dgram.Socket | null = null;
 
@@ -17,7 +18,7 @@ export async function sendMessage(message: string | Buffer, port: number, addres
       if (err) {
         reject(err);
       } else {
-        console.log('Message sent!');
+        logger.debug('UDP message sent');
         resolve();
       }
     });
@@ -39,7 +40,7 @@ export async function closeUdpSocket() {
     const closeAsync = promisify(client.close).bind(client);
     await closeAsync();
     client = null;
-    console.log('UDP socket closed.');
+    logger.debug('UDP socket closed');
   }
 }
 

@@ -1,4 +1,5 @@
 import { TwinklyApiClient } from '../apiClient';
+import { logger } from '../logger';
 import type { LedValue } from './Color';
 import { hasWhiteChannel, LedType } from './Color';
 import type { LedMapper } from './LedMapper';
@@ -42,7 +43,7 @@ export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
       for (let i = 0; i < numberOfLeds; i++) {
         await copyValues(color, gestalt.led_profile, ledValues);
       }
-      console.log(`\nSending '${effect.getName()}' LED values of ${JSON.stringify(color)} to ${apiClient.getIp()}...`);
+      logger.withMetadata({ color, device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' LED values`);
       await apiClient.sendLedValues(ledValues);
 
       i++;
@@ -64,11 +65,11 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
     }
     const mappedFrame = applyMapper(frame, mapper);
     const ledValues: number[] = [];
-    console.log(`\nSending '${effect.getName()}' ${numberOfLeds} LED values to ${apiClient.getIp()}...`);
+    logger.withMetadata({ device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' ${numberOfLeds} LED values`);
     let i = 0;
     for (const color of mappedFrame) {
       i++;
-      console.log(`  ${i}. ${JSON.stringify(color)}`);
+      logger.withMetadata({ color }).debug(`LED ${i}`);
       await copyValues(color, gestalt.led_profile, ledValues);
     }
     await apiClient.sendLedValues(ledValues);
@@ -92,7 +93,7 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
       for (const color of mappedFrame) {
         await copyValues(color, gestalt.led_profile, ledValues);
       }
-      console.log(`Sending '${effect.getName()}' LED values to ${apiClient.getIp()}...`);
+      logger.withMetadata({ device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' LED values`);
       await apiClient.sendLedValues(ledValues);
       i++;
       if (i >= maxIterations) {

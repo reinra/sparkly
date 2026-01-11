@@ -3,6 +3,7 @@ import type { ApiFetcher } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from '../apiContract';
+import { logger } from './logger';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
@@ -111,7 +112,7 @@ export class TwinklyApiClient {
    */
   private createApiFetcherWithErrorHandling(): ApiFetcher {
     return async (args) => {
-      console.log(`Making request to ${args.method} ${args.path} with body: ${JSON.stringify(args.body)}`);
+      logger.withMetadata({ body: args.body }).debug(`Making request to ${args.method} ${args.path}`);
       return await this.fetchWithErrorHandling(args);
     };
   }
@@ -132,12 +133,12 @@ export class TwinklyApiClient {
       };
 
       // Make the initial request
-      console.log(`Making request to ${args.method} ${args.path} with body: ${JSON.stringify(args.body)}`);
+      logger.withMetadata({ body: args.body }).debug(`Making request to ${args.method} ${args.path}`);
       const response = await this.fetchWithErrorHandling(argsWithAuth);
 
       // If we get a 401, attempt to recover by re-authenticating and retrying once
       if (response.status === 401) {
-        console.log('Received 401 Unauthorized. Clearing token and re-authenticating...');
+        logger.debug('Received 401 Unauthorized. Clearing token and re-authenticating');
 
         // Clear the invalid token
         this.authenticationToken = null;
@@ -146,7 +147,7 @@ export class TwinklyApiClient {
         await this.login();
 
         // Retry the original request with the new token
-        console.log('Retrying request with new token...');
+        logger.debug('Retrying request with new token');
         const retryArgs = {
           ...args,
           headers: {
@@ -178,27 +179,27 @@ export class TwinklyApiClient {
   }
 
   async gestalt() {
-    console.log('\nFetching device status...');
+    logger.debug('Fetching device status');
     const result = await this.clientNoAuth.gestalt();
     expect200(result);
     expect1000(result.body);
-    console.log('Status Response validated:', JSON.stringify(result.body, null, 2));
+    logger.withMetadata({ response: result.body }).debug('Status Response validated');
     this.lastGestaltResponse = result.body;
     return result.body;
   }
 
   async getSummary() {
     await this.ensureAuthenticated();
-    console.log('\nFetching device summary...');
+    logger.debug('Fetching device summary');
     const result = await this.client.summary();
     expect200(result);
     expect1000(result.body);
-    console.log('Summary Response validated:', JSON.stringify(result.body, null, 2));
+    logger.withMetadata({ response: result.body }).debug('Summary Response validated');
     return result.body;
   }
 
   private async login() {
-    console.log('\nSending login request with challenge...');
+    logger.debug('Sending login request with challenge');
     const loginResult = await this.clientNoAuth.login({
       body: {
         challenge: challenge,
@@ -206,10 +207,10 @@ export class TwinklyApiClient {
     });
     expect200(loginResult);
     expect1000(loginResult.body);
-    console.log('Login Response validated:', JSON.stringify(loginResult.body, null, 2));
+    logger.withMetadata({ response: loginResult.body }).debug('Login Response validated');
     this.authenticationToken = loginResult.body.authentication_token;
 
-    console.log('\nSending verify request...');
+    logger.debug('Sending verify request');
     const verifyResult = await this.client.verify({
       body: {
         'challenge-response': loginResult.body['challenge-response'],
@@ -217,13 +218,13 @@ export class TwinklyApiClient {
     });
     expect200(verifyResult);
     expect1000(verifyResult.body);
-    console.log('Verify Response validated:', JSON.stringify(verifyResult.body, null, 2));
+    logger.withMetadata({ response: verifyResult.body }).debug('Verify Response validated');
   }
 
   async setMode(mode: Mode) {
     await this.ensureAuthenticated();
 
-    console.log(`\nSetting device mode to "${mode}"...`);
+    logger.debug(`Setting device mode to "${mode}"`);
     const result = await this.client.setMode({
       body: {
         mode,
@@ -231,12 +232,12 @@ export class TwinklyApiClient {
     });
     expect200(result);
     expect1000((result as any).body);
-    console.log('Set Mode Response validated:', JSON.stringify((result as any).body, null, 2));
+    logger.withMetadata({ response: (result as any).body }).debug('Set Mode Response validated');
   }
 
   async setBrightnessAbsolute(value: number) {
     await this.ensureAuthenticated();
-    console.log(`\nSetting brightness to absolute value ${value}...`);
+    logger.debug(`Setting brightness to absolute value ${value}`);
     const result = await this.client.setBrightness({
       body: {
         mode: EnabledDisabledSchema.enum.enabled,
@@ -246,36 +247,36 @@ export class TwinklyApiClient {
     });
     expect200(result);
     expect1000((result as any).body);
-    console.log('Set Brightness Response validated:', JSON.stringify((result as any).body, null, 2));
+    logger.withMetadata({ response: (result as any).body }).debug('Set Brightness Response validated');
   }
 
   async listMovies() {
     await this.ensureAuthenticated();
-    console.log(`\nListing movies...`);
+    logger.debug('Listing movies');
     const result = await this.client.listMovies();
     expect200(result);
     expect1000(result.body);
-    console.log('List Movies Response validated:', JSON.stringify(result.body, null, 2));
+    logger.withMetadata({ response: result.body }).debug('List Movies Response validated');
     return result.body;
   }
 
   async getLayout() {
     await this.ensureAuthenticated();
-    console.log(`\nFetching LED layout...`);
+    logger.debug('Fetching LED layout');
     const result = await this.client.getLayout();
     expect200(result);
     expect1000(result.body);
-    console.log('Get Layout Response validated:', JSON.stringify(result.body, null, 2));
+    logger.withMetadata({ response: result.body }).debug('Get Layout Response validated');
     return result.body;
   }
 
   async getLedConfig() {
     await this.ensureAuthenticated();
-    console.log(`\nFetching LED config...`);
+    logger.debug('Fetching LED config');
     const result = await this.client.getLedConfig();
     expect200(result);
     expect1000(result.body);
-    console.log('Get LED Config Response validated:', JSON.stringify(result.body, null, 2));
+    logger.withMetadata({ response: result.body }).debug('Get LED Config Response validated');
     return result.body;
   }
 
@@ -283,7 +284,7 @@ export class TwinklyApiClient {
     await this.ensureGestaltFetched();
     await this.ensureAuthenticated();
 
-    console.log(`\nSending LED values over UDP...`);
+    logger.withMetadata({ ledCount: ledValues.length / 3 }).debug('Sending LED values over UDP');
     await sendLedValues(
       {
         authentication_token: this.authenticationToken!,

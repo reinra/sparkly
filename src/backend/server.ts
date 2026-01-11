@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { TwinklyApiClient, DeviceUnreachableError } from './apiClient';
 import { loadConfig } from './config';
+import { logger, logError, withMeta } from './logger';
 import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
 import { z } from 'zod';
@@ -57,13 +58,13 @@ app.get('/api/info', async (req, res) => {
     try {
       gestalt = await device.apiClient.gestalt();
     } catch (error) {
-      console.error(`Error fetching gestalt for device ${device.id}:`, error);
+      logError(error).error(`Error fetching gestalt for device ${device.id}`);
     }
     let summary = null;
     try {
       summary = await device.apiClient.getSummary();
     } catch (error) {
-      console.error(`Error fetching summary for device ${device.id}:`, error);
+      logError(error).error(`Error fetching summary for device ${device.id}`);
     }
 
     deviceList.push({
@@ -103,18 +104,15 @@ app.get('/api/status', async (req, res) => {
     res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Zod validation error:', error.errors);
+      logger.withMetadata({ errors: error.errors }).error('Zod validation error');
     } else if (error instanceof DeviceUnreachableError) {
-      console.error('Device unreachable:', error.message);
+      logger.withError(error).error('Device unreachable');
       const errorResponse = backendApiContract.status.responses[500].parse({
         error: error.message,
       });
       return res.status(503).json(errorResponse);
     } else {
-      console.error('Error getting device status:', error instanceof Error ? error.message : String(error));
-      if (error instanceof Error && error.stack) {
-        console.error('Stack trace:', error.stack);
-      }
+      logError(error).error('Error getting device status');
     }
     const errorResponse = backendApiContract.status.responses[500].parse({
       error: 'Failed to get device status',
@@ -144,7 +142,7 @@ app.post('/api/mode', async (req, res) => {
     });
     res.json(response);
   } catch (error) {
-    console.error('Error setting mode:', error);
+    logError(error).error('Error setting mode');
     if (error instanceof z.ZodError) {
       const errorResponse = backendApiContract.setMode.responses[500].parse({
         error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
@@ -183,7 +181,7 @@ app.post('/api/brightness', async (req, res) => {
     });
     res.json(response);
   } catch (error) {
-    console.error('Error setting brightness:', error);
+    logError(error).error('Error setting brightness');
     if (error instanceof z.ZodError) {
       const errorResponse = backendApiContract.setBrightness.responses[500].parse({
         error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
@@ -258,7 +256,7 @@ app.post('/api/effect', async (req, res) => {
     });
     res.json(response);
   } catch (error) {
-    console.error('Error choosing effect:', error);
+    logError(error).error('Error choosing effect');
     if (error instanceof z.ZodError) {
       const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
         error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
@@ -279,5 +277,5 @@ app.post('/api/effect', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  logger.info(`Backend server running on http://localhost:${PORT}`);
 });

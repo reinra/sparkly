@@ -1,5 +1,6 @@
 import type { LedValue } from './Color';
 import type { FrameInput, StaticStripEffect } from './StaticStripEffect';
+import { logger } from '../logger';
 
 export interface StripEffect {
   getName(): string;
@@ -36,7 +37,7 @@ export class RotatingStrictEffect implements StripEffect {
     };
     while (true) {
       for (let frameIndex = 0; frameIndex < this.framesPerRotation * this.zoomFactor; frameIndex++) {
-        console.log(`Frame index: ${frameIndex}`);
+        logger.debug(`Frame index: ${frameIndex}`);
         const baseFrame = this.target.getFrame(adjustedInput);
         const segmentLength = adjustedInput.led_count / this.framesPerRotation;
         const ledValues: LedValue[] = [];

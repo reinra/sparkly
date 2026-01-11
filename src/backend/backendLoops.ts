@@ -1,3 +1,5 @@
+import { logger, logError } from './logger';
+
 export interface Task {
   run: (abort: AbortSignal) => Promise<void>;
 }
@@ -17,21 +19,21 @@ export function startAndAbortPreviousTask(key: string, task: Task) {
   } catch (error) {
     // Ignore AbortError when aborting previous task
     if (!isAbortError(error)) {
-      console.error(`Error aborting previous task with key '${key}':`, error);
+      logError(error).error(`Error aborting previous task with key '${key}'`);
     }
   }
 
   const abortController = new AbortController();
   abortControllers[key] = abortController;
   setImmediate(async () => {
-    console.log(`Starting task with key '${key}'...`);
+    logger.info(`Starting task with key '${key}'`);
     try {
       await task.run(abortController.signal);
     } catch (error) {
       if (isAbortError(error)) {
-        console.log(`Task with key '${key}' was aborted.`);
+        logger.info(`Task with key '${key}' was aborted`);
       } else {
-        console.error(`Error in task with key '${key}':`, error);
+        logError(error).error(`Error in task with key '${key}'`);
       }
     }
   });
@@ -39,7 +41,7 @@ export function startAndAbortPreviousTask(key: string, task: Task) {
 
 export function abortTask(key: string) {
   if (abortControllers[key]) {
-    console.log(`Aborting running task with key '${key}'...`);
+    logger.info(`Aborting running task with key '${key}'`);
     try {
       (abortControllers[key] as AbortController).abort();
     } catch (error) {
@@ -50,6 +52,6 @@ export function abortTask(key: string) {
     }
     delete abortControllers[key];
   } else {
-    console.log(`No running task with key '${key}' to abort.`);
+    logger.info(`No running task with key '${key}' to abort`);
   }
 }
