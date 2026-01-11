@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { TwinklyApiClient, DeviceUnreachableError } from './apiClient';
 import { loadConfig } from './config';
-import { Mode } from './apiContract';
+import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
 import { z } from 'zod';
 import { effects } from './effects/EffectLibrary';

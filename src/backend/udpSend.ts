@@ -25,26 +25,26 @@ export async function sendMessage(message: string | Buffer, port: number, addres
 }
 
 export async function sendLedValues(request: SetLedValuesRequestSchema, port: number, address: string) {
-    const header = Buffer.from([0x01]); // Example header
-    const authTokenBuffer = Buffer.from(request.authentication_token, 'base64');
-    const ledCountBuffer = Buffer.alloc(1);
-    ledCountBuffer.writeUInt8(request.led_count, 0);
-    const ledValuesBuffer = Buffer.from(request.led_values);
-    const message = Buffer.concat([header, authTokenBuffer, ledCountBuffer, ledValuesBuffer]);
-    await sendMessage(message, port, address);
+  const header = Buffer.from([0x01]); // Example header
+  const authTokenBuffer = Buffer.from(request.authentication_token, 'base64');
+  const ledCountBuffer = Buffer.alloc(1);
+  ledCountBuffer.writeUInt8(request.led_count, 0);
+  const ledValuesBuffer = Buffer.from(request.led_values);
+  const message = Buffer.concat([header, authTokenBuffer, ledCountBuffer, ledValuesBuffer]);
+  await sendMessage(message, port, address);
 }
 
 export async function closeUdpSocket() {
-    if (client) {
-        const closeAsync = promisify(client.close).bind(client);
-        await closeAsync();
-        client = null;
-        console.log('UDP socket closed.');
-    }
+  if (client) {
+    const closeAsync = promisify(client.close).bind(client);
+    await closeAsync();
+    client = null;
+    console.log('UDP socket closed.');
+  }
 }
 
 export interface SetLedValuesRequestSchema {
-    authentication_token: string;
-    led_count: number;
-    led_values: number[];
+  authentication_token: string;
+  led_count: number;
+  led_values: number[];
 }

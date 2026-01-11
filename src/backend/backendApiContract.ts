@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { GestaltResponseSchema, SummaryResponseSchema, Mode } from './apiContract';
-import { set } from 'zod/v4';
+import { GestaltResponseSchema, SummaryResponseSchema, Mode } from '../apiContract';
 
 // Request/Response schemas for backend API
 const HelloResponseSchema = z.object({

@@ -1,5 +1,5 @@
 import { initClient } from '@ts-rest/core';
-import { backendApiContract } from './backendApiContract';
+import { backendApiContract } from './backend/backendApiContract';
 
 // Create a type-safe client for the backend API
 export const backendClient = initClient(backendApiContract, {
@@ -16,5 +16,5 @@ export type {
   StatusResponse,
   SetModeRequest,
   SetModeResponse,
-} from './backendApiContract';
+} from './backend/backendApiContract';
 export { Mode } from './apiContract';

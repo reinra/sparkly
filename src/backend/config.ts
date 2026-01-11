@@ -9,15 +9,17 @@ const __dirname = dirname(__filename);
 
 // Define config schema with Zod
 const ConfigSchema = z.object({
-  device: z.array(z.object({
-    ip: z.string().ip(),
-  })),
+  device: z.array(
+    z.object({
+      ip: z.string().ip(),
+    })
+  ),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(): Config {
-  const configPath = join(__dirname, '..', 'config.toml');
+  const configPath = join(__dirname, '../..', 'config.toml');
 
   if (!existsSync(configPath)) {
     throw new Error(
