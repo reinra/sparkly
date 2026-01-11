@@ -65,7 +65,9 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
     }
     const mappedFrame = applyMapper(frame, mapper);
     const ledValues: number[] = [];
-    logger.withMetadata({ device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' ${numberOfLeds} LED values`);
+    logger
+      .withMetadata({ device: apiClient.getIp() })
+      .debug(`Sending '${effect.getName()}' ${numberOfLeds} LED values`);
     let i = 0;
     for (const color of mappedFrame) {
       i++;

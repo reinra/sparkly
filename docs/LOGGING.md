@@ -34,12 +34,14 @@ Use `.withMetadata()` to add structured data to your logs:
 ```typescript
 import { logger } from './logger';
 
-logger.withMetadata({ 
-  method: 'POST',
-  path: '/api/mode',
-  duration: 45,
-  status: 200
-}).info('API request completed');
+logger
+  .withMetadata({
+    method: 'POST',
+    path: '/api/mode',
+    duration: 45,
+    status: 200,
+  })
+  .info('API request completed');
 ```
 
 ### Logging Errors
