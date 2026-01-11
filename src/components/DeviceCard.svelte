@@ -13,7 +13,8 @@
   let effect_id = $state(device.effect_id);
   let updating = $state(false);
 
-  async function updateBrightness(value: number) {
+  async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
+    const value = Number(event.currentTarget.value);
     if (updating || value === device.brightness) return;
 
     updating = true;
@@ -35,7 +36,8 @@
     updating = false;
   }
 
-  async function updateMode(value: string) {
+  async function updateMode(event: Event & { currentTarget: HTMLSelectElement }) {
+    const value = event.currentTarget.value;
     if (updating || value === device.mode) return;
 
     updating = true;
@@ -57,7 +59,8 @@
     updating = false;
   }
 
-  async function updateEffect(value: string | null) {
+  async function updateEffect(event: Event & { currentTarget: HTMLSelectElement }) {
+    const value = event.currentTarget.value || null;
     if (updating || value === device.effect_id) return;
 
     updating = true;
@@ -92,18 +95,11 @@
       <p><strong>LED Count:</strong> {device.led_count}</p>
     {/if}
     <p><strong>Brightness:</strong> {brightness}%</p>
-    <input
-      type="range"
-      min="0"
-      max="100"
-      bind:value={brightness}
-      onchange={() => updateBrightness(brightness)}
-      disabled={updating}
-    />
+    <input type="range" min="0" max="100" bind:value={brightness} onchange={updateBrightness} disabled={updating} />
     {#if device.mode}
       <p>
         <strong>Mode:</strong>
-        <select bind:value={mode} onchange={() => updateMode(mode)} disabled={updating}>
+        <select bind:value={mode} onchange={updateMode} disabled={updating}>
           <option value="off">Off</option>
           <option value="demo">Demo</option>
           <option value="effect">Effect</option>
@@ -114,7 +110,7 @@
     {/if}
     <p>
       <strong>Effect:</strong>
-      <select bind:value={effect_id} onchange={(e) => updateEffect(effect_id)} disabled={updating}>
+      <select bind:value={effect_id} onchange={updateEffect} disabled={updating}>
         <option value={null}>(None)</option>
         {#each effects as effect}
           <option value={effect.id}>{effect.id}</option>
