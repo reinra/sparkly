@@ -8,9 +8,9 @@
   }
 
   let { device, effects }: Props = $props();
-  let brightness = $state(device.brightness);
-  let mode = $state(device.mode);
-  let effect_id = $state(device.effect_id);
+  let brightness = $derived(device.brightness);
+  let mode = $derived(device.mode);
+  let effect_id = $derived(device.effect_id);
   let updating = $state(false);
 
   async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
