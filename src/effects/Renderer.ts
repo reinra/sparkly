@@ -1,13 +1,13 @@
 import { TwinklyApiClient } from '../apiClient';
-import { hasWhiteChannel, LedType } from './Color';
 import type { LedValue } from './Color';
+import { hasWhiteChannel, LedType } from './Color';
 import type { LedMapper } from './LedMapper';
 import type { SameColorEffect } from './SameColorEffect';
 import type { StaticStripEffect } from './StaticStripEffect';
 import type { StripEffect } from './StripEffect';
 
 export interface Renderer<T> {
-  render(effect: T, apiClient: TwinklyApiClient, mapper: LedMapper): void;
+  render(effect: T, apiClient: TwinklyApiClient, mapper: LedMapper, signal: AbortSignal): void;
 }
 
 export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect;
@@ -16,13 +16,13 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
   private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
   private readonly stripEffectRenderer = new StripEffectRenderer();
-  async render(effect: AnyEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
+  async render(effect: AnyEffect, apiClient: TwinklyApiClient, mapper: LedMapper, signal: AbortSignal) {
     if ('getColors' in effect) {
-      await this.sameColorEffectRenderer.render(effect, apiClient, mapper);
+      await this.sameColorEffectRenderer.render(effect, apiClient, mapper, signal);
     } else if ('getFrame' in effect) {
-      await this.staticStripEffectRenderer.render(effect, apiClient, mapper);
+      await this.staticStripEffectRenderer.render(effect, apiClient, mapper, signal);
     } else if ('getFrames' in effect) {
-      await this.stripEffectRenderer.render(effect, apiClient, mapper);
+      await this.stripEffectRenderer.render(effect, apiClient, mapper, signal);
     } else {
       throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
     }
@@ -30,13 +30,14 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
 }
 
 export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
-  async render(effect: SameColorEffect, apiClient: TwinklyApiClient, _mapper: LedMapper) {
+  async render(effect: SameColorEffect, apiClient: TwinklyApiClient, _mapper: LedMapper, signal: AbortSignal) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const colors = effect.getColors();
     const maxIterations = 1000;
     let i = 0;
     for (const color of colors) {
+      signal.throwIfAborted();
       const ledValues: number[] = [];
       for (let i = 0; i < numberOfLeds; i++) {
         await copyValues(color, gestalt.led_profile, ledValues);
@@ -54,7 +55,7 @@ export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
 }
 
 export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
-  async render(effect: StaticStripEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
+  async render(effect: StaticStripEffect, apiClient: TwinklyApiClient, mapper: LedMapper, signal: AbortSignal) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
@@ -75,13 +76,14 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
 }
 
 export class StripEffectRenderer implements Renderer<StripEffect> {
-  async render(effect: StripEffect, apiClient: TwinklyApiClient, mapper: LedMapper) {
+  async render(effect: StripEffect, apiClient: TwinklyApiClient, mapper: LedMapper, signal: AbortSignal) {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
     const maxIterations = 1000;
     let i = 0;
     for (const frame of frames) {
+      signal.throwIfAborted();
       if (frame.length !== numberOfLeds) {
         throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${numberOfLeds}`);
       }

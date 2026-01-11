@@ -39,7 +39,8 @@ async function callApi(this: any) {
     }
 
     const renderer = new AnyEffectRenderer();
-    await renderer.render(effect, apiClient, mapper);
+    const controller = new AbortController();
+    await renderer.render(effect, apiClient, mapper, controller.signal);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Validation error:', JSON.stringify(error.errors, null, 2));
