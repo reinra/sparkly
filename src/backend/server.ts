@@ -44,6 +44,15 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Helper function to get device or throw error
+function getDeviceOrError(device_id: string): Device {
+  const device = devices[device_id];
+  if (!device) {
+    throw new Error(`Device with ID ${device_id} not found`);
+  }
+  return device;
+}
+
 async function prepareLedMapping(device: Device) {
   const ledConfig = await device.apiClient.getLedConfig();
 
@@ -117,13 +126,7 @@ registerRoutes(app, backendApiContract, {
 
   setMode: async (req, res) => {
     const { device_id, mode } = req.body;
-    const device = devices[device_id];
-    if (!device) {
-      res.status(404).json({
-        error: `Device with ID ${device_id} not found`,
-      });
-      return;
-    }
+    const device = getDeviceOrError(device_id);
     await device.apiClient.setMode(mode);
 
     res.json({
@@ -134,13 +137,7 @@ registerRoutes(app, backendApiContract, {
 
   setBrightness: async (req, res) => {
     const { device_id, brightness } = req.body;
-    const device = devices[device_id];
-    if (!device) {
-      res.status(404).json({
-        error: `Device with ID ${device_id} not found`,
-      });
-      return;
-    }
+    const device = getDeviceOrError(device_id);
     await device.apiClient.setBrightnessAbsolute(brightness);
 
     res.json({
@@ -150,13 +147,7 @@ registerRoutes(app, backendApiContract, {
 
   chooseEffect: async (req, res) => {
     const { device_id, effect_id } = req.body;
-    const device = devices[device_id];
-    if (!device) {
-      res.status(404).json({
-        error: `Device with ID ${device_id} not found`,
-      });
-      return;
-    }
+    const device = getDeviceOrError(device_id);
     const taskKey = device_id;
 
     if (effect_id) {

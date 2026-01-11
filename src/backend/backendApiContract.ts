@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { GestaltResponseSchema, SummaryResponseSchema, Mode } from '../apiContract';
 
 // Request/Response schemas for backend API
+// Common base schema for requests that require device_id
+const DeviceRequestBaseSchema = z.object({
+  device_id: z.string(),
+});
+
 const HelloResponseSchema = z.object({
   message: z.string(),
 });
@@ -44,8 +49,7 @@ const StatusResponseSchema = z.object({
   ledConfig: LedConfigResponseSchema,
 });
 
-const SetModeRequestSchema = z.object({
-  device_id: z.string(),
+const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
   mode: z.nativeEnum(Mode),
 });
 
@@ -54,13 +58,11 @@ const SetModeResponseSchema = z.object({
   mode: z.nativeEnum(Mode),
 });
 
-const SetBrightnessRequestSchema = z.object({
-  device_id: z.string(),
+const SetBrightnessRequestSchema = DeviceRequestBaseSchema.extend({
   brightness: z.number().min(0).max(100),
 });
 
-const ChooseEffectRequestSchema = z.object({
-  device_id: z.string(),
+const ChooseEffectRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string().nullable(),
 });
 
