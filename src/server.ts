@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { AnyEffectRenderer } from './effects/Renderer';
-import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
+import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 
 const config = loadConfig();
 // Use the first device for now
