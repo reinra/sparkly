@@ -41,7 +41,7 @@
   {:else if info?.devices && info.devices.length > 0}
     <div class="devices-grid">
       {#each info.devices as device}
-        <DeviceCard {device} />
+        <DeviceCard {device} effects={info.effects} />
       {/each}
     </div>
   {:else}

@@ -18,6 +18,7 @@ const GetInfoResponseSchema = z.object({
       led_count: z.number().optional(),
       brightness: z.number().min(0).max(100).optional(),
       mode: z.nativeEnum(Mode).optional(),
+      effect_id: z.string().nullable(),
     })
   ),
   effects: z.array(
@@ -57,6 +58,11 @@ const SetModeResponseSchema = z.object({
 const SetBrightnessRequestSchema = z.object({
   device_id: z.string(),
   brightness: z.number().min(0).max(100),
+});
+
+const ChooseEffectRequestSchema = z.object({
+  device_id: z.string(),
+  effect_id: z.string().nullable(),
 });
 
 const GenericSuccessResponseSchema = z.object({
@@ -114,6 +120,15 @@ export const backendApiContract = c.router({
     method: 'POST',
     path: '/api/brightness',
     body: SetBrightnessRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  chooseEffect: {
+    method: 'POST',
+    path: '/api/effect',
+    body: ChooseEffectRequestSchema,
     responses: {
       200: GenericSuccessResponseSchema,
       500: ErrorResponseSchema,

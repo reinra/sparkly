@@ -3,11 +3,13 @@
 
   interface Props {
     device: GetInfoResponse['devices'][0];
+    effects: GetInfoResponse['effects'];
   }
 
-  let { device }: Props = $props();
+  let { device, effects }: Props = $props();
   let brightness = $state(device.brightness);
   let mode = $state(device.mode);
+  let effect_id = $state(device.effect_id);
   let updating = $state(false);
 
   async function updateBrightness(value: number) {
@@ -65,6 +67,34 @@
       updating = false;
     }
   }
+
+  async function updateEffect(value: string | null) {
+    if (updating || value === device.effect_id) return;
+
+    try {
+      updating = true;
+      const response = await backendClient.chooseEffect({
+        body: {
+          device_id: device.id,
+          effect_id: value,
+        },
+      });
+
+      if (response.status === 200) {
+        device.effect_id = value;
+      } else if (response.status === 500) {
+        console.error('Failed to set effect:', response.body.error);
+        // Revert to original value
+        device.effect_id = device.effect_id;
+      }
+    } catch (e) {
+      console.error('Error setting effect:', e);
+      // Revert to original value
+      device.effect_id = device.effect_id;
+    } finally {
+      updating = false;
+    }
+  }
 </script>
 
 <div class="device-card">
@@ -99,6 +129,15 @@
         </select>
       </p>
     {/if}
+    <p>
+      <strong>Effect:</strong>
+      <select bind:value={effect_id} onchange={(e) => updateEffect(effect_id)} disabled={updating}>
+        <option value={null}>(None)</option>
+        {#each effects as effect}
+          <option value={effect.id}>{effect.id}</option>
+        {/each}
+      </select>
+    </p>
   </div>
 </div>
 

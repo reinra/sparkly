@@ -6,15 +6,21 @@ import { Mode } from './apiContract';
 import { backendApiContract } from './backendApiContract';
 import { z } from 'zod';
 import { effects } from './effects/EffectLibrary';
+import { abortTask, startAndAbortPreviousTask } from './backendLoops';
+import { AnyEffectRenderer } from './effects/Renderer';
+import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 
 const config = loadConfig();
 // Use the first device for now
 const apiClient = new TwinklyApiClient(config.device[0].ip);
 
+const renderer = new AnyEffectRenderer();
+
 interface Device {
   id: string;
   alias: string;
   apiClient: TwinklyApiClient;
+  effect_id: string | null;
 }
 // Initialize devices from config
 const devices: Record<string, Device> = Object.fromEntries(
@@ -24,6 +30,7 @@ const devices: Record<string, Device> = Object.fromEntries(
       id: `twinkly-${index + 1}`,
       alias: `Twinkly Device ${index + 1}`,
       apiClient: new TwinklyApiClient(device.ip),
+      effect_id: null,
     },
   ])
 );
@@ -67,6 +74,7 @@ app.get('/api/info', async (req, res) => {
       led_count: gestalt?.number_of_led,
       brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
       mode: summary?.led_mode?.mode,
+      effect_id: device.effect_id,
     });
   }
 
@@ -189,6 +197,81 @@ app.post('/api/brightness', async (req, res) => {
     } else {
       const errorResponse = backendApiContract.setBrightness.responses[500].parse({
         error: 'Failed to set brightness',
+      });
+      res.status(500).json(errorResponse);
+    }
+  }
+});
+
+async function prepareLedMapping(device: Device) {
+  const ledConfig = await device.apiClient.getLedConfig();
+
+  let mapper: LedMapper = new IdentityLedMapper();
+  if (ledConfig.strings.length === 2) {
+    const halfLength = ledConfig.strings[0].length;
+    mapper = new SegmentedLedMapper([
+      { startIndex: 0, mapper: new ReverseLedMapper(halfLength) },
+      { startIndex: halfLength, mapper: new IdentityLedMapper() },
+    ]);
+  }
+  return mapper;
+}
+
+app.post('/api/effect', async (req, res) => {
+  try {
+    // Validate request body
+    const validatedBody = backendApiContract.chooseEffect.body.parse(req.body);
+    const { device_id, effect_id } = validatedBody;
+    const device = devices[device_id];
+    if (!device) {
+      const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
+        error: `Device with ID ${device_id} not found`,
+      });
+      return res.status(404).json(errorResponse);
+    }
+    const taskKey = device_id;
+
+    if (effect_id) {
+      const effect = effects[effect_id];
+      if (!effect) {
+        const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
+          error: `Effect with ID ${effect_id} not found`,
+        });
+        return res.status(404).json(errorResponse);
+      }
+
+      device.effect_id = effect_id;
+      startAndAbortPreviousTask(taskKey, {
+        run: async (signal) => {
+          const ledMapper = await prepareLedMapping(device);
+          await device.apiClient.setMode(Mode.rt);
+          await renderer.render(effect, device.apiClient, ledMapper, signal);
+        },
+      });
+    } else {
+      device.effect_id = null;
+      abortTask(taskKey);
+    }
+
+    const response = backendApiContract.chooseEffect.responses[200].parse({
+      success: true,
+    });
+    res.json(response);
+  } catch (error) {
+    console.error('Error choosing effect:', error);
+    if (error instanceof z.ZodError) {
+      const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
+        error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
+      });
+      res.status(400).json(errorResponse);
+    } else if (error instanceof DeviceUnreachableError) {
+      const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
+        error: error.message,
+      });
+      res.status(503).json(errorResponse);
+    } else {
+      const errorResponse = backendApiContract.chooseEffect.responses[500].parse({
+        error: 'Failed to choose effect',
       });
       res.status(500).json(errorResponse);
     }
