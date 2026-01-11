@@ -8,10 +8,8 @@
     "build": "svelte-kit sync && tsc && vite build",
     "build:backend": "tsc",
     "build:frontend": "vite build",
-    "start": "node dist/index.js",
     "start:server": "tsx src/server.ts",
     "start:frontend": "vite dev",
-    "dev": "tsx src/index.ts",
     "dev:server": "nodemon --watch src --ext ts,js,json --exec tsx src/server.ts",
     "dev:frontend": "vite dev"
   },

@@ -25,13 +25,7 @@ npm install
 
 ### Running the Project
 
-#### Option 1: Run backend CLI (original functionality)
-
-```bash
-npm run dev
-```
-
-#### Option 2: Run backend server + frontend (new web interface)
+#### Run backend server + frontend (new web interface)
 
 In one terminal, start the backend server:
 
@@ -49,12 +43,10 @@ Then open your browser to http://localhost:5173
 
 ### Available Scripts
 
-- `npm run dev` - Run the original CLI application
 - `npm run dev:server` - Start the Express backend API server on port 3001
 - `npm run dev:frontend` - Start the SvelteKit frontend on port 5173
 - `npm run build` - Build the TypeScript backend
 - `npm run build:frontend` - Build the SvelteKit frontend
-- `npm start` - Run the compiled CLI application
 - `npm start:server` - Run the compiled backend server
 
 ## Project Structure
