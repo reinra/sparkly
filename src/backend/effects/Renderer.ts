@@ -83,8 +83,6 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
     const gestalt = await apiClient.gestalt();
     const numberOfLeds = gestalt.number_of_led;
     const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
-    const maxIterations = 1000;
-    let i = 0;
     for (const frame of frames) {
       signal.throwIfAborted();
       if (frame.length !== numberOfLeds) {
@@ -97,10 +95,6 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
       }
       logger.withMetadata({ device: apiClient.getIp() }).trace(`Sending '${effect.getName()}' LED values`);
       await apiClient.sendLedValues(ledValues);
-      i++;
-      if (i >= maxIterations) {
-        break;
-      }
       await sleep(10);
     }
   }
