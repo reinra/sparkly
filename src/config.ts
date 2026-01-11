@@ -1,13 +1,17 @@
 import { z } from 'zod';
 import { readFileSync, existsSync } from 'fs';
 import { parse as parseToml } from 'smol-toml';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Define config schema with Zod
 const ConfigSchema = z.object({
-  device: z.object({
+  device: z.array(z.object({
     ip: z.string().ip(),
-  }),
+  })),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

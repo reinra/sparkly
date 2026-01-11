@@ -1,5 +1,5 @@
-import { LedValue } from './Color';
-import { FrameInput, StaticStripEffect } from './StaticStripEffect';
+import type { LedValue } from './Color';
+import type { FrameInput, StaticStripEffect } from './StaticStripEffect';
 
 export interface StripEffect {
   getName(): string;

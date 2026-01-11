@@ -4,3 +4,6 @@ dist/
 .DS_Store
 .history
 config.toml
+.svelte-kit/
+build/
+.vite/

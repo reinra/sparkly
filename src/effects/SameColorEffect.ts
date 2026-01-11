@@ -1,4 +1,5 @@
-import { addWhiteIfMissing, getGradientColors, getMultiGradientColors, hasWhiteChannel, LedValue, RgbValue } from "./Color";
+import { addWhiteIfMissing, getGradientColors, getMultiGradientColors, hasWhiteChannel } from "./Color";
+import type { LedValue, RgbValue } from "./Color";
 
 export interface SameColorEffect {
     getName(): string;

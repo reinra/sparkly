@@ -17,7 +17,7 @@ const BasicResponseSchema = z.object({
   code: z.number(),
 });
 
-const GestaltResponseSchema = BasicResponseSchema.extend({
+export const GestaltResponseSchema = BasicResponseSchema.extend({
   product_name: z.string(),
   hardware_version: z.string(),
   bytes_per_led: z.number(),
@@ -55,14 +55,14 @@ const VerifyRequestSchema = z.object({
   'challenge-response': z.string(),
 });
 
-const SummaryResponseSchema = BasicResponseSchema.extend({
+export const SummaryResponseSchema = BasicResponseSchema.extend({
   led_mode: z.object({
     mode: z.nativeEnum(Mode),
     detect_mode: z.number(),
     shop_mode: z.number(),
-    id: z.number(),
-    unique_id: z.string(),
-    name: z.string(),
+    id: z.number().optional(),
+    unique_id: z.string().optional(),
+    name: z.string().optional(),
   }),
   timer: z.object({
     time_now: z.number(),
@@ -73,7 +73,7 @@ const SummaryResponseSchema = BasicResponseSchema.extend({
   music: z.object({
     enabled: z.number(),
     active: z.number(),
-    auto: z.string(),
+    auto: z.string().optional(),
     auto_mode: z.string(),
     current_driverset: z.number(),
     mood_index: z.number(),
@@ -156,7 +156,7 @@ const GetLedConfigResponseSchema = BasicResponseSchema.extend({
 });
 
 const authHeaders = z.object({
-  'x-auth-token': z.string(),
+  'x-auth-token': z.string().optional(),
 });
 
 const c = initContract();
