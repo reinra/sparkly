@@ -43,7 +43,7 @@ export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
       for (let i = 0; i < numberOfLeds; i++) {
         await copyValues(color, gestalt.led_profile, ledValues);
       }
-      logger.withMetadata({ color, device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' LED values`);
+      logger.withMetadata({ color, device: apiClient.getIp() }).trace(`Sending '${effect.getName()}' LED values`);
       await apiClient.sendLedValues(ledValues);
 
       i++;
@@ -67,11 +67,11 @@ export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
     const ledValues: number[] = [];
     logger
       .withMetadata({ device: apiClient.getIp() })
-      .debug(`Sending '${effect.getName()}' ${numberOfLeds} LED values`);
+      .trace(`Sending '${effect.getName()}' ${numberOfLeds} LED values`);
     let i = 0;
     for (const color of mappedFrame) {
       i++;
-      logger.withMetadata({ color }).debug(`LED ${i}`);
+      logger.withMetadata({ color }).trace(`LED ${i}`);
       await copyValues(color, gestalt.led_profile, ledValues);
     }
     await apiClient.sendLedValues(ledValues);
@@ -95,7 +95,7 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
       for (const color of mappedFrame) {
         await copyValues(color, gestalt.led_profile, ledValues);
       }
-      logger.withMetadata({ device: apiClient.getIp() }).debug(`Sending '${effect.getName()}' LED values`);
+      logger.withMetadata({ device: apiClient.getIp() }).trace(`Sending '${effect.getName()}' LED values`);
       await apiClient.sendLedValues(ledValues);
       i++;
       if (i >= maxIterations) {

@@ -18,7 +18,7 @@ export async function sendMessage(message: string | Buffer, port: number, addres
       if (err) {
         reject(err);
       } else {
-        logger.debug('UDP message sent');
+        logger.trace('UDP message sent');
         resolve();
       }
     });

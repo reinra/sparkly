@@ -37,7 +37,7 @@ export class RotatingStrictEffect implements StripEffect {
     };
     while (true) {
       for (let frameIndex = 0; frameIndex < this.framesPerRotation * this.zoomFactor; frameIndex++) {
-        logger.debug(`Frame index: ${frameIndex}`);
+        logger.trace(`Frame index: ${frameIndex}`);
         const baseFrame = this.target.getFrame(adjustedInput);
         const segmentLength = adjustedInput.led_count / this.framesPerRotation;
         const ledValues: LedValue[] = [];

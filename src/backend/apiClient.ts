@@ -284,7 +284,7 @@ export class TwinklyApiClient {
     await this.ensureGestaltFetched();
     await this.ensureAuthenticated();
 
-    logger.withMetadata({ ledCount: ledValues.length / 3 }).debug('Sending LED values over UDP');
+    logger.withMetadata({ ledCount: ledValues.length / 3 }).trace('Sending LED values over UDP');
     await sendLedValues(
       {
         authentication_token: this.authenticationToken!,
