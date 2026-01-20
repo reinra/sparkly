@@ -43,7 +43,7 @@ export function abortTask(key: string) {
   if (abortControllers[key]) {
     logger.info(`Aborting running task with key '${key}'`);
     try {
-      (abortControllers[key] as AbortController).abort();
+      abortControllers[key].abort();
     } catch (error) {
       // Ignore AbortError - it's expected when aborting
       if (!isAbortError(error)) {

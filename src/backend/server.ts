@@ -1,41 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import { TwinklyApiClient, DeviceUnreachableError } from './apiClient';
-import { loadConfig } from './config';
-import { logger, logError, withMeta } from './logger';
+import { logger, logError } from './logger';
 import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
-import { z } from 'zod';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { AnyEffectRenderer } from './effects/Renderer';
 import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 import { registerRoutes } from './typedHandler';
-
-const config = loadConfig();
-// Use the first device for now
-const apiClient = new TwinklyApiClient(config.device[0].ip);
+import { devices, refreshAliases, type Device } from './deviceList';
 
 const renderer = new AnyEffectRenderer();
-
-interface Device {
-  id: string;
-  alias: string;
-  apiClient: TwinklyApiClient;
-  effect_id: string | null;
-}
-// Initialize devices from config
-const devices: Record<string, Device> = Object.fromEntries(
-  config.device.map((device, index) => [
-    `twinkly-${index + 1}`,
-    {
-      id: `twinkly-${index + 1}`,
-      alias: `Twinkly Device ${index + 1}`,
-      apiClient: new TwinklyApiClient(device.ip),
-      effect_id: null,
-    },
-  ])
-);
 
 const app = express();
 const PORT = 3001;
@@ -54,7 +29,7 @@ function getDeviceOrError(device_id: string): Device {
 }
 
 async function prepareLedMapping(device: Device) {
-  const ledConfig = await device.apiClient.getLedConfig();
+  const ledConfig = await device.api_client.getLedConfig();
 
   let mapper: LedMapper = new IdentityLedMapper();
   if (ledConfig.strings.length === 2) {
@@ -80,13 +55,13 @@ registerRoutes(app, backendApiContract, {
     for (const device of Object.values(devices)) {
       let gestalt = null;
       try {
-        gestalt = await device.apiClient.gestalt();
+        gestalt = await device.api_client.gestalt();
       } catch (error) {
         logError(error).error(`Error fetching gestalt for device ${device.id}`);
       }
       let summary = null;
       try {
-        summary = await device.apiClient.getSummary();
+        summary = await device.api_client.getSummary();
       } catch (error) {
         logError(error).error(`Error fetching summary for device ${device.id}`);
       }
@@ -94,7 +69,7 @@ registerRoutes(app, backendApiContract, {
       deviceList.push({
         id: device.id,
         alias: device.alias,
-        ip: device.apiClient.getIp(),
+        ip: device.api_client.getIp(),
         name: gestalt?.device_name,
         led_count: gestalt?.number_of_led,
         brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
@@ -113,6 +88,8 @@ registerRoutes(app, backendApiContract, {
   },
 
   status: async (req, res) => {
+    // Use the first device for now
+    const apiClient = Object.values(devices)[0].api_client;
     const gestalt = await apiClient.gestalt();
     const summary = await apiClient.getSummary();
     const ledConfig = await apiClient.getLedConfig();
@@ -127,7 +104,7 @@ registerRoutes(app, backendApiContract, {
   setMode: async (req, res) => {
     const { device_id, mode } = req.body;
     const device = getDeviceOrError(device_id);
-    await device.apiClient.setMode(mode);
+    await device.api_client.setMode(mode);
 
     res.json({
       success: true,
@@ -138,7 +115,7 @@ registerRoutes(app, backendApiContract, {
   setBrightness: async (req, res) => {
     const { device_id, brightness } = req.body;
     const device = getDeviceOrError(device_id);
-    await device.apiClient.setBrightnessAbsolute(brightness);
+    await device.api_client.setBrightnessAbsolute(brightness);
 
     res.json({
       success: true,
@@ -163,8 +140,8 @@ registerRoutes(app, backendApiContract, {
       startAndAbortPreviousTask(taskKey, {
         run: async (signal) => {
           const ledMapper = await prepareLedMapping(device);
-          await device.apiClient.setMode(Mode.rt);
-          await renderer.render(effect, device.apiClient, ledMapper, signal);
+          await device.api_client.setMode(Mode.rt);
+          await renderer.render(effect, device.api_client, ledMapper, signal);
         },
       });
     } else {
@@ -180,4 +157,8 @@ registerRoutes(app, backendApiContract, {
 
 app.listen(PORT, () => {
   logger.info(`Backend server running on http://localhost:${PORT}`);
+
+  refreshAliases().catch((error: unknown) => {
+    logError(error).error('Failed to refresh device aliases on startup');
+  });
 });
