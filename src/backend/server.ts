@@ -9,6 +9,7 @@ import { AnyEffectRenderer } from './effects/Renderer';
 import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
+import { ApiClientFrameOutputStream, MappedFrameOutputStream } from './effects/FrameOutputStream';
 
 const renderer = new AnyEffectRenderer();
 
@@ -141,7 +142,15 @@ registerRoutes(app, backendApiContract, {
         run: async (signal) => {
           const ledMapper = await prepareLedMapping(device);
           await device.api_client.setMode(Mode.rt);
-          await renderer.render(effect, device.api_client, ledMapper, signal);
+          const getstalt = await device.api_client.gestalt();
+          const output = new MappedFrameOutputStream(
+            new ApiClientFrameOutputStream(device.api_client, {
+              led_type: getstalt.led_profile,
+              led_count: getstalt.number_of_led,
+            }),
+            ledMapper
+          );
+          await renderer.render(effect, device.api_client, output, signal);
         },
       });
     } else {
