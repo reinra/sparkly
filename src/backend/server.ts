@@ -5,11 +5,11 @@ import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
-import { AnyEffectRenderer } from './effects/Renderer';
+import { AnyEffectRenderer, type AnyEffect } from './effects/Renderer';
 import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
-import { ApiClientFrameOutputStream, MappedFrameOutputStream } from './effects/FrameOutputStream';
+import { ApiClientFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, MultipleFrameOutputStream } from './effects/FrameOutputStream';
 
 const renderer = new AnyEffectRenderer();
 
@@ -140,17 +140,7 @@ registerRoutes(app, backendApiContract, {
       device.effect_id = effect_id;
       startAndAbortPreviousTask(taskKey, {
         run: async (signal) => {
-          const ledMapper = await prepareLedMapping(device);
-          await device.api_client.setMode(Mode.rt);
-          const getstalt = await device.api_client.gestalt();
-          const output = new MappedFrameOutputStream(
-            new ApiClientFrameOutputStream(device.api_client, {
-              led_type: getstalt.led_profile,
-              led_count: getstalt.number_of_led,
-            }),
-            ledMapper
-          );
-          await renderer.render(effect, device.api_client, output, signal);
+          await startEffect(device, effect, signal);
         },
       });
     } else {
@@ -162,6 +152,11 @@ registerRoutes(app, backendApiContract, {
       success: true,
     });
   },
+  getBuffer: async (req, res) => {
+    const { device_id } = req.query;
+    const device = getDeviceOrError(device_id as string);
+    res.json(device.buffer);
+  },
 });
 
 app.listen(PORT, () => {
@@ -171,3 +166,19 @@ app.listen(PORT, () => {
     logError(error).error('Failed to refresh device aliases on startup');
   });
 });
+
+async function startEffect(device: Device, effect: AnyEffect, signal: AbortSignal) {
+  const ledMapper = await prepareLedMapping(device);
+  const getstalt = await device.api_client.gestalt();
+  const output = new MultipleFrameOutputStream([
+    new BufferReplacingFrameOutputStream(device.buffer),
+    new MappedFrameOutputStream(
+      new ApiClientFrameOutputStream(device.api_client, {
+        led_type: getstalt.led_profile,
+        led_count: getstalt.number_of_led,
+      }),
+      ledMapper
+    )]);
+  await device.api_client.setMode(Mode.rt);
+  await renderer.render(effect, device.api_client, output, signal);
+}

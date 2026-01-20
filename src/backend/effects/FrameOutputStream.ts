@@ -11,6 +11,9 @@ export interface FrameFormat {
 export interface FrameOutputStream {
     writeFrame(frame: LedValue[]): Promise<void>;
 }
+export interface FrameBuffer {
+    base64_encoded: string | null; // Base64 encoded frame data
+}
 
 export class ApiClientFrameOutputStream implements FrameOutputStream {
     constructor(private readonly apiClient: TwinklyApiClient, private readonly frameFormat: FrameFormat) {
@@ -53,5 +56,30 @@ export class MappedFrameOutputStream implements FrameOutputStream {
             result[mappedIndex] = frame[i];
         }
         await this.target.writeFrame(result);
+    }
+}
+
+export class BufferReplacingFrameOutputStream implements FrameOutputStream {
+    constructor(private readonly buffer: FrameBuffer) { }
+    async writeFrame(frame: LedValue[]): Promise<void> {
+        this.buffer.base64_encoded = this.encodeFrameToBase64(frame);
+    }
+    private encodeFrameToBase64(frame: LedValue[]): string {
+        const bytes: number[] = [];
+        for (const color of frame) {
+            bytes.push(color.red, color.green, color.blue);
+            // ignore white channel
+        }
+        const buffer = Buffer.from(bytes);
+        return buffer.toString('base64');
+    }
+}
+
+export class MultipleFrameOutputStream implements FrameOutputStream {
+    constructor(private readonly outputs: FrameOutputStream[]) { }
+    async writeFrame(frame: LedValue[]): Promise<void> {
+        for (const output of this.outputs) {
+            await output.writeFrame(frame);
+        }   
     }
 }

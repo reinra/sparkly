@@ -1,6 +1,7 @@
 <script lang="ts">
   import { backendClient, type GetInfoResponse } from '../frontendApiClient';
   import { handleApiUpdate } from '../utils/apiHelper';
+  import DeviceBufferViewer from './DeviceBufferViewer.svelte';
 
   interface Props {
     device: GetInfoResponse['devices'][0];
@@ -117,6 +118,7 @@
         {/each}
       </select>
     </p>
+    <DeviceBufferViewer deviceId={device.id} />
   </div>
 </div>
 

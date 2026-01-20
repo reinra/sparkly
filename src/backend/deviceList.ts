@@ -1,5 +1,6 @@
 import { TwinklyApiClient } from "./apiClient";
 import { loadConfig } from "./config";
+import type { FrameBuffer } from "./effects/FrameOutputStream";
 import { logger, logError } from './logger';
 
 export interface Device {
@@ -7,6 +8,7 @@ export interface Device {
   api_client: TwinklyApiClient;
   alias: string;
   effect_id: string | null;
+  buffer: FrameBuffer;
 }
 
 const config = loadConfig();
@@ -20,6 +22,7 @@ export const devices: Record<string, Device> = Object.fromEntries(
       alias: `Twinkly Device ${index + 1}`,
       api_client: new TwinklyApiClient(device.ip),
       effect_id: null,
+      buffer: { base64_encoded: null },
     },
   ])
 );
