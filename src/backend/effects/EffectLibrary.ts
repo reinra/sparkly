@@ -1,7 +1,8 @@
 import type { AnyEffect } from '../render/Renderer';
-import { SimpleColorEffect, SmoothSameColorEffect } from './SameColorEffect';
-import { GradientStaticStripEffect } from './StaticStripEffect';
-import { RotatingStrictEffect, TestPerLedEffect } from './StripEffect';
+import { TestPerLedEffect1D } from './generic/Effects1D';
+import { SimpleColorEffect, SmoothSameColorEffect } from './old/SameColorEffect';
+import { GradientStaticStripEffect } from './old/StaticStripEffect';
+import { RotatingStrictEffect, TestPerLedEffect } from './old/StripEffect';
 
 const gradient4 = new GradientStaticStripEffect([
   { red: 255, green: 0, blue: 0 },
@@ -25,4 +26,5 @@ export const effects: Record<string, AnyEffect> = {
   gradient_4: gradient4,
   rotating_gradient_4: new RotatingStrictEffect(gradient4, 400, 3),
   test_per_led: new TestPerLedEffect(),
+  new_test_per_led: new TestPerLedEffect1D(),
 };

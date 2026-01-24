@@ -9,6 +9,9 @@ export interface RgbValue {
   blue: number;
 }
 
+export const BLACK: RgbValue = { red: 0, green: 0, blue: 0 };
+export const WHITE: RgbValue = { red: 255, green: 255, blue: 255 };
+
 export interface RgbwValue extends RgbValue {
   white: number;
 }

@@ -1,15 +1,16 @@
-import { TwinklyApiClient } from '../apiClient';
+import { TwinklyApiClient, type GestaltResponseType } from '../apiClient';
 import type { LedValue } from './Color';
 import type { FrameOutputStream } from './FrameOutputStream';
-import type { SameColorEffect } from '../effects/SameColorEffect';
-import type { StaticStripEffect } from '../effects/StaticStripEffect';
-import type { StripEffect } from '../effects/StripEffect';
+import type { SameColorEffect } from '../effects/old/SameColorEffect';
+import type { StaticStripEffect } from '../effects/old/StaticStripEffect';
+import type { StripEffect } from '../effects/old/StripEffect';
+import type { Effect, EffectContext, LedPoint1D } from '../effects/generic/Effect';
 
 export interface Renderer<T> {
   render(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): void;
 }
 
-export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect;
+export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect | Effect<any>;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
@@ -22,6 +23,14 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
       await this.staticStripEffectRenderer.render(effect, apiClient, output, signal);
     } else if ('getFrames' in effect) {
       await this.stripEffectRenderer.render(effect, apiClient, output, signal);
+    } else if ('pointType' in effect) {
+      const pointType = effect.pointType;
+      if (pointType !== '1D') {
+        throw new Error(`Unsupported effect point type: ${pointType}`);
+      }
+      const effect1D = effect as Effect<LedPoint1D>;
+      const effect1DRenderer = new Effect1DRenderer();
+      await effect1DRenderer.render(effect1D, apiClient, output, signal);
     } else {
       throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
     }
@@ -64,6 +73,64 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
   }
 }
 
+export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
+  async render(effect: Effect<LedPoint1D>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+    const gestalt = await apiClient.gestalt();
+    const points = getPoints(gestalt);
+    const numberOfLeds = gestalt.number_of_led;
+    const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
+    const minFrameMs = 1000 / gestalt.frame_rate;
+
+    const firstStartTime = performance.now();
+    let lastTime = firstStartTime;
+    let frameIndex = 0;
+    while (true) {
+      signal.throwIfAborted();
+
+      const frameStartTime = performance.now();
+      const deltaTimeMs = frameStartTime - lastTime;
+      const elapsedTime = frameStartTime - firstStartTime;
+
+      const ctx: EffectContext = {
+        time_ms: elapsedTime,
+        frame_index: frameIndex,
+        phase: (elapsedTime % loopDurationMs) / loopDurationMs,
+        speed: 1.0,
+        total_leds: numberOfLeds,
+        led_type: gestalt.led_profile,
+      };
+      if (effect.isStateful) {
+        effect.update(ctx, deltaTimeMs);
+      }
+      const ledValues = effect.renderGlobal(ctx, points);
+      await output.writeFrame(ledValues);
+
+      const processingTime = performance.now() - frameStartTime;
+      const timeToWait = minFrameMs - processingTime;
+      if (timeToWait > 0) {
+        await sleep(timeToWait);
+      }
+      else {
+        await yieldNow();
+      }
+
+      frameIndex++;
+      lastTime = frameStartTime;
+    }
+  }
+}
+
 async function sleep(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+async function yieldNow() {
+  await new Promise(resolve => setImmediate(resolve));  
+}
+
+function getPoints(gestalt: GestaltResponseType): LedPoint1D[] {
+  const points: LedPoint1D[] = [];
+  for (let i = 0; i < gestalt.number_of_led; i++) {
+    points.push({ id: i, position: i, distance: i / gestalt.number_of_led });
+  }
+  return points;
 }

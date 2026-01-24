@@ -55,7 +55,7 @@ const dummyClient = initClient(apiContract, {
 
 type ApiNoAuthClientType = typeof dummyNoAuthClient;
 type ApiClientType = typeof dummyClient;
-type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
+export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
 
 export class TwinklyApiClient {
   private readonly baseUrl: string;
