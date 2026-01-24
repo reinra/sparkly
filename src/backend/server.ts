@@ -5,11 +5,11 @@ import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
-import { AnyEffectRenderer, type AnyEffect } from './effects/Renderer';
-import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './effects/LedMapper';
+import { AnyEffectRenderer, type AnyEffect } from './render/Renderer';
+import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
-import { ApiClientFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, MultipleFrameOutputStream } from './effects/FrameOutputStream';
+import { ApiClientFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, MultipleFrameOutputStream } from './render/FrameOutputStream';
 
 const renderer = new AnyEffectRenderer();
 

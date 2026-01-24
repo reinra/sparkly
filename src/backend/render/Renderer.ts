@@ -1,9 +1,9 @@
 import { TwinklyApiClient } from '../apiClient';
 import type { LedValue } from './Color';
 import type { FrameOutputStream } from './FrameOutputStream';
-import type { SameColorEffect } from './SameColorEffect';
-import type { StaticStripEffect } from './StaticStripEffect';
-import type { StripEffect } from './StripEffect';
+import type { SameColorEffect } from '../effects/SameColorEffect';
+import type { StaticStripEffect } from '../effects/StaticStripEffect';
+import type { StripEffect } from '../effects/StripEffect';
 
 export interface Renderer<T> {
   render(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): void;

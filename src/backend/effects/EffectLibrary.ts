@@ -1,4 +1,4 @@
-import type { AnyEffect } from './Renderer';
+import type { AnyEffect } from '../render/Renderer';
 import { SimpleColorEffect, SmoothSameColorEffect } from './SameColorEffect';
 import { GradientStaticStripEffect } from './StaticStripEffect';
 import { RotatingStrictEffect, TestPerLedEffect } from './StripEffect';

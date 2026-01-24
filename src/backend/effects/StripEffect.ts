@@ -1,4 +1,4 @@
-import type { LedValue } from './Color';
+import type { LedValue } from '../render/Color';
 import type { FrameInput, StaticStripEffect } from './StaticStripEffect';
 import { logger } from '../logger';
 

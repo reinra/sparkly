@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { LedType } from './backend/effects/Color';
+import { LedType } from './backend/render/Color';
 
 export const EnabledDisabledSchema = z.enum(['enabled', 'disabled']);
 export const AbsoluteOrRelativeSchema = z.enum(['A', 'R']);
