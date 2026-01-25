@@ -1,5 +1,5 @@
-import { getMultiGradientColors, LedType } from '../../render/Color';
-import type { LedValue, RgbValue } from '../../render/Color';
+import { getMultiGradientColors, LedType } from '../../color/Color';
+import type { LedValue, RgbValue } from '../../color/Color';
 
 export interface FrameInput {
   led_type: LedType;

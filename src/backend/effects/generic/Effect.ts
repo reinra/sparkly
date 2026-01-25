@@ -1,4 +1,4 @@
-import type { LedType, RgbValue } from "../../render/Color";
+import type { LedType, RgbValue } from "../../color/Color";
 
 export interface EffectContext {
     // Float [0.0, 1.0) representing the progress through the effect in a loop

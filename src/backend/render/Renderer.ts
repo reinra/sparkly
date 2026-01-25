@@ -1,5 +1,5 @@
 import { TwinklyApiClient, type GestaltResponseType } from '../apiClient';
-import type { LedValue } from './Color';
+import type { LedValue } from '../color/Color';
 import type { FrameOutputStream } from './FrameOutputStream';
 import type { SameColorEffect } from '../effects/old/SameColorEffect';
 import type { StaticStripEffect } from '../effects/old/StaticStripEffect';
