@@ -92,16 +92,14 @@ export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
       const elapsedTime = frameStartTime - firstStartTime;
 
       const ctx: EffectContext = {
-        time_ms: elapsedTime,
-        frame_index: frameIndex,
-        phase: (elapsedTime % loopDurationMs) / loopDurationMs,
-        speed: 1.0,
         total_leds: numberOfLeds,
         led_type: gestalt.led_profile,
+        speed: 1.0,
+        time_ms: elapsedTime,
+        delta_time_ms: deltaTimeMs,
+        frame_index: frameIndex,
+        phase: (elapsedTime % loopDurationMs) / loopDurationMs,
       };
-      if (effect.isStateful) {
-        effect.update(ctx, deltaTimeMs);
-      }
       const ledValues = effect.renderGlobal(ctx, points);
       await output.writeFrame(ledValues);
 

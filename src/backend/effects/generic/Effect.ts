@@ -1,18 +1,28 @@
 import type { LedType, RgbValue } from "../../color/Color";
 
 export interface EffectContext {
-    // Float [0.0, 1.0) representing the progress through the effect in a loop
-    readonly phase: number;
-    // Integer, time since the effect started in milliseconds
-    readonly time_ms: number;
-    // Integer, current frame index since the effect started
-    readonly frame_index: number;
-    // Float, speed multiplier for the effect
-    readonly speed: number;
+    // 1. CHANGING LESS
+
     // Integer, total number of LEDs in the buffer
     readonly total_leds: number;
     // LedType of the LED buffer
     readonly led_type: LedType;
+
+    // 2. MANUALLY CHANGED
+
+    // Float, speed multiplier for the effect
+    readonly speed: number;
+
+    // 3. CONSTANTLY CHANGING
+
+    // Float [0.0, 1.0) representing the progress through the effect in a loop
+    readonly phase: number;
+    // Integer, time since the effect started in milliseconds
+    readonly time_ms: number;
+    // Integer, time since the last renderGlobal() call in milliseconds
+    readonly delta_time_ms: number;
+    // Integer, current frame index since the effect started
+    readonly frame_index: number;
 }
 
 export interface LedPoint1D {    
@@ -40,13 +50,11 @@ export type LedPointType = '1D' | '2D';
 export interface Effect<P extends LedPoint> {
     // Runtime type identifier for the generic parameter
     readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
-    // If true, the effect maintains internal state across frames, runner will call update()
+    // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
     readonly isStateful: boolean;
     getName(): string;
     // Returns the duration of a full effect loop in seconds
     getLoopDurationSeconds(ledCount: number): number;
-    // For simulation-based effects, update internal state based on time progression
-    update(ctx: EffectContext, deltaTimeMs: number): void;
     // Renders the full LED buffer for the current effect state
     renderGlobal(ctx: EffectContext, points: P[]): RgbValue[];
 }
@@ -54,9 +62,6 @@ export interface Effect<P extends LedPoint> {
 export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
     abstract readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
     isStateful: boolean = false;
-    update(ctx: EffectContext, deltaTimeMs: number): void {
-        throw new Error("Method not implemented.");
-    }
     abstract getName(): string;
     abstract getLoopDurationSeconds(ledCount: number): number;
     abstract renderPixel(ctx: EffectContext, point: P): RgbValue;

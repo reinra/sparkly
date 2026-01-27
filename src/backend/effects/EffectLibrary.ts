@@ -1,5 +1,5 @@
 import type { AnyEffect } from '../render/Renderer';
-import { RainbowGradientEffect1D, TestPerLedEffect1D } from './generic/Effects1D';
+import { MeteorEffect, RainbowGradientEffect1D, TestPerLedEffect1D } from './generic/Effects1D';
 import { SimpleColorEffect, SmoothSameColorEffect } from './old/SameColorEffect';
 import { GradientStaticStripEffect } from './old/StaticStripEffect';
 import { RotatingStrictEffect, TestPerLedEffect } from './old/StripEffect';
@@ -27,5 +27,6 @@ export const effects: Record<string, AnyEffect> = {
   rotating_gradient_4: new RotatingStrictEffect(gradient4, 400, 3),
   test_per_led: new TestPerLedEffect(),
   new_test_per_led: new TestPerLedEffect1D(),
-  new_rainbow: new RainbowGradientEffect1D()
+  new_rainbow: new RainbowGradientEffect1D(),
+  meteor: new MeteorEffect()
 };

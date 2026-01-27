@@ -1,17 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import { logger, logError } from './logger';
-import { Mode } from '../apiContract';
 import { backendApiContract } from './backendApiContract';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
-import { AnyEffectRenderer, type AnyEffect } from './render/Renderer';
-import { type LedMapper, IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
-import { ApiClientFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, MultipleFrameOutputStream } from './render/FrameOutputStream';
-
-const renderer = new AnyEffectRenderer();
+import { startEffect } from './effects/EffectLauncher';
 
 const app = express();
 const PORT = 3001;
@@ -27,20 +22,6 @@ function getDeviceOrError(device_id: string): Device {
     throw new Error(`Device with ID ${device_id} not found`);
   }
   return device;
-}
-
-async function prepareLedMapping(device: Device) {
-  const ledConfig = await device.api_client.getLedConfig();
-
-  let mapper: LedMapper = new IdentityLedMapper();
-  if (ledConfig.strings.length === 2) {
-    const halfLength = ledConfig.strings[0].length;
-    mapper = new SegmentedLedMapper([
-      { startIndex: 0, mapper: new ReverseLedMapper(halfLength) },
-      { startIndex: halfLength, mapper: new IdentityLedMapper() },
-    ]);
-  }
-  return mapper;
 }
 
 // Register all API routes
@@ -166,19 +147,3 @@ app.listen(PORT, () => {
     logError(error).error('Failed to refresh device aliases on startup');
   });
 });
-
-async function startEffect(device: Device, effect: AnyEffect, signal: AbortSignal) {
-  const ledMapper = await prepareLedMapping(device);
-  const getstalt = await device.api_client.gestalt();
-  const output = new MultipleFrameOutputStream([
-    new BufferReplacingFrameOutputStream(device.buffer),
-    new MappedFrameOutputStream(
-      new ApiClientFrameOutputStream(device.api_client, {
-        led_type: getstalt.led_profile,
-        led_count: getstalt.number_of_led,
-      }),
-      ledMapper
-    )]);
-  await device.api_client.setMode(Mode.rt);
-  await renderer.render(effect, device.api_client, output, signal);
-}
