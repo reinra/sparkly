@@ -108,3 +108,19 @@ export class RainEffect implements Effect<LedPoint1D> {
     return buffer;
   }
 }
+
+export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: "1D" = "1D";
+  getName(): string {
+      return "Twinkle";
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return 1;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+    if (Math.random() < 0.01) {
+      return WHITE;
+    }
+    return BLACK;
+  }
+}
