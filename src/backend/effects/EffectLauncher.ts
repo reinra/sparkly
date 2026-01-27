@@ -3,6 +3,7 @@ import type { Device } from "../deviceList";
 import { MultipleFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, ApiClientFrameOutputStream } from "../render/FrameOutputStream";
 import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from "../render/LedMapper";
 import { AnyEffectRenderer, type AnyEffect } from "../render/Renderer";
+import { logger } from "../logger";
 
 const renderer = new AnyEffectRenderer();
 
@@ -18,12 +19,41 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
       }),
       ledMapper
     )]);
-  await device.api_client.setMode(Mode.rt);
   if ("isStateful" in effect && effect.isStateful) {
     // If the effect is stateful, we should not share it between multiple devices
     effect = cloneEffect(effect);
   }
-  await renderer.render(effect, device.api_client, output, signal);
+  await prepareForSendingLedValues(device);
+  
+  // Schedule regular keep-alive calls every 5 minutes
+  let keepAliveInterval: NodeJS.Timeout | null = setInterval(() => {
+    prepareForSendingLedValues(device).catch(err => {
+      logger.error("Keep-alive call failed:", err);
+    });
+  }, 5 * 60 * 1000); // 5 minutes
+  
+  // Clear interval on abort signal - using unique handler per invocation
+  const abortHandler = () => {
+    if (keepAliveInterval !== null) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+  };
+  signal.addEventListener('abort', abortHandler);
+  
+  try {
+    await renderer.render(effect, device.api_client, output, signal);
+  } finally {
+    if (keepAliveInterval !== null) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+    signal.removeEventListener('abort', abortHandler);
+  }
+}
+
+async function prepareForSendingLedValues(device: Device) {
+    await device.api_client.setMode(Mode.rt);
 }
 
 async function prepareLedMapping(device: Device) {
