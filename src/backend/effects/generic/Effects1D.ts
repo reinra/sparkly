@@ -2,6 +2,7 @@ import { BLACK, lerp, WHITE, type RgbValue } from "../../color/Color";
 import { hslToRgb } from "../../color/Hsl";
 import { PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from "./Effect";
 
+// Also called "Marquee" if it runs a bit faster
 export class TestPerLedEffect1D implements Effect<LedPoint1D> {
   pointType: "1D" = "1D";
   isStateful: boolean = false;
@@ -124,3 +125,4 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
     return BLACK;
   }
 }
+
