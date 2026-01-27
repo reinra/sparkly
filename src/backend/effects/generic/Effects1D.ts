@@ -66,3 +66,45 @@ export class MeteorEffect implements Effect<LedPoint1D> {
     return this.lastBuffer;
   }
 }
+
+interface Particle {
+  pos: number;
+  vel: number;
+  color: RgbValue;
+}
+export class RainEffect implements Effect<LedPoint1D> {
+  pointType: "1D" = "1D";
+  isStateful: boolean = true;
+  private particles: Particle[] = [];
+  getName(): string {
+      return "Rain";  
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 10;
+  } 
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
+    // 1. Move existing particles based on velocity and time passed
+    this.particles.forEach(p => {
+      p.pos += p.vel * (ctx.delta_time_ms / 1000) * ctx.speed;
+    });
+
+    // 2. Remove off-screen particles
+    this.particles = this.particles.filter(p => p.pos < ctx.total_leds);
+
+    // 3. Add new particles "randomly" using a Seeded PRNG
+    if (Math.random() > 0.9) {
+       this.particles.push({ pos: 0, vel: Math.random() * 10, color: { red: 0, green: 0, blue: 255 } });
+    }
+
+    const buffer: RgbValue[] = new Array(points.length).fill(BLACK);
+
+    // Draw particles
+    for (const p of this.particles) {
+      const idx = Math.floor(p.pos);
+      if (idx >= 0 && idx < buffer.length) {
+        buffer[idx] = p.color;
+      }
+    }
+    return buffer;
+  }
+}
