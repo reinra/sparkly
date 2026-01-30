@@ -1,4 +1,4 @@
-import { TwinklyApiClient } from "./apiClient";
+import { TwinklyApiClient } from "./deviceClient/apiClient";
 import { loadConfig } from "./config";
 import type { FrameBuffer } from "./render/FrameOutputStream";
 import { logger, logError } from './logger';

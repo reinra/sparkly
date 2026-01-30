@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { GestaltResponseSchema, SummaryResponseSchema, Mode } from '../apiContract';
+import { GestaltResponseSchema, SummaryResponseSchema, Mode } from './deviceClient/apiContract';
 
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id

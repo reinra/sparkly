@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction, Express } from 'express';
 import { z } from 'zod';
 import { logError } from './logger';
-import { DeviceUnreachableError } from './apiClient';
+import { DeviceUnreachableError } from './deviceClient/apiClient';
 
 interface EndpointDefinition {
   method?: string;

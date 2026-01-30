@@ -17,4 +17,4 @@ export type {
   SetModeRequest,
   SetModeResponse,
 } from './backend/backendApiContract';
-export { Mode } from './apiContract';
+export { Mode } from './backend/deviceClient/apiContract';

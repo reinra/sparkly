@@ -1,6 +1,6 @@
 import dgram from 'dgram';
 import { promisify } from 'util';
-import { logger } from './logger';
+import { logger } from '../logger';
 
 let client: dgram.Socket | null = null;
 

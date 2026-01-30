@@ -1,4 +1,4 @@
-import { Mode } from "../../apiContract";
+import { Mode } from "../deviceClient/apiContract";
 import type { Device } from "../deviceList";
 import { MultipleFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, ApiClientFrameOutputStream } from "../render/FrameOutputStream";
 import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from "../render/LedMapper";

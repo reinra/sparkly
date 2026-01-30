@@ -1,4 +1,4 @@
-import { TwinklyApiClient, type GestaltResponseType } from '../apiClient';
+import { TwinklyApiClient, type GestaltResponseType } from '../deviceClient/apiClient';
 import type { LedValue } from '../color/Color';
 import type { FrameOutputStream } from './FrameOutputStream';
 import type { SameColorEffect } from '../effects/old/SameColorEffect';
