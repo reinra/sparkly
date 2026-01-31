@@ -7,6 +7,7 @@ import type { StripEffect } from '../effects/old/StripEffect';
 import { is1DEffect, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
 
 const CUTOFF_FRAME_COUNT = 1000;
+const YIELD_FRAME_COUNT = 50;
 
 export interface Renderer<T> {
   renderLive(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
@@ -173,12 +174,13 @@ export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
     const points = getPoints(gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
+    const [startRecordingMs, endRecordingMs] = effect.isStateful ? [loopDurationMs, loopDurationMs * 2] : [0, loopDurationMs];
     const frameTimeMs = 1000 / gestalt.frame_rate; // Fixed time between frames
 
     let virtualTime = 0;
     let frameIndex = 0;
     
-    while (virtualTime < loopDurationMs) {
+    while (virtualTime < endRecordingMs) {
       signal.throwIfAborted();
 
       const ctx: EffectContext = {
@@ -191,8 +193,12 @@ export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
         phase: (virtualTime % loopDurationMs) / loopDurationMs,
       };
       const ledValues = effect.renderGlobal(ctx, points);
-      await output.writeFrame(ledValues);
-      await yieldNow();
+      if (virtualTime >= startRecordingMs) {
+        await output.writeFrame(ledValues);
+      }
+      if (frameIndex % YIELD_FRAME_COUNT === 0) {
+        await yieldNow();
+      }
 
       virtualTime += frameTimeMs;
       frameIndex++;
