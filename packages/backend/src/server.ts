@@ -33,8 +33,15 @@ registerRoutes(app, backendApiContract, {
   },
 
   getInfo: async (req, res) => {
+    const { device_id } = req.query;
     const deviceList = [];
-    for (const device of Object.values(devices)) {
+    
+    // Filter devices if device_id is provided
+    const devicesToQuery = device_id 
+      ? [getDeviceOrError(device_id as string)] 
+      : Object.values(devices);
+    
+    for (const device of devicesToQuery) {
       let gestalt = null;
       try {
         gestalt = await device.api_client.gestalt();

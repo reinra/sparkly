@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   
   let { children } = $props();
 </script>
@@ -10,12 +10,12 @@
       <h1 class="logo">Twinkly LED Controller</h1>
       <ul class="menu">
         <li>
-          <a href="/devices" class:active={$page.url.pathname === '/devices'}>
+          <a href="/devices" class:active={page.url.pathname === '/devices'}>
             Devices
           </a>
         </li>
         <li>
-          <a href="/debug" class:active={$page.url.pathname === '/debug'}>
+          <a href="/debug" class:active={page.url.pathname === '/debug'}>
             Debug
           </a>
         </li>

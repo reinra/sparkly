@@ -94,6 +94,9 @@ export const backendApiContract = c.router({
   getInfo: {
     method: 'GET',
     path: '/api/info',
+    query: z.object({
+      device_id: z.string().optional(),
+    }),
     responses: {
       200: GetInfoResponseSchema,
       500: ErrorResponseSchema,

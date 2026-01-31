@@ -1,50 +1,33 @@
 <script lang="ts">
-  import { backendClient, type GetInfoResponse } from '../../frontendApiClient';
-  import { handleApiCall } from '../../utils/apiHelper';
   import DeviceCard from '../../components/DeviceCard.svelte';
-
-  let info = $state<GetInfoResponse | null>(null);
-  let loading = $state(false);
-  let error = $state('');
-
-  async function fetchDevices() {
-    loading = true;
-    error = '';
-    try {
-      info = await handleApiCall(
-        () => backendClient.getInfo(),
-        'Failed to get info. Make sure config.toml is properly configured.'
-      );
-    } catch (e) {
-      error = (e as Error).message;
-    } finally {
-      loading = false;
-    }
-  }
+  import { deviceStore } from '../../stores/deviceStore.svelte';
 
   $effect(() => {
-    fetchDevices();
+    // Fetch devices on mount if not already loaded
+    if (deviceStore.devices.length === 0 && !deviceStore.loading) {
+      deviceStore.fetchAllDevices();
+    }
   });
 </script>
 
 <div class="devices-page">
   <h2>Twinkly Devices</h2>
 
-  {#if loading}
+  {#if deviceStore.loading}
     <p class="loading">Loading devices...</p>
-  {:else if error}
-    <p class="error">{error}</p>
-  {:else if info?.devices && info.devices.length > 0}
+  {:else if deviceStore.error}
+    <p class="error">{deviceStore.error}</p>
+  {:else if deviceStore.devices.length > 0}
     <div class="devices-grid">
-      {#each info.devices as device}
-        <DeviceCard {device} effects={info.effects} />
+      {#each deviceStore.devices as device (device.id)}
+        <DeviceCard {device} effects={deviceStore.effects} />
       {/each}
     </div>
   {:else}
     <p class="no-devices">No devices configured</p>
   {/if}
 
-  <button onclick={fetchDevices} disabled={loading}> Refresh Devices </button>
+  <button onclick={() => deviceStore.fetchAllDevices()} disabled={deviceStore.loading}> Refresh Devices </button>
 </div>
 
 <style>

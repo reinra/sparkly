@@ -1,20 +1,26 @@
 <script lang="ts">
-  import { backendClient, type GetInfoResponse } from '../../../frontendApiClient';
-  import { handleApiCall, handleApiUpdate } from '../../../utils/apiHelper';
+  import { backendClient } from '../../../frontendApiClient';
+  import { handleApiUpdate } from '../../../utils/apiHelper';
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
+  import { deviceStore } from '../../../stores/deviceStore.svelte';
+  import { page } from '$app/state';
 
-  let info = $state<GetInfoResponse | null>(null);
-  let loading = $state(false);
-  let error = $state('');
-  let device = $derived(
-    info?.devices.find((d) => d.id === $page.params.id) || null
-  );
-  let effects = $derived(info?.effects || []);
+  let deviceId = $derived(page.params.id);
+  let device = $derived(deviceStore.getDevice(deviceId));
+  let effects = $derived(deviceStore.effects);
   let updating = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
 
-  import { page } from '$app/stores';
+  // Fetch devices on mount or when device ID changes
+  $effect(() => {
+    if (deviceStore.devices.length === 0) {
+      deviceStore.fetchAllDevices();
+    } else {
+      // Only fetch when deviceId changes, not when devices array updates
+      deviceStore.fetchDevice(deviceId);
+    }
+  });
 
   $effect(() => {
     // Scroll selected effect into view
@@ -26,25 +32,13 @@
     }
   });
 
-  async function fetchDevices() {
-    loading = true;
-    error = '';
-    try {
-      info = await handleApiCall(
-        () => backendClient.getInfo(),
-        'Failed to get info. Make sure config.toml is properly configured.'
-      );
-      // Set selected effect index based on current effect
-      if (device && device.effect_id && effects.length > 0) {
-        const idx = effects.findIndex((e) => e.id === device.effect_id);
-        if (idx >= 0) selectedEffectIndex = idx;
-      }
-    } catch (e) {
-      error = (e as Error).message;
-    } finally {
-      loading = false;
+  $effect(() => {
+    // Set selected effect index based on current effect
+    if (device && device.effect_id && effects.length > 0) {
+      const idx = effects.findIndex((e) => e.id === device.effect_id);
+      if (idx >= 0) selectedEffectIndex = idx;
     }
-  }
+  });
 
   async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
     if (!device || updating) return;
@@ -56,12 +50,12 @@
       () =>
         backendClient.setBrightness({
           body: {
-            device_id: device.id,
+            device_id: deviceId,
             brightness: value,
           },
         }),
-      () => {
-        device.brightness = value;
+      async () => {
+        await deviceStore.fetchDevice(deviceId);
       },
       () => {}
     );
@@ -78,12 +72,12 @@
       () =>
         backendClient.setMode({
           body: {
-            device_id: device.id,
+            device_id: deviceId,
             mode: value as any,
           },
         }),
-      () => {
-        device.mode = value as any;
+      async () => {
+        await deviceStore.fetchDevice(deviceId);
       },
       () => {}
     );
@@ -101,12 +95,12 @@
       () =>
         backendClient.chooseEffect({
           body: {
-            device_id: device.id,
+            device_id: deviceId,
             effect_id: effect.id,
           },
         }),
-      () => {
-        device.effect_id = effect.id;
+      async () => {
+        await deviceStore.fetchDevice(deviceId);
       },
       () => {}
     );
@@ -121,11 +115,14 @@
       () =>
         backendClient.sendMovie({
           body: {
-            device_id: device.id,
+            device_id: deviceId,
             effect_id: device.effect_id!,
           },
         }),
-      () => {},
+      async () => {
+        // Refresh device state
+        await deviceStore.fetchDevice(deviceId);
+      },
       () => {}
     );
     updating = false;
@@ -144,19 +141,15 @@
       selectEffect(newIndex);
     }
   }
-
-  $effect(() => {
-    fetchDevices();
-  });
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
 
 <div class="device-detail">
-  {#if loading}
+  {#if deviceStore.loading}
     <p class="loading">Loading device...</p>
-  {:else if error}
-    <p class="error">{error}</p>
+  {:else if deviceStore.error}
+    <p class="error">{deviceStore.error}</p>
   {:else if device}
     <div class="header">
       <a href="/devices" class="back-button">← Back to Devices</a>

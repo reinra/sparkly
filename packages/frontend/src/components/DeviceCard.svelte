@@ -2,6 +2,7 @@
   import { backendClient, type GetInfoResponse } from '../frontendApiClient';
   import { handleApiUpdate } from '../utils/apiHelper';
   import DeviceBufferViewer from './DeviceBufferViewer.svelte';
+  import { deviceStore } from '../stores/deviceStore.svelte';
 
   interface Props {
     device: GetInfoResponse['devices'][0];
@@ -27,8 +28,8 @@
             brightness: value,
           },
         }),
-      () => {
-        device.brightness = value;
+      async () => {
+        await deviceStore.fetchDevice(device.id);
       },
       () => {
         brightness = device.brightness;
@@ -50,8 +51,8 @@
             mode: value as any,
           },
         }),
-      () => {
-        device.mode = value as any;
+      async () => {
+        await deviceStore.fetchDevice(device.id);
       },
       () => {
         mode = device.mode;
@@ -73,8 +74,8 @@
             effect_id: value,
           },
         }),
-      () => {
-        device.effect_id = value;
+      async () => {
+        await deviceStore.fetchDevice(device.id);
       },
       () => {
         effect_id = device.effect_id;
@@ -95,7 +96,10 @@
             effect_id: effect_id!,
           },
         }),
-      () => {},
+      async () => {
+        // Refresh device state
+        await deviceStore.fetchDevice(device.id);
+      },
       () => {}
     );
     updating = false;
@@ -116,11 +120,11 @@
       <p><strong>LED Count:</strong> {device.led_count}</p>
     {/if}
     <p><strong>Brightness:</strong> {brightness}%</p>
-    <input type="range" min="0" max="100" bind:value={brightness} onchange={updateBrightness} disabled={updating} />
+    <input type="range" min="0" max="100" value={brightness} onchange={updateBrightness} disabled={updating} />
     {#if device.mode}
       <p>
         <strong>Mode:</strong>
-        <select bind:value={mode} onchange={updateMode} disabled={updating}>
+        <select value={mode} onchange={updateMode} disabled={updating}>
           <option value="off">Off</option>
           <option value="demo">Demo</option>
           <option value="effect">Effect</option>
@@ -131,7 +135,7 @@
     {/if}
     <p>
       <strong>Effect:</strong>
-      <select bind:value={effect_id} onchange={updateEffect} disabled={updating}>
+      <select value={effect_id} onchange={updateEffect} disabled={updating}>
         <option value={null}>(None)</option>
         {#each effects as effect}
           <option value={effect.id}>{effect.id}</option>
