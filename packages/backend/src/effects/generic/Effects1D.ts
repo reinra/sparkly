@@ -81,7 +81,7 @@ export class RainEffect implements Effect<LedPoint1D> {
       return "Rain";  
   }
   getLoopDurationSeconds(ledCount: number): number {
-    return 10;
+    return 60;
   } 
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
     // 1. Move existing particles based on velocity and time passed

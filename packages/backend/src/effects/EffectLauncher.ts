@@ -70,13 +70,14 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   const postDuration = Date.now() - postStart;
   logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
 
-  await device.api_client.setMode(Mode.movie);
-
+  const frameMs = 1000 / gestalt.frame_rate;
   await device.api_client.setLedMovieConfig({
-    frame_delay: 100, // You may want to adjust this value or make it configurable
+    frame_delay: frameMs,
     leds_number: gestalt.number_of_led,
     frames_number: movieBuffer.getFrameCount(),
   });
+
+  await device.api_client.setMode(Mode.movie);
 }
 
 async function prepareLedMapping(device: Device) {
