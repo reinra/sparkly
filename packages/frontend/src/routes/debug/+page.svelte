@@ -17,7 +17,7 @@
     loading = true;
     error = '';
     try {
-      const result = await handleApiCall(
+      const result = await handleApiCall<HelloResponse>(
         () => backendClient.hello(),
         'Failed to connect to backend. Make sure the backend server is running on port 3001.'
       );
@@ -33,7 +33,7 @@
     loading = true;
     error = '';
     try {
-      info = await handleApiCall(
+      info = await handleApiCall<GetInfoResponse>(
         () => backendClient.getInfo(),
         'Failed to get info. Make sure config.toml is properly configured.'
       );
@@ -48,7 +48,7 @@
     loading = true;
     error = '';
     try {
-      status = await handleApiCall(
+      status = await handleApiCall<StatusResponse>(
         () => backendClient.status(),
         'Failed to get device status. Make sure config.toml is properly configured.'
       );
@@ -130,11 +130,11 @@
     {#if status}
       <div class="status">
         <h4>Device Info</h4>
-        <pre>{JSON.stringify(status.device, null, 2)}</pre>
+        <pre>{status.device}</pre>
         <h4>Summary</h4>
-        <pre>{JSON.stringify(status.summary, null, 2)}</pre>
+        <pre>{status.summary}</pre>
         <h4>LED Configuration</h4>
-        <pre>{JSON.stringify(status.ledConfig, null, 2)}</pre>
+        <pre>{status.ledConfig}</pre>
         <h4>Movie Configuration</h4>
         <pre>{status.movieConfig}</pre>
       </div>

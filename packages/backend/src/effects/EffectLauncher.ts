@@ -4,7 +4,7 @@ import { MultipleFrameOutputStream, BufferReplacingFrameOutputStream, MappedFram
 import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from "../render/LedMapper";
 import { AnyEffectRenderer, type AnyEffect } from "../render/Renderer";
 import { logger } from "../logger";
-import type { GestaltResponseType } from "../deviceClient/apiClient";
+import type { GestaltResponseType, MovieFullResponseType } from "../deviceClient/apiClient";
 
 const renderer = new AnyEffectRenderer();
 

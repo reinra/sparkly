@@ -155,6 +155,7 @@ const GetLedConfigResponseSchema = BasicResponseSchema.extend({
 const MovieFullResponseSchema = BasicResponseSchema.extend({
   frames_number: z.number(),
 });
+export type MovieFullResponseType = z.infer<typeof MovieFullResponseSchema>;
 
 const GetLedMovieConfigResponseSchema = BasicResponseSchema.extend({
   frame_delay: z.number(),

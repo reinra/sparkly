@@ -78,9 +78,9 @@ registerRoutes(app, backendApiContract, {
     const movieConfig = await apiClient.getLedMovieConfig();
 
     res.json({
-      device: gestalt,
-      summary: summary,
-      ledConfig: ledConfig,
+      device: JSON.stringify(gestalt, null, 2) as any,
+      summary: JSON.stringify(summary, null, 2) as any,
+      ledConfig: JSON.stringify(ledConfig, null, 2) as any,
       movieConfig: JSON.stringify(movieConfig, null, 2),
     });
   },

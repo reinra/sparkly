@@ -14,7 +14,8 @@
 export async function handleApiCall<T>(
   apiCall: () => Promise<{
     status: number;
-    body: T | { error: string };
+    body: T | { error: string } | unknown;
+    headers: Headers;
   }>,
   errorMessage?: string
 ): Promise<T> {

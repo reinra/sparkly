@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { GestaltResponseSchema, SummaryResponseSchema, Mode } from './types';
+import { Mode } from './types';
 
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id
@@ -33,20 +33,10 @@ const GetInfoResponseSchema = z.object({
   ),
 });
 
-const LedConfigResponseSchema = z.object({
-  code: z.number(),
-  strings: z.array(
-    z.object({
-      first_led_id: z.number(),
-      length: z.number(),
-    })
-  ),
-});
-
 const StatusResponseSchema = z.object({
-  device: GestaltResponseSchema,
-  summary: SummaryResponseSchema,
-  ledConfig: LedConfigResponseSchema,
+  device: z.string(),
+  summary: z.string(),
+  ledConfig: z.string(),
   movieConfig: z.string(),
 });
 

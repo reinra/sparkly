@@ -59,6 +59,7 @@ type ApiClientType = typeof dummyClient;
 export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
 export type GetLedMovieConfigResponseType = z.infer<(typeof apiContract.getLedMovieConfig.responses)[200]>;
 export type SetLedMovieConfigRequestType = z.infer<typeof apiContract.setLedMovieConfig.body>;
+export type MovieFullResponseType = z.infer<(typeof apiContract.postMovieFull.responses)[200]>;
 
 export class TwinklyApiClient {
   private readonly baseUrl: string;
@@ -366,7 +367,7 @@ export class TwinklyApiClient {
     );
   }
 
-  async postMovieFull(movieData: Buffer) {
+  async postMovieFull(movieData: Buffer): Promise<MovieFullResponseType> {
     await this.ensureAuthenticated();
     
     // Convert Buffer to Uint8Array for fetch API
@@ -381,7 +382,7 @@ export class TwinklyApiClient {
     
     expect1000(result);
     logger.withMetadata({ response: result }).debug('Post Movie Full Response validated');
-    return result;
+    return result as MovieFullResponseType;
   }
 
   async getLedMovieConfig() {
