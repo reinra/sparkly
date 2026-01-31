@@ -103,7 +103,9 @@
 </script>
 
 <div class="device-card">
-  <h3>{device.alias}</h3>
+  <a href="/devices/{device.id}" class="device-title">
+    <h3>{device.alias}</h3>
+  </a>
   <div class="device-info">
     <p><strong>ID:</strong> {device.id}</p>
     <p><strong>IP:</strong> {device.ip}</p>
@@ -157,10 +159,22 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
+  .device-title {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
   .device-card h3 {
     color: #ff3e00;
     margin: 0 0 1rem 0;
     font-size: 1.3rem;
+    transition: color 0.2s;
+  }
+
+  .device-title:hover h3 {
+    color: #e63900;
+    text-decoration: underline;
   }
 
   .device-info p {
