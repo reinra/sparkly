@@ -14,6 +14,22 @@ const gradient4 = new GradientStaticStripEffect([
 export const effects: Record<string, AnyEffect> = {
   simple: new SimpleColorEffect(),
   smooth: new SmoothSameColorEffect(new SimpleColorEffect(), 64),
+  red: new GradientStaticStripEffect([
+    { red: 255, green: 0, blue: 0 },
+    { red: 255, green: 0, blue: 0 },
+  ]),
+  black: new GradientStaticStripEffect([
+    { red: 0, green: 0, blue: 0 },
+    { red: 0, green: 0, blue: 0 },
+  ]),
+  white: new GradientStaticStripEffect([
+    { red: 255, green: 255, blue: 255 },
+    { red: 255, green: 255, blue: 255 },
+  ]),
+  gray: new GradientStaticStripEffect([
+    { red: 128, green: 128, blue: 128 },
+    { red: 128, green: 128, blue: 128 },
+  ]),
   gradient_2: new GradientStaticStripEffect([
     { red: 255, green: 0, blue: 0 },
     { red: 255, green: 255, blue: 0 },

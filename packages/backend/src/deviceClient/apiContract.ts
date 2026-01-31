@@ -2,6 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { LedType } from '../color/Color';
 import { Mode } from '@twinkly-ts/common';
+import { get } from 'http';
 
 export const EnabledDisabledSchema = z.enum(['enabled', 'disabled']);
 export const AbsoluteOrRelativeSchema = z.enum(['A', 'R']);
@@ -155,6 +156,29 @@ const MovieFullResponseSchema = BasicResponseSchema.extend({
   frames_number: z.number(),
 });
 
+const GetLedMovieConfigResponseSchema = BasicResponseSchema.extend({
+  frame_delay: z.number(),
+  leds_number: z.number(),
+  loop_type: z.number(),
+  frames_number: z.number(),
+  sync: z.object({
+    mode: z.string(),
+    slave_id: z.string(),
+    master_id: z.string(),
+    compat_mode: z.number(),
+  }),
+  mic: z.object({
+    filters: z.array(
+      z.object({
+        filter: z.string(),
+      })),
+    brightness_depth: z.number(),
+    hue_depth: z.number(),
+    value_depth: z.number(),
+    saturation_depth: z.number(),
+    }),
+});
+
 const SetLedMovieConfigRequestSchema = z.object({
   frame_delay: z.number(),
   leds_number: z.number(),
@@ -250,6 +274,14 @@ export const apiContract = c.router({
     body: c.type<Blob | Buffer | Uint8Array>(),
     responses: {
       200: MovieFullResponseSchema,
+    },
+  },
+  getLedMovieConfig: {
+    method: 'GET',
+    path: '/xled/v1/led/movie/config',
+    headers: authHeaders,
+    responses: {
+      200: GetLedMovieConfigResponseSchema,
     },
   },
   setLedMovieConfig: {

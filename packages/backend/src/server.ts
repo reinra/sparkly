@@ -75,11 +75,13 @@ registerRoutes(app, backendApiContract, {
     const gestalt = await apiClient.gestalt();
     const summary = await apiClient.getSummary();
     const ledConfig = await apiClient.getLedConfig();
+    const movieConfig = await apiClient.getLedMovieConfig();
 
     res.json({
       device: gestalt,
       summary: summary,
       ledConfig: ledConfig,
+      movieConfig: JSON.stringify(movieConfig, null, 2),
     });
   },
 

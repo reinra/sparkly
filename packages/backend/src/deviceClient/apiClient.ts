@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
 import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
 import { logger } from '../logger';
+import { config } from 'process';
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
@@ -56,6 +57,7 @@ const dummyClient = initClient(apiContract, {
 type ApiNoAuthClientType = typeof dummyNoAuthClient;
 type ApiClientType = typeof dummyClient;
 export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
+export type GetLedMovieConfigResponseType = z.infer<(typeof apiContract.getLedMovieConfig.responses)[200]>;
 export type SetLedMovieConfigRequestType = z.infer<typeof apiContract.setLedMovieConfig.body>;
 
 export class TwinklyApiClient {
@@ -86,22 +88,6 @@ export class TwinklyApiClient {
    * Log request with appropriate level based on body size (trace for >2k bytes, debug otherwise)
    */
   private logRequest(args: Parameters<ApiFetcher>[0]) {
-    // Check if body is binary data (Buffer, Uint8Array, Blob)
-    const isBinary = args.body instanceof Buffer || args.body instanceof Uint8Array || args.body instanceof Blob;
-    
-    if (isBinary && args.body) {
-      const size = args.body instanceof Blob 
-        ? args.body.size 
-        : (args.body as unknown as Buffer | Uint8Array).byteLength;
-      logger.debug(`Making binary request to ${args.method} ${args.path} (${size} bytes)`);
-      logger.withMetadata({ 
-        bodyType: args.body.constructor.name,
-        bodySize: size,
-        contentType: args.contentType || args.headers?.['Content-Type'] || args.headers?.['content-type']
-      }).debug('Binary data details');
-      return;
-    }
-    
     const bodySize = args.body ? JSON.stringify(args.body).length : 0;
     if (bodySize > 2000) {
       logger.debug(`Making request to ${args.method} ${args.path}`);
@@ -117,13 +103,13 @@ export class TwinklyApiClient {
   private async fetchWithErrorHandling(
     args: Parameters<ApiFetcher>[0]
   ): Promise<{ status: number; body: any; headers: any }> {
-    logger.debug(`Making request with content type ${args.contentType}`);
     try {
       return await tsRestFetchApi({
         ...args,
         fetchOptions: {
           ...args.fetchOptions,
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          // Only apply default timeout if no signal is already provided
+          signal: args.fetchOptions?.signal || AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         },
       });
     } catch (error) {
@@ -146,6 +132,59 @@ export class TwinklyApiClient {
       this.logRequest(args);
       return await this.fetchWithErrorHandling(args);
     };
+  }
+
+  /**
+   * Direct fetch for binary data bypassing ts-rest serialization
+   * Useful for endpoints that need to send raw binary data without JSON encoding
+   */
+  private async fetchBinary(
+    path: string,
+    binaryData: Uint8Array,
+    options?: {
+      method?: string;
+      timeout?: number;
+      extraHeaders?: Record<string, string>;
+    }
+  ): Promise<any> {
+    const method = options?.method || 'POST';
+    const timeout = options?.timeout || REQUEST_TIMEOUT_MS;
+    
+    logger.withMetadata({
+      method,
+      path,
+      dataSize: binaryData.byteLength,
+      timeout,
+    }).debug('Making direct binary fetch request');
+    
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers: {
+          'x-auth-token': this.authenticationToken!,
+          'Content-Type': 'application/octet-stream',
+          ...options?.extraHeaders,
+        },
+        body: binaryData as BodyInit,
+        signal: AbortSignal.timeout(timeout),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      // Wrap network errors with DeviceUnreachableError
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('aborted') || NETWORK_ERROR_KEYWORDS.some((keyword) => message.includes(keyword))) {
+          throw new DeviceUnreachableError(this.ip, error);
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -330,27 +369,28 @@ export class TwinklyApiClient {
   async postMovieFull(movieData: Buffer) {
     await this.ensureAuthenticated();
     
-    // Convert Buffer to Uint8Array so ts-rest recognizes it as binary and doesn't JSON.stringify it
+    // Convert Buffer to Uint8Array for fetch API
     const binaryData = new Uint8Array(movieData);
     
-    logger.withMetadata({
-      originalType: movieData.constructor.name,
-      originalSize: movieData.length,
-      convertedType: binaryData.constructor.name,
-      convertedSize: binaryData.byteLength,
-      firstBytes: Array.from(binaryData.slice(0, 16)),
-      lastBytes: Array.from(binaryData.slice(-16))
-    }).debug('Posting full movie data');
+    logger.debug('Posting full movie data');
     
-    const result = await this.client.postMovieFull({
-      body: binaryData,
-      extraHeaders: {
-        'Content-Type': 'application/octet-stream'
-      }
+    // Use direct fetch to avoid ts-rest serializing the binary data
+    const result = await this.fetchBinary('/xled/v1/led/movie/full', binaryData, {
+      timeout: 20000,
     });
+    
+    expect1000(result);
+    logger.withMetadata({ response: result }).debug('Post Movie Full Response validated');
+    return result;
+  }
+
+  async getLedMovieConfig() {
+    await this.ensureAuthenticated();
+    logger.debug('Fetching LED movie config');
+    const result = await this.client.getLedMovieConfig();
     expect200(result);
     expect1000(result.body);
-    logger.withMetadata({ response: result.body }).debug('Post Movie Full Response validated');
+    logger.withMetadata({ response: result.body }).debug('Get LED Movie Config Response validated');
     return result.body;
   }
 

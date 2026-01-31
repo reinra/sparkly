@@ -135,6 +135,8 @@
         <pre>{JSON.stringify(status.summary, null, 2)}</pre>
         <h4>LED Configuration</h4>
         <pre>{JSON.stringify(status.ledConfig, null, 2)}</pre>
+        <h4>Movie Configuration</h4>
+        <pre>{status.movieConfig}</pre>
       </div>
     {:else if error && !status}
       <p class="error">{error}</p>

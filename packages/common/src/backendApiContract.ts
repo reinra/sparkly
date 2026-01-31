@@ -47,6 +47,7 @@ const StatusResponseSchema = z.object({
   device: GestaltResponseSchema,
   summary: SummaryResponseSchema,
   ledConfig: LedConfigResponseSchema,
+  movieConfig: z.string(),
 });
 
 const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
