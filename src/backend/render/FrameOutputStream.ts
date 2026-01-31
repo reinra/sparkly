@@ -11,8 +11,18 @@ export interface FrameFormat {
 export interface FrameOutputStream {
     writeFrame(frame: LedValue[]): Promise<void>;
 }
+
 export interface FrameBuffer {
     base64_encoded: string | null; // Base64 encoded frame data
+}
+
+export class MultipleFrameOutputStream implements FrameOutputStream {
+    constructor(private readonly outputs: FrameOutputStream[]) { }
+    async writeFrame(frame: LedValue[]): Promise<void> {
+        for (const output of this.outputs) {
+            await output.writeFrame(frame);
+        }   
+    }
 }
 
 export class ApiClientFrameOutputStream implements FrameOutputStream {
@@ -24,20 +34,52 @@ export class ApiClientFrameOutputStream implements FrameOutputStream {
         }
         const ledValues: number[] = [];
         for (const color of frame) {
-            await this.copyValues(color, this.frameFormat.led_type, ledValues);
+            await copyValues(color, this.frameFormat.led_type, ledValues);
         }
         logger.withMetadata({ device: this.apiClient.getIp() }).trace(`Sending LED values`);
         await this.apiClient.sendLedValues(ledValues);
     }
-    private async copyValues(color: LedValue, targetType: LedType, output: number[]) {
-        if (targetType === LedType.RGB) {
-            // Ignore white even if provided
-            output.push(color.red, color.green, color.blue);
-        } else if (hasWhiteChannel(color)) {
-            output.push(color.white, color.red, color.green, color.blue);
-        } else {
-            output.push(0, color.red, color.green, color.blue);
+}
+
+export class BufferReplacingFrameOutputStream implements FrameOutputStream {
+    constructor(private readonly buffer: FrameBuffer) { }
+    async writeFrame(frame: LedValue[]): Promise<void> {
+        this.buffer.base64_encoded = this.encodeFrameToBase64(frame);
+    }
+    private encodeFrameToBase64(frame: LedValue[]): string {
+        const bytes: number[] = [];
+        for (const color of frame) {
+            bytes.push(color.red, color.green, color.blue);
+            // ignore white channel
         }
+        const buffer = new Uint8Array(bytes);
+        return btoa(String.fromCharCode(...buffer));
+    }
+}
+
+export class MovieBufferOutputStream implements FrameOutputStream {
+    private buffers: Uint8Array[] = []; // Array of frames, each frame is a Uint8Array
+    constructor(private readonly frameFormat: FrameFormat) { }
+    async writeFrame(frame: LedValue[]): Promise<void> {
+        if (frame.length !== this.frameFormat.led_count) {
+            throw new Error(`Effect frame length ${frame.length} does not match number of LEDs ${this.frameFormat.led_count}`);
+        }
+        const bytes: number[] = [];
+        for (const color of frame) {
+            await copyValues(color, this.frameFormat.led_type, bytes);
+        }
+        this.buffers.push(new Uint8Array(bytes));
+    }
+    public getMovieBuffer(): Uint8Array {
+        // Concatenate all buffers into a single Uint8Array
+        const totalLength = this.buffers.reduce((sum, buf) => sum + buf.length, 0);
+        const result = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const buf of this.buffers) {
+            result.set(buf, offset);
+            offset += buf.length;
+        }
+        return result;
     }
 }
 
@@ -59,27 +101,13 @@ export class MappedFrameOutputStream implements FrameOutputStream {
     }
 }
 
-export class BufferReplacingFrameOutputStream implements FrameOutputStream {
-    constructor(private readonly buffer: FrameBuffer) { }
-    async writeFrame(frame: LedValue[]): Promise<void> {
-        this.buffer.base64_encoded = this.encodeFrameToBase64(frame);
-    }
-    private encodeFrameToBase64(frame: LedValue[]): string {
-        const bytes: number[] = [];
-        for (const color of frame) {
-            bytes.push(color.red, color.green, color.blue);
-            // ignore white channel
-        }
-        const buffer = Buffer.from(bytes);
-        return buffer.toString('base64');
-    }
-}
-
-export class MultipleFrameOutputStream implements FrameOutputStream {
-    constructor(private readonly outputs: FrameOutputStream[]) { }
-    async writeFrame(frame: LedValue[]): Promise<void> {
-        for (const output of this.outputs) {
-            await output.writeFrame(frame);
-        }   
+async function copyValues(color: LedValue, targetType: LedType, output: number[]) {
+    if (targetType === LedType.RGB) {
+        // Ignore white even if provided
+        output.push(color.red, color.green, color.blue);
+    } else if (hasWhiteChannel(color)) {
+        output.push(color.white, color.red, color.green, color.blue);
+    } else {
+        output.push(0, color.red, color.green, color.blue);
     }
 }

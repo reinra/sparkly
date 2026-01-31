@@ -296,6 +296,18 @@ export class TwinklyApiClient {
     );
   }
 
+  async postMovieFull(movieData: Uint8Array) {
+    await this.ensureAuthenticated();
+    
+    logger.debug('Posting full movie data');
+    const result = await this.client.postMovieFull({
+      body: movieData as Uint8Array<ArrayBuffer>,
+    });
+    expect200(result);
+    expect1000(result.body);
+    logger.withMetadata({ response: result.body }).debug('Post Movie Full Response validated');
+  }
+
   async close() {
     await closeUdpSocket();
   }

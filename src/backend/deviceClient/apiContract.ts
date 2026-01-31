@@ -235,4 +235,14 @@ export const apiContract = c.router({
       200: GetLedConfigResponseSchema,
     },
   },
+  postMovieFull: {
+    method: 'POST',
+    path: '/xled/v1/led/movie/full',
+    headers: authHeaders,
+    contentType: 'application/octet-stream' as any,
+    body: z.instanceof(Uint8Array),
+    responses: {
+      200: BasicResponseSchema,
+    },
+  },
 });

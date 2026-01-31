@@ -6,7 +6,7 @@ import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
-import { startEffect } from './effects/EffectLauncher';
+import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 
 const app = express();
 const PORT = 3001;
@@ -137,6 +137,29 @@ registerRoutes(app, backendApiContract, {
     const { device_id } = req.query;
     const device = getDeviceOrError(device_id as string);
     res.json(device.buffer);
+  },
+  sendMovie: async (req, res) => {
+    const { device_id, effect_id } = req.body;
+    const device = getDeviceOrError(device_id);
+    const taskKey = device_id;
+
+    const effect = effects[effect_id];
+    if (!effect) {
+      res.status(404).json({
+        error: `Effect with ID ${effect_id} not found`,
+      });
+      return;
+    }
+
+    abortTask(taskKey);
+
+    await sendEffectAsMovie(device, effect, new AbortController().signal).catch((error: unknown) => {
+      logError(error).error(`Error sending effect as movie to device ${device.id}`);
+    });
+
+    res.json({
+      success: true,
+    });
   },
 });
 

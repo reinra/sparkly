@@ -73,3 +73,10 @@ export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
         return result;
     }
 }
+
+export function is1DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint1D> {
+    return effect.pointType === '1D';
+}
+export function is2DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint2D> {
+    return effect.pointType === '2D';
+}

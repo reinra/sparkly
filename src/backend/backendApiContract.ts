@@ -66,6 +66,10 @@ const ChooseEffectRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string().nullable(),
 });
 
+const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
+  effect_id: z.string(),
+});
+
 const GetBufferResponseSchema = z.object({
   base64_encoded: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/, "Must be valid base64").nullable(),
 });
@@ -148,4 +152,13 @@ export const backendApiContract = c.router({
       500: ErrorResponseSchema,
     },
   },
+  sendMovie: {
+    method: 'POST',
+    path: '/api/sendMovie',
+    body: SendMovieRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  }
 });

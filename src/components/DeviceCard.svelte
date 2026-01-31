@@ -51,7 +51,7 @@
           },
         }),
       () => {
-        device.mode = value;
+        device.mode = value as any;
       },
       () => {
         mode = device.mode;
@@ -79,6 +79,24 @@
       () => {
         effect_id = device.effect_id;
       }
+    );
+    updating = false;
+  }
+
+  async function sendMovie() {
+    if (updating || !effect_id) return;
+
+    updating = true;
+    await handleApiUpdate(
+      () =>
+        backendClient.sendMovie({
+          body: {
+            device_id: device.id,
+            effect_id: effect_id!,
+          },
+        }),
+      () => {},
+      () => {}
     );
     updating = false;
   }
@@ -118,6 +136,7 @@
         {/each}
       </select>
     </p>
+    <button onclick={sendMovie} disabled={updating || !effect_id}>Send movie</button>
     <DeviceBufferViewer deviceId={device.id} />
   </div>
 </div>
@@ -147,5 +166,34 @@
   .device-info p {
     margin: 0.5rem 0;
     color: #666;
+  }
+
+  button {
+    background: #ff3e00;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.2s;
+  }
+
+  button:hover:not(:disabled) {
+    background: #e63900;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 62, 0, 0.3);
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 </style>
