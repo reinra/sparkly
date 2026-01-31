@@ -52,13 +52,13 @@ export class BufferReplacingFrameOutputStream implements FrameOutputStream {
             bytes.push(color.red, color.green, color.blue);
             // ignore white channel
         }
-        const buffer = new Uint8Array(bytes);
-        return btoa(String.fromCharCode(...buffer));
+        const buffer = Buffer.from(bytes);
+        return buffer.toString('base64');
     }
 }
 
 export class MovieBufferOutputStream implements FrameOutputStream {
-    private buffers: Uint8Array[] = []; // Array of frames, each frame is a Uint8Array
+    private buffers: Buffer[] = []; // Array of frames, each frame is a Buffer
     constructor(private readonly frameFormat: FrameFormat) { }
     async writeFrame(frame: LedValue[]): Promise<void> {
         if (frame.length !== this.frameFormat.led_count) {
@@ -68,18 +68,10 @@ export class MovieBufferOutputStream implements FrameOutputStream {
         for (const color of frame) {
             await copyValues(color, this.frameFormat.led_type, bytes);
         }
-        this.buffers.push(new Uint8Array(bytes));
+        this.buffers.push(Buffer.from(bytes));
     }
-    public getMovieBuffer(): Uint8Array {
-        // Concatenate all buffers into a single Uint8Array
-        const totalLength = this.buffers.reduce((sum, buf) => sum + buf.length, 0);
-        const result = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const buf of this.buffers) {
-            result.set(buf, offset);
-            offset += buf.length;
-        }
-        return result;
+    public getMovieBuffer(): Buffer {
+        return Buffer.concat(this.buffers);
     }
 }
 

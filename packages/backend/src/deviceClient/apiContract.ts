@@ -240,7 +240,7 @@ export const apiContract = c.router({
     path: '/xled/v1/led/movie/full',
     headers: authHeaders,
     contentType: 'application/octet-stream' as any,
-    body: z.instanceof(Uint8Array),
+    body: z.instanceof(Buffer),
     responses: {
       200: MovieFullResponseSchema,
     },
