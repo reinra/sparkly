@@ -155,6 +155,10 @@ const GetLedConfigResponseSchema = BasicResponseSchema.extend({
   ),
 });
 
+const MovieFullResponseSchema = BasicResponseSchema.extend({
+  frames_number: z.number(),
+});
+
 const authHeaders = z.object({
   'x-auth-token': z.string().optional(),
 });
@@ -242,7 +246,7 @@ export const apiContract = c.router({
     contentType: 'application/octet-stream' as any,
     body: z.instanceof(Uint8Array),
     responses: {
-      200: BasicResponseSchema,
+      200: MovieFullResponseSchema,
     },
   },
 });

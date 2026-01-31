@@ -7,6 +7,7 @@ import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { registerRoutes } from './typedHandler';
 import { devices, refreshAliases, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
+import { Mode } from '../frontendApiClient';
 
 const app = express();
 const PORT = 3001;
@@ -86,6 +87,12 @@ registerRoutes(app, backendApiContract, {
   setMode: async (req, res) => {
     const { device_id, mode } = req.body;
     const device = getDeviceOrError(device_id);
+
+    if (mode !== Mode.rt) {
+      const taskKey = device_id;
+      abortTask(taskKey);
+    }
+
     await device.api_client.setMode(mode);
 
     res.json({

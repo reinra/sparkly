@@ -82,6 +82,19 @@ export class TwinklyApiClient {
   }
 
   /**
+   * Log request with appropriate level based on body size (trace for >2k bytes, debug otherwise)
+   */
+  private logRequest(args: Parameters<ApiFetcher>[0]) {
+    const bodySize = args.body ? JSON.stringify(args.body).length : 0;
+    if (bodySize > 2000) {
+      logger.debug(`Making request to ${args.method} ${args.path}`);
+      logger.withMetadata({ body: args.body }).trace(`Making request to ${args.method} ${args.path}`);
+    } else {
+      logger.withMetadata({ body: args.body }).debug(`Making request to ${args.method} ${args.path}`);
+    }
+  }
+
+  /**
    * Helper to make a request using tsRestFetchApi and wrap network errors with DeviceUnreachableError
    */
   private async fetchWithErrorHandling(
@@ -112,7 +125,7 @@ export class TwinklyApiClient {
    */
   private createApiFetcherWithErrorHandling(): ApiFetcher {
     return async (args) => {
-      logger.withMetadata({ body: args.body }).debug(`Making request to ${args.method} ${args.path}`);
+      this.logRequest(args);
       return await this.fetchWithErrorHandling(args);
     };
   }
@@ -133,7 +146,7 @@ export class TwinklyApiClient {
       };
 
       // Make the initial request
-      logger.withMetadata({ body: args.body }).debug(`Making request to ${args.method} ${args.path}`);
+      this.logRequest(args);
       const response = await this.fetchWithErrorHandling(argsWithAuth);
 
       // If we get a 401, attempt to recover by re-authenticating and retrying once

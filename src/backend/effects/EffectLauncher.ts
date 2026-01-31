@@ -60,8 +60,16 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   
   await prepareForSendingLedValues(device);
     
+  const renderStart = Date.now();
   await renderer.renderAsap(effect, device.api_client, output, signal);
+  const renderDuration = Date.now() - renderStart;
+  logger.debug(`renderAsap completed in ${renderDuration}ms`);
+  
+  const postStart = Date.now();
   await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
+  const postDuration = Date.now() - postStart;
+  logger.debug(`postMovieFull completed in ${postDuration}ms`);
+  
   await device.api_client.setMode(Mode.movie);
 }
 
