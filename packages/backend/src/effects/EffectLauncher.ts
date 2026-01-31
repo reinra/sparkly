@@ -63,14 +63,20 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   const renderStart = Date.now();
   await renderer.renderAsap(effect, device.api_client, output, signal);
   const renderDuration = Date.now() - renderStart;
-  logger.debug(`renderAsap completed in ${renderDuration}ms`);
+  logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
   
   const postStart = Date.now();
-  await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
+  const movieResult = await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
   const postDuration = Date.now() - postStart;
-  logger.debug(`postMovieFull completed in ${postDuration}ms`);
-  
+  logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
+
   await device.api_client.setMode(Mode.movie);
+
+  await device.api_client.setLedMovieConfig({
+    frame_delay: 100, // You may want to adjust this value or make it configurable
+    leds_number: gestalt.number_of_led,
+    frames_number: movieBuffer.getFrameCount(),
+  });
 }
 
 async function prepareLedMapping(device: Device) {

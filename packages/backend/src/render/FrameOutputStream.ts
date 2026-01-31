@@ -73,6 +73,9 @@ export class MovieBufferOutputStream implements FrameOutputStream {
     public getMovieBuffer(): Buffer {
         return Buffer.concat(this.buffers);
     }
+    public getFrameCount(): number {
+        return this.buffers.length;
+    }
 }
 
 export class MappedFrameOutputStream implements FrameOutputStream {

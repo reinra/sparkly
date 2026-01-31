@@ -56,6 +56,7 @@ const dummyClient = initClient(apiContract, {
 type ApiNoAuthClientType = typeof dummyNoAuthClient;
 type ApiClientType = typeof dummyClient;
 export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
+export type SetLedMovieConfigRequestType = z.infer<typeof apiContract.setLedMovieConfig.body>;
 
 export class TwinklyApiClient {
   private readonly baseUrl: string;
@@ -85,6 +86,22 @@ export class TwinklyApiClient {
    * Log request with appropriate level based on body size (trace for >2k bytes, debug otherwise)
    */
   private logRequest(args: Parameters<ApiFetcher>[0]) {
+    // Check if body is binary data (Buffer, Uint8Array, Blob)
+    const isBinary = args.body instanceof Buffer || args.body instanceof Uint8Array || args.body instanceof Blob;
+    
+    if (isBinary && args.body) {
+      const size = args.body instanceof Blob 
+        ? args.body.size 
+        : (args.body as unknown as Buffer | Uint8Array).byteLength;
+      logger.debug(`Making binary request to ${args.method} ${args.path} (${size} bytes)`);
+      logger.withMetadata({ 
+        bodyType: args.body.constructor.name,
+        bodySize: size,
+        contentType: args.contentType || args.headers?.['Content-Type'] || args.headers?.['content-type']
+      }).debug('Binary data details');
+      return;
+    }
+    
     const bodySize = args.body ? JSON.stringify(args.body).length : 0;
     if (bodySize > 2000) {
       logger.debug(`Making request to ${args.method} ${args.path}`);
@@ -100,6 +117,7 @@ export class TwinklyApiClient {
   private async fetchWithErrorHandling(
     args: Parameters<ApiFetcher>[0]
   ): Promise<{ status: number; body: any; headers: any }> {
+    logger.debug(`Making request with content type ${args.contentType}`);
     try {
       return await tsRestFetchApi({
         ...args,
@@ -312,13 +330,39 @@ export class TwinklyApiClient {
   async postMovieFull(movieData: Buffer) {
     await this.ensureAuthenticated();
     
-    logger.debug('Posting full movie data');
+    // Convert Buffer to Uint8Array so ts-rest recognizes it as binary and doesn't JSON.stringify it
+    const binaryData = new Uint8Array(movieData);
+    
+    logger.withMetadata({
+      originalType: movieData.constructor.name,
+      originalSize: movieData.length,
+      convertedType: binaryData.constructor.name,
+      convertedSize: binaryData.byteLength,
+      firstBytes: Array.from(binaryData.slice(0, 16)),
+      lastBytes: Array.from(binaryData.slice(-16))
+    }).debug('Posting full movie data');
+    
     const result = await this.client.postMovieFull({
-      body: movieData,
+      body: binaryData,
+      extraHeaders: {
+        'Content-Type': 'application/octet-stream'
+      }
     });
     expect200(result);
     expect1000(result.body);
     logger.withMetadata({ response: result.body }).debug('Post Movie Full Response validated');
+    return result.body;
+  }
+
+  async setLedMovieConfig(config: SetLedMovieConfigRequestType) {
+    await this.ensureAuthenticated();
+    logger.debug('Setting LED movie config');
+    const result = await this.client.setLedMovieConfig({
+      body: config,
+    });
+    expect200(result);
+    expect1000(result.body);
+    logger.withMetadata({ response: result.body }).debug('Set LED Movie Config Response validated');
   }
 
   async close() {

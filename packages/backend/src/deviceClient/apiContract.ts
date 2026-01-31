@@ -155,6 +155,12 @@ const MovieFullResponseSchema = BasicResponseSchema.extend({
   frames_number: z.number(),
 });
 
+const SetLedMovieConfigRequestSchema = z.object({
+  frame_delay: z.number(),
+  leds_number: z.number(),
+  frames_number: z.number(),
+});
+
 const authHeaders = z.object({
   'x-auth-token': z.string().optional(),
 });
@@ -238,11 +244,21 @@ export const apiContract = c.router({
   postMovieFull: {
     method: 'POST',
     path: '/xled/v1/led/movie/full',
-    headers: authHeaders,
-    contentType: 'application/octet-stream' as any,
-    body: z.instanceof(Buffer),
+    headers: authHeaders.extend({
+      'Content-Type': z.string().optional(),
+    }),
+    body: c.type<Blob | Buffer | Uint8Array>(),
     responses: {
       200: MovieFullResponseSchema,
+    },
+  },
+  setLedMovieConfig: {
+    method: 'POST',
+    path: '/xled/v1/led/movie/config',
+    headers: authHeaders,
+    body: SetLedMovieConfigRequestSchema,
+    responses: {
+      200: BasicResponseSchema,
     },
   },
 });
