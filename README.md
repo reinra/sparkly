@@ -2,6 +2,8 @@
 
 A Twinkly LED controller with TypeScript backend and SvelteKit frontend.
 
+> **Note**: This project now uses a modular architecture with separate packages for common types, backend, and frontend. See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
+
 ## Getting Started
 
 ### Prerequisites
@@ -12,7 +14,7 @@ A Twinkly LED controller with TypeScript backend and SvelteKit frontend.
 
 ### Installation
 
-Install dependencies:
+Install dependencies for all packages:
 
 ```bash
 npm install
@@ -20,17 +22,17 @@ npm install
 
 ### Configuration
 
-1. Copy `config.toml.example` to `config.toml`
+1. Copy `packages/backend/config.toml.example` to `packages/backend/config.toml`
 2. Update the IP address of your Twinkly device in `config.toml`
 
 ### Running the Project
 
-#### Run backend server + frontend (new web interface)
+#### Development Mode
 
 In one terminal, start the backend server:
 
 ```bash
-npm run dev:server
+npm run dev:backend
 ```
 
 In another terminal, start the frontend:

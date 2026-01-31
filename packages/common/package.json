@@ -1,0 +1,19 @@
+{
+  "name": "@twinkly-ts/common",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Common API contracts and types shared between backend and frontend",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@ts-rest/core": "^3.52.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

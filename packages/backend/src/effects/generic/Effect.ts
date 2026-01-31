@@ -1,0 +1,82 @@
+import type { LedType, RgbValue } from "../../color/Color";
+
+export interface EffectContext {
+    // 1. CHANGING LESS
+
+    // Integer, total number of LEDs in the buffer
+    readonly total_leds: number;
+    // LedType of the LED buffer
+    readonly led_type: LedType;
+
+    // 2. MANUALLY CHANGED
+
+    // Float, speed multiplier for the effect
+    readonly speed: number;
+
+    // 3. CONSTANTLY CHANGING
+
+    // Float [0.0, 1.0) representing the progress through the effect in a loop
+    readonly phase: number;
+    // Integer, time since the effect started in milliseconds
+    readonly time_ms: number;
+    // Integer, time since the last renderGlobal() call in milliseconds
+    readonly delta_time_ms: number;
+    // Integer, current frame index since the effect started
+    readonly frame_index: number;
+}
+
+export interface LedPoint1D {    
+    // Integer, index in the hardware buffer
+    readonly id: number;
+    // Integer, position along the 1D strip
+    readonly position: number;
+    // Float, distance from the start of the strip normalized to [0.0, 1.0]
+    readonly distance: number;
+}
+
+export interface LedPoint2D {    
+    // Integer, index in the hardware buffer
+    readonly id: number;
+    // Float, X coordinate of the LED normalized to [0.0, 1.0]
+    readonly x: number;
+    // Float, Y coordinate of the LED normalized to [0.0, 1.0]
+    readonly y: number;
+}
+
+export type LedPoint = LedPoint1D | LedPoint2D;
+
+export type LedPointType = '1D' | '2D';
+
+export interface Effect<P extends LedPoint> {
+    // Runtime type identifier for the generic parameter
+    readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
+    // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
+    readonly isStateful: boolean;
+    getName(): string;
+    // Returns the duration of a full effect loop in seconds
+    getLoopDurationSeconds(ledCount: number): number;
+    // Renders the full LED buffer for the current effect state
+    renderGlobal(ctx: EffectContext, points: P[]): RgbValue[];
+}
+
+export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
+    abstract readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
+    isStateful: boolean = false;
+    abstract getName(): string;
+    abstract getLoopDurationSeconds(ledCount: number): number;
+    abstract renderPixel(ctx: EffectContext, point: P): RgbValue;
+    renderGlobal(ctx: EffectContext, points: P[]): RgbValue[] {
+        const result: RgbValue[] = new Array(points.length);
+        for (const point of points) {
+            result[point.id] = this.renderPixel(ctx, point);
+        }
+        return result;
+    }
+}
+
+export function is1DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint1D> {
+    return effect.pointType === '1D';
+}
+export function is2DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint2D> {
+    return effect.pointType === '2D';
+}
