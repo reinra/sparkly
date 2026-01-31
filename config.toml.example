@@ -1,5 +1,0 @@
-# Twinkly Configuration
-# Copy this file to config.toml and update with your device's IP address (can be many)
-
-[[device]]
-ip = "192.168.0.100"
