@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build:common && npm run build:backend && npm run build:frontend",
     "build:common": "npm run build --workspace=@twinkly-ts/common",
     "build:backend": "npm run build --workspace=@twinkly-ts/backend",
     "build:frontend": "npm run build --workspace=@twinkly-ts/frontend",
