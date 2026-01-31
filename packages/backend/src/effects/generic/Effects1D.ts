@@ -126,3 +126,52 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
+export class SineEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: "1D" = "1D";
+  constructor(private readonly frequency: number = 2) { 
+    super();
+  }
+  getName(): string {
+      return `Sine Wave Effect (${this.frequency} cycles)`;
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return 5;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+    // We combine spatial position (pt.distance) with temporal progress (ctx.phase)
+    const wave = Math.sin((point.distance * this.frequency + ctx.phase) * Math.PI * 2);
+    
+    // Map wave (-1 to 1) to brightness (0 to 1)
+    const brightness = (wave + 1) / 2;
+    
+    // Use HSL to keep a consistent color but vary the lightness
+    return hslToRgb({hue: 0.1, saturation: 1.0, lightness: brightness * 0.5});
+  }
+}
+
+export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: "1D" = "1D"
+  getName(): string {
+    return "Ping Pong";
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 5;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+    // Convert 0...1 phase into 0...1...0 bounce
+    const bounce = 1.0 - Math.abs((ctx.phase * 2) - 1);
+    
+    const pulseWidth = 0.1;
+
+    // Calculate distance from LED to the current bounce position
+    const dist = Math.abs(point.distance - bounce);
+    
+    // Create a sharp pulse with soft edges
+    const intensity = Math.max(0, 1.0 - (dist / pulseWidth));
+    
+    // Shift hue based on direction
+    const hue = ctx.phase < 0.5 ? 0.6 : 0.0; // Blue going one way, Red the other
+    
+    return hslToRgb({hue, saturation: 1.0, lightness: intensity * 0.5});
+  }
+}
