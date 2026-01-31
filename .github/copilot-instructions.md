@@ -2,6 +2,10 @@
 
 A Node.js TypeScript hello world project.
 
+### Important Guidelines
+
+**Always verify compilation after changes:** After making any code changes, always run `npm run build` to ensure the project compiles successfully. Do not leave the codebase in a broken state.
+
 ### Setup Complete
 
 - [x] Project structure created
