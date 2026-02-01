@@ -1,6 +1,6 @@
 import type { AnyEffect } from '../render/Renderer';
 import { MeteorEffect, PingPongEffect, RainbowGradientEffect1D, RainEffect, SineEffect, TestPerLedEffect1D, TwinkleEffect } from './generic/Effects1D';
-import { AdapterFrom1DEffectTo2D, RainbowGradientEffect2D } from './generic/Effects2D';
+import { AdapterFrom1DEffectTo2D, CloudsEffect, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './generic/Effects2D';
 import { SimpleColorEffect, SmoothSameColorEffect } from './old/SameColorEffect';
 import { GradientStaticStripEffect } from './old/StaticStripEffect';
 import { RotatingStrictEffect, TestPerLedEffect } from './old/StripEffect';
@@ -52,4 +52,8 @@ export const effects: Record<string, AnyEffect> = {
   ping_pong: new PingPongEffect(),
   rainbow_2d: new RainbowGradientEffect2D(),
   sine_2d: new AdapterFrom1DEffectTo2D(new SineEffect(3)),
+  pulse_scanner: new PulseScanner(),
+  slime: new Slime(),
+  clouds: new CloudsEffect(),
+  plasma: new PlasmaEffect(),
 };
