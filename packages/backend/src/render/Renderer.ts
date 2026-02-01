@@ -4,7 +4,7 @@ import type { FrameOutputStream } from './FrameOutputStream';
 import type { SameColorEffect } from '../effects/old/SameColorEffect';
 import type { StaticStripEffect } from '../effects/old/StaticStripEffect';
 import type { StripEffect } from '../effects/old/StripEffect';
-import { is1DEffect, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
+import { LedPoint2D, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
 
 const CUTOFF_FRAME_COUNT = 1000;
 const YIELD_FRAME_COUNT = 50;
@@ -20,7 +20,7 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
   private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
   private readonly stripEffectRenderer = new StripEffectRenderer();
-  private readonly effect1DRenderer = new Effect1DRenderer();
+  private readonly newEffectRenderer = new NewEffectRenderer();
   async renderLive(effect: AnyEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
     await (this.getRenderer(effect)).renderLive(effect, apiClient, output, signal);
   }
@@ -28,8 +28,8 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
     await (this.getRenderer(effect)).renderAsap(effect, apiClient, output, signal);
   }
   private getRenderer(effect: AnyEffect): Renderer<AnyEffect> {
-    if (isNewEffect(effect) && is1DEffect(effect)) {
-      return this.effect1DRenderer;
+    if (isNewEffect(effect)) {
+      return this.newEffectRenderer;
     }
     if (isSameColorEffect(effect)) {
       return this.sameColorEffectRenderer;
@@ -126,10 +126,10 @@ export class StripEffectRenderer implements Renderer<StripEffect> {
   }
 }
 
-export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
-  async renderLive(effect: Effect<LedPoint1D>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+export class NewEffectRenderer implements Renderer<Effect<any>> {
+  async renderLive(effect: Effect<any>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
     const gestalt = await apiClient.gestalt();
-    const points = getPoints(gestalt);
+    const points = await getPoints(effect, apiClient, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
     const minFrameMs = 1000 / gestalt.frame_rate;
@@ -169,9 +169,9 @@ export class Effect1DRenderer implements Renderer<Effect<LedPoint1D>> {
       lastTime = frameStartTime;
     }
   }
-  async renderAsap(effect: Effect<LedPoint1D>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+  async renderAsap(effect: Effect<any>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
     const gestalt = await apiClient.gestalt();
-    const points = getPoints(gestalt);
+    const points = await getPoints(effect, apiClient, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
     const [startRecordingMs, endRecordingMs] = effect.isStateful ? [loopDurationMs, loopDurationMs * 2] : [0, loopDurationMs];
@@ -213,10 +213,31 @@ async function yieldNow() {
   await new Promise(resolve => setImmediate(resolve));  
 }
 
-function getPoints(gestalt: GestaltResponseType): LedPoint1D[] {
+async function getPoints(effect: Effect<any>, apiClient: TwinklyApiClient, gestalt: GestaltResponseType): Promise<LedPoint1D[] | LedPoint2D[]> {
+  if (effect.pointType === '1D') {
+    return getPoints1D(gestalt);
+  }
+  if (effect.pointType === '2D') {
+    return await getPoints2D(apiClient, gestalt);
+  }
+  throw new Error(`Unsupported effect point type: ${effect.pointType}`);
+}
+
+function getPoints1D(gestalt: GestaltResponseType): LedPoint1D[] {
   const points: LedPoint1D[] = [];
   for (let i = 0; i < gestalt.number_of_led; i++) {
     points.push({ id: i, position: i, distance: i / gestalt.number_of_led });
+  }
+  return points;
+}
+
+async function getPoints2D(apiClient: TwinklyApiClient, gestalt: GestaltResponseType): Promise<LedPoint2D[]> {
+  const points: LedPoint2D[] = [];
+  const layout = await apiClient.getLayout(); // TODO: Use layout config to get actual 2D positions
+  let i = 0;
+  for (const led of layout.coordinates) {
+    points.push({ id: i, x: led.x, y: led.y });
+    i++;
   }
   return points;
 }

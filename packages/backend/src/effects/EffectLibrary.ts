@@ -1,5 +1,6 @@
 import type { AnyEffect } from '../render/Renderer';
 import { MeteorEffect, PingPongEffect, RainbowGradientEffect1D, RainEffect, SineEffect, TestPerLedEffect1D, TwinkleEffect } from './generic/Effects1D';
+import { RainbowGradientEffect2D } from './generic/Effects2D';
 import { SimpleColorEffect, SmoothSameColorEffect } from './old/SameColorEffect';
 import { GradientStaticStripEffect } from './old/StaticStripEffect';
 import { RotatingStrictEffect, TestPerLedEffect } from './old/StripEffect';
@@ -48,5 +49,6 @@ export const effects: Record<string, AnyEffect> = {
   rain: new RainEffect(),
   twinkle: new TwinkleEffect(),
   sine: new SineEffect(2),
-  ping_pong: new PingPongEffect()
+  ping_pong: new PingPongEffect(),
+  rainbow_2d: new RainbowGradientEffect2D(),
 };

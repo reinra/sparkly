@@ -7,7 +7,7 @@ export class TestPerLedEffect1D implements Effect<LedPoint1D> {
   pointType: "1D" = "1D";
   isStateful: boolean = false;
   getName(): string {
-      return "Test Per-Led Effect 1D";
+      return "Test Per-Led 1D";
   }
   getLoopDurationSeconds(ledCount: number): number {
       return ledCount / 2;
@@ -23,7 +23,7 @@ export class TestPerLedEffect1D implements Effect<LedPoint1D> {
 export class RainbowGradientEffect1D extends PerPixelEffect<LedPoint1D> {
   pointType: "1D" = "1D";
   getName(): string {
-      return "Rainbow Gradient Effect 1D";
+      return "Rainbow Gradient 1D";
   }
   getLoopDurationSeconds(ledCount: number): number {
       return 10;
