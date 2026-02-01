@@ -65,6 +65,16 @@ const GetBufferResponseSchema = z.object({
   base64_encoded: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/, "Must be valid base64").nullable(),
 });
 
+const GetLedMappingResponseSchema = z.object({
+  coordinates: z.array(
+    z.object({
+      id: z.number(),
+      x: z.number().min(0).max(1),
+      y: z.number().min(0).max(1),
+    })
+  ),
+});
+
 const GenericSuccessResponseSchema = z.object({
   success: z.boolean(),
 });
@@ -143,6 +153,15 @@ export const backendApiContract = c.router({
     query: DeviceRequestBaseSchema,
     responses: {
       200: GetBufferResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  getLedMapping: {
+    method: 'GET',
+    path: '/api/ledMapping',
+    query: DeviceRequestBaseSchema,
+    responses: {
+      200: GetLedMappingResponseSchema,
       500: ErrorResponseSchema,
     },
   },

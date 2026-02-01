@@ -153,6 +153,12 @@ registerRoutes(app, backendApiContract, {
     const device = getDeviceOrError(device_id as string);
     res.json(device.buffer);
   },
+  getLedMapping: async (req, res) => {
+    const { device_id } = req.query;
+    const device = getDeviceOrError(device_id as string);
+    const ledMapping = await device.helper.getLedMapping();
+    res.json(ledMapping);
+  },
   sendMovie: async (req, res) => {
     const { device_id, effect_id } = req.body;
     const device = getDeviceOrError(device_id);
