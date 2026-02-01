@@ -161,3 +161,60 @@ export class PlasmaEffect implements Effect<LedPoint2D> {
     }
 }
 
+export class GravityFountain implements Effect<LedPoint2D> {
+    pointType: "2D" = "2D";
+    isStateful: boolean = true;
+    private particles: { x: number, y: number, vy: number }[] = [];
+    private lastTime: number = 0;
+    getName(): string {
+        return "Gravity Fountain";
+    }
+    getLoopDurationSeconds(ledCount: number): number {
+        return 60; // Continuous effect, no loop
+    }
+    renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
+        // Calculate delta time
+        const dt = this.lastTime === 0 ? 16 : ctx.time_ms - this.lastTime;
+        this.lastTime = ctx.time_ms;
+        const dtSec = dt / 1000;
+        const gravity = 1.5;
+
+        // 1. Move particles
+        this.particles.forEach(p => {
+            p.vy += gravity * dtSec; // Apply gravity to velocity
+            p.y += p.vy * dtSec;     // Apply velocity to position
+        });
+
+        // 2. Spawn new ones at the bottom
+        // Use ctx.millis for pseudo-random behavior
+        const spawnChance = (Math.sin(ctx.time_ms * 0.01) + 1) * 0.5;
+        if (spawnChance > 0.8) {
+            const x = (Math.sin(ctx.time_ms * 0.003) + 1) * 0.5;
+            this.particles.push({ x, y: 1.0, vy: -1.5 });
+        }
+
+        // 3. Cleanup
+        this.particles = this.particles.filter(p => p.y <= 1.1);
+
+        // 4. Render
+        const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+        for (const p of this.particles) {
+            // Find the closest LED to the particle's X, Y
+            // Use a radius-based blend for better looks
+            for (const pt of points) {
+                const d = Math.sqrt((pt.x - p.x) ** 2 + (pt.y - p.y) ** 2);
+                if (d < 0.05) {
+                    const intensity = 1 - (d / 0.05);
+                    const color = { red: 255, green: 255, blue: 255 };
+                    // Blend with existing color
+                    buffer[pt.id] = {
+                        red: Math.min(255, buffer[pt.id].red + color.red * intensity),
+                        green: Math.min(255, buffer[pt.id].green + color.green * intensity),
+                        blue: Math.min(255, buffer[pt.id].blue + color.blue * intensity)
+                    };
+                }
+            }
+        }
+        return buffer;
+    }
+}
