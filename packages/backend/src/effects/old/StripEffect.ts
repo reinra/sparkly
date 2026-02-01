@@ -53,20 +53,3 @@ export class RotatingStrictEffect implements StripEffect {
 
 const black: LedValue = { red: 0, green: 0, blue: 0 } as const;
 const white: LedValue = { red: 255, green: 255, blue: 255 } as const;
-
-export class TestPerLedEffect implements StripEffect {
-  private cachedFrames: LedValue[] | null = null;
-  getName(): string {
-    return `Test Per LED Effect`;
-  }
-  *getFrames(input: FrameInput): Iterable<LedValue[]> {
-    if (this.cachedFrames === null || this.cachedFrames.length !== input.led_count) {
-      this.cachedFrames = Array.from({ length: input.led_count }, () => black);
-    }
-    for (let i = 0; i < input.led_count; i++) {
-      const frame = [...this.cachedFrames];
-      frame[i] = white;
-      yield frame;
-    }
-  }
-}

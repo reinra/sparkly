@@ -3,7 +3,7 @@ import { MeteorEffect, PingPongEffect, RainbowGradientEffect1D, RainEffect, Sine
 import { AdapterFrom1DEffectTo2D, CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './generic/Effects2D';
 import { SimpleColorEffect, SmoothSameColorEffect } from './old/SameColorEffect';
 import { GradientStaticStripEffect } from './old/StaticStripEffect';
-import { RotatingStrictEffect, TestPerLedEffect } from './old/StripEffect';
+import { RotatingStrictEffect } from './old/StripEffect';
 
 const gradient4 = new GradientStaticStripEffect([
   { red: 255, green: 0, blue: 0 },
@@ -13,7 +13,6 @@ const gradient4 = new GradientStaticStripEffect([
 ]);
 
 export const effects: Record<string, AnyEffect> = {
-  simple: new SimpleColorEffect(),
   smooth: new SmoothSameColorEffect(new SimpleColorEffect(), 64),
   red: new GradientStaticStripEffect([
     { red: 255, green: 0, blue: 0 },
@@ -42,8 +41,7 @@ export const effects: Record<string, AnyEffect> = {
   ]),
   gradient_4: gradient4,
   rotating_gradient_4: new RotatingStrictEffect(gradient4, 400, 3),
-  test_per_led: new TestPerLedEffect(),
-  new_test_per_led: new TestPerLedEffect1D(),
+  test_per_led: new TestPerLedEffect1D(),
   new_rainbow: new RainbowGradientEffect1D(),
   meteor: new MeteorEffect(),
   rain: new RainEffect(),
