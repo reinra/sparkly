@@ -2,10 +2,12 @@ import { TwinklyApiClient } from "./deviceClient/apiClient";
 import { loadConfig } from "./config";
 import type { FrameBuffer } from "./render/FrameOutputStream";
 import { logger, logError } from './logger';
+import { DeviceHelper } from "./DeviceHelper";
 
 export interface Device {
   id: string;
   api_client: TwinklyApiClient;
+  helper: DeviceHelper;
   alias: string;
   effect_id: string | null;
   buffer: FrameBuffer;
@@ -15,16 +17,20 @@ const config = loadConfig();
 
 // Initialize devices from config
 export const devices: Record<string, Device> = Object.fromEntries(
-  config.device.map((device, index) => [
-    `twinkly-${index + 1}`,
-    {
-      id: `twinkly-${index + 1}`,
-      alias: `Twinkly Device ${index + 1}`,
-      api_client: new TwinklyApiClient(device.ip),
-      effect_id: null,
-      buffer: { base64_encoded: null },
-    },
-  ])
+  config.device.map((device, index) => {
+    const apiClient = new TwinklyApiClient(device.ip);
+    return [
+      `twinkly-${index + 1}`,
+      {
+        id: `twinkly-${index + 1}`,
+        alias: `Twinkly Device ${index + 1}`,
+        api_client: apiClient,
+        helper: new DeviceHelper(apiClient),
+        effect_id: null,
+        buffer: { base64_encoded: null },
+      },
+    ];
+  })
 );
 
 export async function refreshAliases(): Promise<void> {

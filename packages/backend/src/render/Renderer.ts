@@ -1,23 +1,24 @@
-import { TwinklyApiClient, type GestaltResponseType } from '../deviceClient/apiClient';
+import type { GestaltResponseType } from '../deviceClient/apiClient';
 import type { FrameOutputStream } from './FrameOutputStream';
 import { LedPoint2D, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
+import type { DeviceHelper } from '../DeviceHelper';
 
 const YIELD_FRAME_COUNT = 50;
 
 export interface Renderer<T> {
-  renderLive(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
-  renderAsap(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
+  renderLive(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
+  renderAsap(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
 }
 
 export type AnyEffect = Effect<any>;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly newEffectRenderer = new NewEffectRenderer();
-  async renderLive(effect: AnyEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    await (this.getRenderer(effect)).renderLive(effect, apiClient, output, signal);
+  async renderLive(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
+    await (this.getRenderer(effect)).renderLive(effect, deviceHelper, output, signal);
   }
-  async renderAsap(effect: AnyEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    await (this.getRenderer(effect)).renderAsap(effect, apiClient, output, signal);
+  async renderAsap(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
+    await (this.getRenderer(effect)).renderAsap(effect, deviceHelper, output, signal);
   }
   private getRenderer(effect: AnyEffect): Renderer<AnyEffect> {
     if (isNewEffect(effect)) {
@@ -32,9 +33,9 @@ function isNewEffect(effect: AnyEffect): effect is Effect<any> {
 }
 
 export class NewEffectRenderer implements Renderer<Effect<any>> {
-  async renderLive(effect: Effect<any>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
-    const gestalt = await apiClient.gestalt();
-    const points = await getPoints(effect, apiClient, gestalt);
+  async renderLive(effect: Effect<any>, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+    const gestalt = await deviceHelper.getGestalt();
+    const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const minFrameMs = 1000 / gestalt.frame_rate;
@@ -74,9 +75,9 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       lastTime = frameStartTime;
     }
   }
-  async renderAsap(effect: Effect<any>, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
-    const gestalt = await apiClient.gestalt();
-    const points = await getPoints(effect, apiClient, gestalt);
+  async renderAsap(effect: Effect<any>, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+    const gestalt = await deviceHelper.getGestalt();
+    const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const [startRecordingMs, endRecordingMs] = effect.isStateful ? [loopDurationMs, loopDurationMs * 2] : [0, loopDurationMs];
@@ -130,12 +131,12 @@ async function yieldNow() {
   await new Promise(resolve => setImmediate(resolve));  
 }
 
-async function getPoints(effect: Effect<any>, apiClient: TwinklyApiClient, gestalt: GestaltResponseType): Promise<LedPoint1D[] | LedPoint2D[]> {
+async function getPoints(effect: Effect<any>, deviceHelper: DeviceHelper, gestalt: GestaltResponseType): Promise<LedPoint1D[] | LedPoint2D[]> {
   if (effect.pointType === '1D') {
     return getPoints1D(gestalt);
   }
   if (effect.pointType === '2D') {
-    return await getPoints2D(apiClient, gestalt);
+    return (await deviceHelper.getLedMapping()).coordinates;
   }
   throw new Error(`Unsupported effect point type: ${effect.pointType}`);
 }
@@ -145,35 +146,5 @@ function getPoints1D(gestalt: GestaltResponseType): LedPoint1D[] {
   for (let i = 0; i < gestalt.number_of_led; i++) {
     points.push({ id: i, position: i, distance: i / gestalt.number_of_led });
   }
-  return points;
-}
-
-async function getPoints2D(apiClient: TwinklyApiClient, gestalt: GestaltResponseType): Promise<LedPoint2D[]> {
-  const layout = await apiClient.getLayout();
-  
-  // Find min/max for normalization
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-  
-  for (const led of layout.coordinates) {
-    minX = Math.min(minX, led.x);
-    maxX = Math.max(maxX, led.x);
-    minY = Math.min(minY, led.y);
-    maxY = Math.max(maxY, led.y);
-  }
-  
-  const rangeX = maxX - minX;
-  const rangeY = maxY - minY;
-  
-  // Normalize coordinates to 0...1
-  const points: LedPoint2D[] = [];
-  let i = 0;
-  for (const led of layout.coordinates) {
-    const normalizedX = rangeX > 0 ? (led.x - minX) / rangeX : 0;
-    const normalizedY = rangeY > 0 ? (led.y - minY) / rangeY : 0;
-    points.push({ id: i, x: normalizedX, y: normalizedY });
-    i++;
-  }
-  
   return points;
 }

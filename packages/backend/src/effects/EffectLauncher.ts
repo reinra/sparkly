@@ -10,7 +10,7 @@ const renderer = new AnyEffectRenderer();
 
 export async function startEffect(device: Device, effect: AnyEffect, signal: AbortSignal) {
   const ledMapper = await prepareLedMapping(device);
-  const gestalt = await device.api_client.gestalt();
+  const gestalt = await device.helper.getGestalt();
   const output = new MultipleFrameOutputStream([
     new BufferReplacingFrameOutputStream(device.buffer),
     new MappedFrameOutputStream(
@@ -37,7 +37,7 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
   signal.addEventListener('abort', abortHandler);
   
   try {
-    await renderer.renderLive(effect, device.api_client, output, signal);
+    await renderer.renderLive(effect, device.helper, output, signal);
   } finally {
     if (keepAliveInterval !== null) {
       clearInterval(keepAliveInterval);
@@ -53,7 +53,7 @@ async function prepareForSendingLedValues(device: Device) {
 
 export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signal: AbortSignal) {
   const ledMapper = await prepareLedMapping(device);
-  const gestalt = await device.api_client.gestalt();
+  const gestalt = await device.helper.getGestalt();
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
   effect = cloneEffectIfNeeded(effect);
@@ -61,7 +61,7 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   await prepareForSendingLedValues(device);
     
   const renderStart = Date.now();
-  await renderer.renderAsap(effect, device.api_client, output, signal);
+  await renderer.renderAsap(effect, device.helper, output, signal);
   const renderDuration = Date.now() - renderStart;
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
   
