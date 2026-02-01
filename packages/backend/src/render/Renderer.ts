@@ -232,12 +232,31 @@ function getPoints1D(gestalt: GestaltResponseType): LedPoint1D[] {
 }
 
 async function getPoints2D(apiClient: TwinklyApiClient, gestalt: GestaltResponseType): Promise<LedPoint2D[]> {
+  const layout = await apiClient.getLayout();
+  
+  // Find min/max for normalization
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  
+  for (const led of layout.coordinates) {
+    minX = Math.min(minX, led.x);
+    maxX = Math.max(maxX, led.x);
+    minY = Math.min(minY, led.y);
+    maxY = Math.max(maxY, led.y);
+  }
+  
+  const rangeX = maxX - minX;
+  const rangeY = maxY - minY;
+  
+  // Normalize coordinates to 0...1
   const points: LedPoint2D[] = [];
-  const layout = await apiClient.getLayout(); // TODO: Use layout config to get actual 2D positions
   let i = 0;
   for (const led of layout.coordinates) {
-    points.push({ id: i, x: led.x, y: led.y });
+    const normalizedX = rangeX > 0 ? (led.x - minX) / rangeX : 0;
+    const normalizedY = rangeY > 0 ? (led.y - minY) / rangeY : 0;
+    points.push({ id: i, x: normalizedX, y: normalizedY });
     i++;
   }
+  
   return points;
 }
