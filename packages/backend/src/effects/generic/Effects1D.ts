@@ -1,6 +1,107 @@
 import { BLACK, lerp, WHITE, type RgbValue } from "../../color/Color";
 import { hslToRgb } from "../../color/Hsl";
-import { PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from "./Effect";
+import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from "./Effect";
+
+export class SingleColorEffect extends BaseSameColorEffect {
+  pointType: "1D" = "1D";
+  constructor(private readonly color: RgbValue) {
+    super();
+  }
+  getName(): string {
+      return "Single Color";
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return 0;
+  }
+  renderColor(ctx: EffectContext): RgbValue {
+    return this.color;
+  }
+}
+
+export class FlipColorEffect extends BaseSameColorEffect {
+  pointType: "1D" = "1D";
+  constructor(private readonly colors: RgbValue[]) {
+    super();
+  }
+  getName(): string {
+      return "Flip Color";
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return this.colors.length * 2;
+  }
+  renderColor(ctx: EffectContext): RgbValue {
+    const totalColors = this.colors.length;
+    const index = Math.floor(ctx.phase * totalColors) % totalColors;
+    return this.colors[index];
+  }
+}
+
+export class ChangeColorEffect extends BaseSameColorEffect {
+  pointType: "1D" = "1D";
+  constructor(private readonly colors: RgbValue[]) {
+    super();
+  }
+  getName(): string {
+      return "Change Color";
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return this.colors.length * 2;
+  }
+  renderColor(ctx: EffectContext): RgbValue {
+    const totalColors = this.colors.length;
+    const colorPhase = (ctx.phase * totalColors) % totalColors;
+    const fromIndex = Math.floor(colorPhase);
+    const toIndex = (fromIndex + 1) % totalColors;
+    const t = colorPhase - fromIndex; // Interpolation factor 0 to 1
+    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+  }
+}
+
+export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: "1D" = "1D";
+  private colors: RgbValue[];
+  constructor(colors: RgbValue[]) {
+    super();
+    this.colors = colors;
+  }
+  getName(): string {
+      return `Static Color Gradient (${this.colors.length} colors)`;
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return 0; // Static effect has no loop
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+    // Map point.distance (0.0 to 1.0) to the color gradient
+    const scaledPos = point.distance * (this.colors.length - 1);
+    const fromIndex = Math.floor(scaledPos);
+    const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
+    const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
+    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+  }
+}
+
+export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: "1D" = "1D";
+  private colors: RgbValue[];
+  constructor(colors: RgbValue[]) {
+    super();
+    this.colors = colors;
+  }
+  getName(): string {
+      return `Rotating Color Gradient (${this.colors.length} colors)`;
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+      return 5; // Rotating effect has a loop duration
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+    // Map point.distance (0.0 to 1.0) to the color gradient
+    const scaledPos = (point.distance + ctx.phase) % 1.0 * (this.colors.length - 1);
+    const fromIndex = Math.floor(scaledPos);
+    const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
+    const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
+    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+  }
+}
 
 // Also called "Marquee" if it runs a bit faster
 export class TestPerLedEffect1D implements Effect<LedPoint1D> {
@@ -34,6 +135,7 @@ export class RainbowGradientEffect1D extends PerPixelEffect<LedPoint1D> {
     return hslToRgb({hue, saturation: 1, lightness: 0.5});
   }
 }
+
 
 export class MeteorEffect implements Effect<LedPoint1D> {
   pointType: "1D" = "1D";

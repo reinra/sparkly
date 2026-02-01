@@ -1,12 +1,7 @@
 import { TwinklyApiClient, type GestaltResponseType } from '../deviceClient/apiClient';
-import type { LedValue } from '../color/Color';
 import type { FrameOutputStream } from './FrameOutputStream';
-import type { SameColorEffect } from '../effects/old/SameColorEffect';
-import type { StaticStripEffect } from '../effects/old/StaticStripEffect';
-import type { StripEffect } from '../effects/old/StripEffect';
 import { LedPoint2D, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
 
-const CUTOFF_FRAME_COUNT = 1000;
 const YIELD_FRAME_COUNT = 50;
 
 export interface Renderer<T> {
@@ -14,12 +9,9 @@ export interface Renderer<T> {
   renderAsap(effect: T, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
 }
 
-export type AnyEffect = SameColorEffect | StaticStripEffect | StripEffect | Effect<any>;
+export type AnyEffect = Effect<any>;
 
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
-  private readonly sameColorEffectRenderer = new SameColorEffectRenderer();
-  private readonly staticStripEffectRenderer = new StaticStripEffectRenderer();
-  private readonly stripEffectRenderer = new StripEffectRenderer();
   private readonly newEffectRenderer = new NewEffectRenderer();
   async renderLive(effect: AnyEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
     await (this.getRenderer(effect)).renderLive(effect, apiClient, output, signal);
@@ -31,99 +23,12 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
     if (isNewEffect(effect)) {
       return this.newEffectRenderer;
     }
-    if (isSameColorEffect(effect)) {
-      return this.sameColorEffectRenderer;
-    }
-    if (isStaticStripEffect(effect)) {
-      return this.staticStripEffectRenderer;
-    } 
-    if (isStripEffect(effect)) {
-      return this.stripEffectRenderer;
-    } 
     throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
   }
 } 
 
-function isSameColorEffect(effect: AnyEffect): effect is SameColorEffect {
-  return 'getColors' in effect;
-}
-function isStaticStripEffect(effect: AnyEffect): effect is StaticStripEffect {
-  return 'getFrame' in effect;
-}
-function isStripEffect(effect: AnyEffect): effect is StripEffect {
-  return 'getFrames' in effect;
-}
 function isNewEffect(effect: AnyEffect): effect is Effect<any> {
   return 'renderGlobal' in effect;
-}
-
-export class SameColorEffectRenderer implements Renderer<SameColorEffect> {
-  async renderLive(effect: SameColorEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    const gestalt = await apiClient.gestalt();
-    const numberOfLeds = gestalt.number_of_led;
-    const colors = effect.getColors();
-    for (const color of colors) {
-      signal.throwIfAborted();
-      const frame: LedValue[] = new Array(numberOfLeds).fill(color);
-      await output.writeFrame(frame);
-      await sleep(10);
-    }
-  }
-  async renderAsap(effect: SameColorEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    const gestalt = await apiClient.gestalt();
-    const numberOfLeds = gestalt.number_of_led;
-    const colors = effect.getColors();
-    let frameCount = 0;
-    for (const color of colors) {
-      signal.throwIfAborted();
-      const frame: LedValue[] = new Array(numberOfLeds).fill(color);
-      await output.writeFrame(frame);
-      frameCount++;
-      if (frameCount >= CUTOFF_FRAME_COUNT) {
-        break;
-      }
-    }
-  }
-}
-
-export class StaticStripEffectRenderer implements Renderer<StaticStripEffect> {
-  async renderLive(effect: StaticStripEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    const gestalt = await apiClient.gestalt();
-    const numberOfLeds = gestalt.number_of_led;
-    const frame = effect.getFrame({ led_type: gestalt.led_profile, led_count: numberOfLeds });
-    await output.writeFrame(frame);
-  }
-  async renderAsap(effect: StaticStripEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    return this.renderLive(effect, apiClient, output, signal);
-  }
-}
-
-export class StripEffectRenderer implements Renderer<StripEffect> {
-  async renderLive(effect: StripEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    const gestalt = await apiClient.gestalt();
-    const numberOfLeds = gestalt.number_of_led;
-    const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
-    for (const frame of frames) {
-      signal.throwIfAborted();
-      await output.writeFrame(frame);
-      await sleep(10);
-    }
-  }
-  async renderAsap(effect: StripEffect, apiClient: TwinklyApiClient, output: FrameOutputStream, signal: AbortSignal) {
-    const gestalt = await apiClient.gestalt();
-    const numberOfLeds = gestalt.number_of_led;
-    const frames = effect.getFrames({ led_type: gestalt.led_profile, led_count: numberOfLeds });
-    let frameCount = 0;
-    for (const frame of frames) {
-      signal.throwIfAborted();
-      await output.writeFrame(frame);
-      await sleep(10);
-      frameCount++;
-      if (frameCount >= CUTOFF_FRAME_COUNT) {
-        break;
-      }
-    }
-  }
 }
 
 export class NewEffectRenderer implements Renderer<Effect<any>> {
@@ -131,7 +36,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
     const gestalt = await apiClient.gestalt();
     const points = await getPoints(effect, apiClient, gestalt);
     const numberOfLeds = gestalt.number_of_led;
-    const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
+    const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const minFrameMs = 1000 / gestalt.frame_rate;
 
     const firstStartTime = performance.now();
@@ -173,14 +78,15 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
     const gestalt = await apiClient.gestalt();
     const points = await getPoints(effect, apiClient, gestalt);
     const numberOfLeds = gestalt.number_of_led;
-    const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
+    const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const [startRecordingMs, endRecordingMs] = effect.isStateful ? [loopDurationMs, loopDurationMs * 2] : [0, loopDurationMs];
     const frameTimeMs = 1000 / gestalt.frame_rate; // Fixed time between frames
 
     let virtualTime = 0;
     let frameIndex = 0;
     
-    while (virtualTime < endRecordingMs) {
+    // For static effects, just render one frame
+    while (virtualTime < endRecordingMs || virtualTime === 0) {
       signal.throwIfAborted();
 
       const ctx: EffectContext = {
@@ -204,6 +110,17 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       frameIndex++;
     }
   }  
+}
+
+function getValidLoopDurationInMs(effect: Effect<any>, numberOfLeds: number) {
+  const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
+  if (loopDurationMs < 0) {
+    throw new Error(`Effect ${effect.getName()} does not support renderAsap() because it has no defined loop duration`);
+  }
+  if (loopDurationMs === 0 && effect.isStateful) {
+    throw new Error(`Effect ${effect.getName()} does not support renderAsap() because it is stateful but has zero loop duration`);
+  }
+  return loopDurationMs;
 }
 
 async function sleep(milliseconds: number) {

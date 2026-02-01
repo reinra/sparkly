@@ -49,7 +49,7 @@ export type LedPointType = '1D' | '2D';
 
 export interface Effect<P extends LedPoint> {
     // Runtime type identifier for the generic parameter
-    readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
+    readonly pointType: LedPointType;
     // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
     readonly isStateful: boolean;
     getName(): string;
@@ -60,11 +60,10 @@ export interface Effect<P extends LedPoint> {
 }
 
 export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
-    abstract readonly pointType: P extends LedPoint1D ? '1D' : P extends LedPoint2D ? '2D' : LedPointType;
+    abstract readonly pointType: LedPointType;
     isStateful: boolean = false;
     abstract getName(): string;
     abstract getLoopDurationSeconds(ledCount: number): number;
-    abstract renderPixel(ctx: EffectContext, point: P): RgbValue;
     renderGlobal(ctx: EffectContext, points: P[]): RgbValue[] {
         const result: RgbValue[] = new Array(points.length);
         for (const point of points) {
@@ -72,6 +71,19 @@ export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
         }
         return result;
     }
+    abstract renderPixel(ctx: EffectContext, point: P): RgbValue;
+}
+
+export abstract class BaseSameColorEffect implements Effect<LedPoint1D> {
+    readonly pointType: LedPointType = '1D';
+    isStateful: boolean = false;
+    abstract getName(): string;
+    abstract getLoopDurationSeconds(ledCount: number): number;
+    renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
+        const color = this.renderColor(ctx);
+        return new Array(points.length).fill(color);
+    }
+    abstract renderColor(ctx: EffectContext): RgbValue;
 }
 
 export function is1DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint1D> {
