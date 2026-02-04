@@ -5,7 +5,7 @@ import { backendApiContract, Mode } from '@twinkly-ts/common';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { registerRoutes } from './typedHandler';
-import { devices, refreshAliases, type Device } from './deviceList';
+import { devices, tryToConnectAll, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 
 const app = express();
@@ -35,12 +35,10 @@ registerRoutes(app, backendApiContract, {
   getInfo: async (req, res) => {
     const { device_id } = req.query;
     const deviceList = [];
-    
+
     // Filter devices if device_id is provided
-    const devicesToQuery = device_id 
-      ? [getDeviceOrError(device_id as string)] 
-      : Object.values(devices);
-    
+    const devicesToQuery = device_id ? [getDeviceOrError(device_id as string)] : Object.values(devices);
+
     for (const device of devicesToQuery) {
       let gestalt = null;
       try {
@@ -64,8 +62,17 @@ registerRoutes(app, backendApiContract, {
         brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
         effect_id: device.effect_id,
+        parameters: (await device.helper.getParameters()).list(),
       });
+
+      logger
+        .withMetadata({ deviceId: device.id, paramCount: deviceList[deviceList.length - 1].parameters.length })
+        .info('Device parameters loaded');
     }
+
+    logger
+      .withMetadata({ devices: deviceList })
+      .info(`getInfo called, returning info for ${deviceList.length} device(s)`);
 
     res.json({
       devices: deviceList,
@@ -182,12 +189,27 @@ registerRoutes(app, backendApiContract, {
       success: true,
     });
   },
+
+  setParameters: async (req, res) => {
+    const { device_id, parameters } = req.body;
+    const device = getDeviceOrError(device_id);
+
+    logger.withMetadata({ device_id, parameters }).info(`setParameters called`);
+    const params = await device.helper.getParameters();
+    for (const param of parameters) {
+      params.setValue(param.id, param.value);
+    }
+
+    res.json({
+      success: true,
+    });
+  },
 });
 
 app.listen(PORT, () => {
   logger.info(`Backend server running on http://localhost:${PORT}`);
 
-  refreshAliases().catch((error: unknown) => {
+  tryToConnectAll().catch((error: unknown) => {
     logError(error).error('Failed to refresh device aliases on startup');
   });
 });

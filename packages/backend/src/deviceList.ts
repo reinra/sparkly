@@ -1,8 +1,8 @@
-import { TwinklyApiClient } from "./deviceClient/apiClient";
-import { loadConfig } from "./config";
-import type { FrameBuffer } from "./render/FrameOutputStream";
+import { TwinklyApiClient } from './deviceClient/apiClient';
+import { loadConfig } from './config';
+import type { FrameBuffer } from './render/FrameOutputStream';
 import { logger, logError } from './logger';
-import { DeviceHelper } from "./DeviceHelper";
+import { DeviceHelper } from './DeviceHelper';
 
 export interface Device {
   id: string;
@@ -33,14 +33,16 @@ export const devices: Record<string, Device> = Object.fromEntries(
   })
 );
 
-export async function refreshAliases(): Promise<void> {
-    for (const device of Object.values(devices)) {
-        try {   
-            const gestalt = await device.api_client.gestalt();
-            device.alias = gestalt.device_name || device.alias;
-        } catch (error) {   
-            logError(error).withMetadata({device_id: device.id}).error(`Failed to refresh alias for device`);
-        }
+export async function tryToConnectAll(): Promise<void> {
+  for (const device of Object.values(devices)) {
+    try {
+      const gestalt = await device.api_client.gestalt();
+      device.alias = gestalt.device_name || device.alias;
+
+      await device.helper.refreshFromDevice();
+    } catch (error) {
+      logError(error).withMetadata({ device_id: device.id }).error(`Failed to connect to device ${device.id}`);
     }
-    logger.info('Device aliases refreshed');
+  }
+  logger.info('Device aliases refreshed');
 }

@@ -1,10 +1,16 @@
-import { Mode } from "@twinkly-ts/common";
-import type { Device } from "../deviceList";
-import { MultipleFrameOutputStream, BufferReplacingFrameOutputStream, MappedFrameOutputStream, ApiClientFrameOutputStream, MovieBufferOutputStream } from "../render/FrameOutputStream";
-import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from "../render/LedMapper";
-import { AnyEffectRenderer, type AnyEffect } from "../render/Renderer";
-import { logger } from "../logger";
-import type { GestaltResponseType, MovieFullResponseType } from "../deviceClient/apiClient";
+import { Mode } from '@twinkly-ts/common';
+import type { Device } from '../deviceList';
+import {
+  MultipleFrameOutputStream,
+  BufferReplacingFrameOutputStream,
+  MappedFrameOutputStream,
+  ApiClientFrameOutputStream,
+  MovieBufferOutputStream,
+} from '../render/FrameOutputStream';
+import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from '../render/LedMapper';
+import { AnyEffectRenderer, type AnyEffect } from '../render/Renderer';
+import { logger } from '../logger';
+import type { GestaltResponseType, MovieFullResponseType } from '../deviceClient/apiClient';
 
 const renderer = new AnyEffectRenderer();
 
@@ -13,20 +19,21 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
   const gestalt = await device.helper.getGestalt();
   const output = new MultipleFrameOutputStream([
     new BufferReplacingFrameOutputStream(device.buffer),
-    new MappedFrameOutputStream(
-      new ApiClientFrameOutputStream(device.api_client, toFrameFormat(gestalt)),
-      ledMapper
-    )]);
+    new MappedFrameOutputStream(new ApiClientFrameOutputStream(device.api_client, toFrameFormat(gestalt)), ledMapper),
+  ]);
   effect = cloneEffectIfNeeded(effect);
   await prepareForSendingLedValues(device);
-  
+
   // Schedule regular keep-alive calls every 5 minutes
-  let keepAliveInterval: NodeJS.Timeout | null = setInterval(() => {
-    prepareForSendingLedValues(device).catch(err => {
-      logger.error("Keep-alive call failed:", err);
-    });
-  }, 5 * 60 * 1000); // 5 minutes
-  
+  let keepAliveInterval: NodeJS.Timeout | null = setInterval(
+    () => {
+      prepareForSendingLedValues(device).catch((err) => {
+        logger.error('Keep-alive call failed:', err);
+      });
+    },
+    5 * 60 * 1000
+  ); // 5 minutes
+
   // Clear interval on abort signal - using unique handler per invocation
   const abortHandler = () => {
     if (keepAliveInterval !== null) {
@@ -35,7 +42,7 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
     }
   };
   signal.addEventListener('abort', abortHandler);
-  
+
   try {
     await renderer.renderLive(effect, device.helper, output, signal);
   } finally {
@@ -48,7 +55,7 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
 }
 
 async function prepareForSendingLedValues(device: Device) {
-    await device.api_client.setMode(Mode.rt);
+  await device.api_client.setMode(Mode.rt);
 }
 
 export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signal: AbortSignal) {
@@ -57,20 +64,20 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
   effect = cloneEffectIfNeeded(effect);
-  
+
   await prepareForSendingLedValues(device);
-    
+
   const renderStart = Date.now();
   await renderer.renderAsap(effect, device.helper, output, signal);
   const renderDuration = Date.now() - renderStart;
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
-  
+
   const postStart = Date.now();
   const movieResult = await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
   const postDuration = Date.now() - postStart;
   logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
 
-  const frameMs = 1000 / gestalt.frame_rate;
+  const frameMs = device.helper.getMinFrameTimeMs();
   await device.api_client.setLedMovieConfig({
     frame_delay: frameMs,
     leds_number: gestalt.number_of_led,
@@ -95,21 +102,21 @@ async function prepareLedMapping(device: Device) {
 }
 
 function cloneEffectIfNeeded(effect: AnyEffect) {
-    if ('isStateful' in effect && effect.isStateful) {
-        return cloneEffect(effect);
-    }
-    return effect;
+  if ('isStateful' in effect && effect.isStateful) {
+    return cloneEffect(effect);
+  }
+  return effect;
 }
 
 function cloneEffect(effect: AnyEffect) {
-    const effectConstructor = effect.constructor as new (...args: any[]) => AnyEffect;
-    effect = new effectConstructor(...Object.values(effect));
-    return effect;
+  const effectConstructor = effect.constructor as new (...args: any[]) => AnyEffect;
+  effect = new effectConstructor(...Object.values(effect));
+  return effect;
 }
 
 function toFrameFormat(gestalt: GestaltResponseType) {
-    return {
-        led_type: gestalt.led_profile,
-        led_count: gestalt.number_of_led,
-    };
+  return {
+    led_type: gestalt.led_profile,
+    led_count: gestalt.number_of_led,
+  };
 }

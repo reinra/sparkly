@@ -2,8 +2,10 @@
   import { backendClient } from '../../../frontendApiClient';
   import { handleApiUpdate } from '../../../utils/apiHelper';
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
+  import EffectParameters from '../../../components/EffectParameters.svelte';
   import { deviceStore } from '../../../stores/deviceStore.svelte';
   import { page } from '$app/state';
+  import { ParameterType, type EffectParameter } from '@twinkly-ts/common';
 
   let deviceId = $derived(page.params.id);
   let device = $derived(deviceStore.getDevice(deviceId));
@@ -39,28 +41,6 @@
       if (idx >= 0) selectedEffectIndex = idx;
     }
   });
-
-  async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
-    if (!device || updating) return;
-    const value = Number(event.currentTarget.value);
-    if (value === device.brightness) return;
-
-    updating = true;
-    await handleApiUpdate(
-      () =>
-        backendClient.setBrightness({
-          body: {
-            device_id: deviceId,
-            brightness: value,
-          },
-        }),
-      async () => {
-        await deviceStore.fetchDevice(deviceId);
-      },
-      () => {}
-    );
-    updating = false;
-  }
 
   async function updateMode(event: Event & { currentTarget: HTMLSelectElement }) {
     if (!device || updating) return;
@@ -182,21 +162,6 @@
           {/if}
         </div>
 
-        <div class="control-group">
-          <label for="brightness">
-            <strong>Brightness:</strong> {device.brightness}%
-          </label>
-          <input
-            id="brightness"
-            type="range"
-            min="0"
-            max="100"
-            value={device.brightness}
-            onchange={updateBrightness}
-            disabled={updating}
-          />
-        </div>
-
         {#if device.mode}
           <div class="control-group">
             <label for="mode">
@@ -212,9 +177,9 @@
           </div>
         {/if}
 
-        <button onclick={sendMovie} disabled={updating || !device.effect_id}>
-          Send Movie
-        </button>
+        <EffectParameters deviceId={device.id} parameters={device.parameters || []} bind:updating />
+
+        <button onclick={sendMovie} disabled={updating || !device.effect_id}> Send Movie </button>
       </div>
 
       <div class="effects-section">
@@ -282,6 +247,12 @@
     color: #ff3e00;
     font-size: 1.4rem;
     margin: 0 0 1rem 0;
+  }
+
+  h4 {
+    color: #ff3e00;
+    font-size: 1.1rem;
+    margin: 1.5rem 0 1rem 0;
   }
 
   .device-content {
