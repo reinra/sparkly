@@ -1,4 +1,4 @@
-import type { LedType, RgbValue } from '../../color/Color';
+import type { LedType, RgbValue } from '../../color/Color8bit';
 
 export interface EffectContext {
   // 1. CHANGING LESS

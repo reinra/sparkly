@@ -1,4 +1,4 @@
-import { BLACK, lerp, WHITE, type RgbValue } from '../../color/Color';
+import { BLACK, lerp, WHITE, type RgbValue } from '../../color/Color8bit';
 import { hslToRgb } from '../../color/Hsl';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 

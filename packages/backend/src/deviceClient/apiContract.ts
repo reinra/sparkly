@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { LedType } from '../color/Color';
+import { LedType } from '../color/Color8bit';
 import { Mode } from '@twinkly-ts/common';
 import { get } from 'http';
 
