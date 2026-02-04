@@ -61,9 +61,15 @@ export function floatTo8bit(color: LedFloat): RgbValue | RgbwValue {
   };
 }
 
+/**
+ * Applies gamma correction to a color. Gamma is a value where 1 means no correction, less than 1 brightens the color, and greater than 1 darkens it.
+ */
 export function gammaCorrect(color: RgbFloat, gamma: number): RgbFloat;
 export function gammaCorrect(color: RgbwFloat, gamma: number): RgbwFloat;
 export function gammaCorrect(color: LedFloat, gamma: number): LedFloat {
+  if (gamma === 1) {
+    return color; // No correction needed
+  }
   if (hasWhiteChannel(color)) {
     return {
       red_f: Math.pow(color.red_f, gamma),
@@ -77,4 +83,31 @@ export function gammaCorrect(color: LedFloat, gamma: number): LedFloat {
     green_f: Math.pow(color.green_f, gamma),
     blue_f: Math.pow(color.blue_f, gamma),
   };
+}
+
+/**
+ * Adjusts the color temperature of a color. Temperature is a value between -1 (cool/blue) and 1 (warm/orange).
+ */
+export function adjustColorTemperatureNormalized(color: RgbFloat, temperature: number): RgbFloat {
+  if (temperature === 0) {
+    return color; // No adjustment needed
+  }
+  // Clamp temperature between -1 (cool/blue) and 1 (warm/orange)
+  const t = Math.max(-1, Math.min(1, temperature));
+
+  if (t > 0) {
+    // Warm shift: increase red, slightly reduce green, reduce blue
+    return {
+      red_f: Math.min(1, color.red_f + t * 0.3 * (1 - color.red_f)),
+      green_f: Math.max(0, color.green_f - t * 0.1),
+      blue_f: Math.max(0, color.blue_f - t * 0.5),
+    };
+  } else {
+    // Cool shift: reduce red, slightly increase green, increase blue
+    return {
+      red_f: Math.max(0, color.red_f + t * 0.5), // t is negative, so this reduces
+      green_f: Math.min(1, color.green_f - t * 0.1 * (1 - color.green_f)),
+      blue_f: Math.min(1, color.blue_f - t * 0.3 * (1 - color.blue_f)),
+    };
+  }
 }
