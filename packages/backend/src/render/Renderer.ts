@@ -43,7 +43,6 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
     const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
-    const minFrameMs = 1000 / gestalt.frame_rate;
 
     const firstStartTime = performance.now();
     let lastTime = firstStartTime;
@@ -68,7 +67,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       await output.writeFrame(ledValues);
 
       const processingTime = performance.now() - frameStartTime;
-      const timeToWait = minFrameMs - processingTime;
+      const timeToWait = deviceHelper.getMinFrameTimeMs() - processingTime;
       if (timeToWait > 0) {
         await sleep(timeToWait);
       } else {
@@ -92,7 +91,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
     const [startRecordingMs, endRecordingMs] = effect.isStateful
       ? [loopDurationMs, loopDurationMs * 2]
       : [0, loopDurationMs];
-    const frameTimeMs = 1000 / gestalt.frame_rate; // Fixed time between frames
+    const frameTimeMs = deviceHelper.getMinFrameTimeMs() * deviceHelper.getCurrentSpeedMultiplier();
 
     let virtualTime = 0;
     let frameIndex = 0;

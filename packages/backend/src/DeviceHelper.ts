@@ -28,6 +28,16 @@ export class DeviceHelper {
     unit: 'x',
     step: 0.1,
   };
+  private readonly maxFpsParameter: RangeEffectParameter = {
+    id: 'fps',
+    name: 'Max rendering frequency',
+    description: 'Maximum frames per second for effect rendering',
+    type: ParameterType.RANGE,
+    value: 60,
+    min: 1,
+    max: 60,
+    unit: 'fps',
+  };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
 
@@ -76,6 +86,9 @@ export class DeviceHelper {
 
     this.params.register(this.speedParameter);
 
+    this.maxFpsParameter.value = (await this.getGestalt()).frame_rate;
+    this.params.register(this.maxFpsParameter);
+
     this.paramsInitialized = true;
   }
 
@@ -90,6 +103,12 @@ export class DeviceHelper {
 
   public getCurrentSpeedMultiplier(): number {
     return this.speedParameter.value;
+  }
+  public getMaxFps(): number {
+    return this.maxFpsParameter.value;
+  }
+  public getMinFrameTimeMs(): number {
+    return 1000 / this.getMaxFps();
   }
 
   public async getGestalt(): Promise<GestaltResponseType> {
