@@ -35,7 +35,10 @@ function expect1000(responseBody: { code: number }): asserts responseBody is { c
 export class DeviceUnreachableError extends Error {
   public readonly cause?: Error;
 
-  constructor(public readonly deviceIp: string, cause?: Error) {
+  constructor(
+    public readonly deviceIp: string,
+    cause?: Error
+  ) {
     super(
       `Twinkly device unreachable at ${deviceIp}. Please check if the device is powered on and connected to the network.`
     );
@@ -150,14 +153,16 @@ export class TwinklyApiClient {
   ): Promise<any> {
     const method = options?.method || 'POST';
     const timeout = options?.timeout || REQUEST_TIMEOUT_MS;
-    
-    logger.withMetadata({
-      method,
-      path,
-      dataSize: binaryData.byteLength,
-      timeout,
-    }).debug('Making direct binary fetch request');
-    
+
+    logger
+      .withMetadata({
+        method,
+        path,
+        dataSize: binaryData.byteLength,
+        timeout,
+      })
+      .debug('Making direct binary fetch request');
+
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
@@ -169,11 +174,11 @@ export class TwinklyApiClient {
         body: binaryData as BodyInit,
         signal: AbortSignal.timeout(timeout),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       return result;
     } catch (error) {
@@ -321,6 +326,21 @@ export class TwinklyApiClient {
     logger.withMetadata({ response: (result as any).body }).debug('Set Brightness Response validated');
   }
 
+  async setSaturationAbsolute(value: number) {
+    await this.ensureAuthenticated();
+    logger.debug(`Setting saturation to absolute value ${value}`);
+    const result = await this.client.setSaturation({
+      body: {
+        mode: EnabledDisabledSchema.enum.enabled,
+        type: AbsoluteOrRelativeSchema.enum.A,
+        value,
+      },
+    });
+    expect200(result);
+    expect1000((result as any).body);
+    logger.withMetadata({ response: (result as any).body }).debug('Set Saturation Response validated');
+  }
+
   async listMovies() {
     await this.ensureAuthenticated();
     logger.debug('Listing movies');
@@ -369,17 +389,17 @@ export class TwinklyApiClient {
 
   async postMovieFull(movieData: Buffer): Promise<MovieFullResponseType> {
     await this.ensureAuthenticated();
-    
+
     // Convert Buffer to Uint8Array for fetch API
     const binaryData = new Uint8Array(movieData);
-    
+
     logger.debug('Posting full movie data');
-    
+
     // Use direct fetch to avoid ts-rest serializing the binary data
     const result = await this.fetchBinary('/xled/v1/led/movie/full', binaryData, {
       timeout: 20000,
     });
-    
+
     expect1000(result);
     logger.withMetadata({ response: result }).debug('Post Movie Full Response validated');
     return result as MovieFullResponseType;

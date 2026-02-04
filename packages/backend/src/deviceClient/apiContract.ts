@@ -172,12 +172,13 @@ const GetLedMovieConfigResponseSchema = BasicResponseSchema.extend({
     filters: z.array(
       z.object({
         filter: z.string(),
-      })),
+      })
+    ),
     brightness_depth: z.number(),
     hue_depth: z.number(),
     value_depth: z.number(),
     saturation_depth: z.number(),
-    }),
+  }),
 });
 
 const SetLedMovieConfigRequestSchema = z.object({
@@ -236,6 +237,15 @@ export const apiContract = c.router({
   setBrightness: {
     method: 'POST',
     path: '/xled/v1/led/out/brightness',
+    headers: authHeaders,
+    body: SetBrightnessRequestSchema,
+    responses: {
+      200: BasicResponseSchema,
+    },
+  },
+  setSaturation: {
+    method: 'POST',
+    path: '/xled/v1/led/out/saturation',
     headers: authHeaders,
     body: SetBrightnessRequestSchema,
     responses: {

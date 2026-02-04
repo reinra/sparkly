@@ -64,6 +64,10 @@ registerRoutes(app, backendApiContract, {
         effect_id: device.effect_id,
         parameters: (await device.helper.getParameters()).list(),
       });
+
+      logger
+        .withMetadata({ deviceId: device.id, paramCount: deviceList[deviceList.length - 1].parameters.length })
+        .info('Device parameters loaded');
     }
 
     logger

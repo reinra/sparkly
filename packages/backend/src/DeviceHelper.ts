@@ -34,13 +34,29 @@ export class DeviceHelper {
         name: 'Brightness',
         description: 'Current brightness of LEDs regardless of mode, not shown in previews',
         type: ParameterType.RANGE,
-        value: (await this.getAbsoluteBrightness()) ?? 100,
+        value: (await this.getFilterValue('brightness')) ?? 100,
         min: 0,
         max: 100,
         unit: '%',
       },
       async (_parameter, _oldValue, newValue: number) => {
         await this.apiClient.setBrightnessAbsolute(newValue);
+      }
+    );
+
+    this.params.register(
+      {
+        id: 'saturation',
+        name: 'Saturation',
+        description: 'Current saturation of LEDs regardless of mode, not shown in previews',
+        type: ParameterType.RANGE,
+        value: (await this.getFilterValue('saturation')) ?? 100,
+        min: 0,
+        max: 100,
+        unit: '%',
+      },
+      async (_parameter, _oldValue, newValue: number) => {
+        await this.apiClient.setSaturationAbsolute(newValue);
       }
     );
 
@@ -52,8 +68,8 @@ export class DeviceHelper {
     return this.params;
   }
 
-  public async getAbsoluteBrightness(): Promise<number | undefined> {
-    return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == 'brightness')?.config?.value;
+  public async getFilterValue(name: string): Promise<number | undefined> {
+    return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == name)?.config?.value;
   }
 
   public async getGestalt(): Promise<GestaltResponseType> {
