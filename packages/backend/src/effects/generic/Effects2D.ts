@@ -1,5 +1,5 @@
-import { RgbValue } from '../../color/Color8bit';
-import { hslToRgb } from '../../color/Hsl';
+import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
+import { hslToRgbFloat } from '../../color/Hsl';
 import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
 
@@ -13,7 +13,7 @@ export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return this.effect1D.getLoopDurationSeconds(ledCount);
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Map the 2D points to 1D points by using only the X coordinate
     const points1D: LedPoint1D[] = points.map((point) => ({
       id: point.id,
@@ -32,10 +32,10 @@ export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint2D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint2D): RgbFloat {
     // We use the normalized 'distance' for a smooth gradient
     const hue = (ctx.phase + point.x) % 1.0;
-    return hslToRgb({ hue, saturation: point.y, lightness: 0.5 });
+    return hslToRgbFloat({ hue, saturation: point.y, lightness: 0.5 });
   }
 }
 
@@ -48,14 +48,14 @@ export class PulseScanner implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     const centerX = 0.5,
       centerY = 0.5;
     const maxRadius = 0.7; // Reach the corners
     const currentRadius = ctx.phase * maxRadius;
     const thickness = 0.1;
 
-    const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     for (const pt of points) {
       const dist = Math.sqrt((pt.x - centerX) ** 2 + (pt.y - centerY) ** 2);
 
@@ -67,7 +67,7 @@ export class PulseScanner implements Effect<LedPoint2D> {
       // Fade out as the ring gets larger
       const alpha = intensity * (1.0 - ctx.phase);
 
-      buffer[pt.id] = hslToRgb({ hue: 0.6, saturation: 1.0, lightness: alpha * 0.5 });
+      buffer[pt.id] = hslToRgbFloat({ hue: 0.6, saturation: 1.0, lightness: alpha * 0.5 });
     }
     return buffer;
   }
@@ -84,18 +84,18 @@ export class Slime implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Get seamless loop coordinates
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 
-    const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     for (const pt of points) {
       // Scale coordinates to control "blob" size
       const noiseVal = this.noise.get4D(pt.x * 2, pt.y * 2, nz, nw);
 
       // Use noise to pick a Hue
       const hue = this.noise.normalize(noiseVal);
-      buffer[pt.id] = hslToRgb({ hue, saturation: 0.8, lightness: 0.5 });
+      buffer[pt.id] = hslToRgbFloat({ hue, saturation: 0.8, lightness: 0.5 });
     }
     return buffer;
   }
@@ -112,8 +112,8 @@ export class CloudsEffect implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
-    const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
 
     for (const pt of points) {
       // Animate by scrolling through the Z dimension of 3D noise
@@ -124,7 +124,7 @@ export class CloudsEffect implements Effect<LedPoint2D> {
       const hue = 0.55; // Blue
       const saturation = 0.3;
 
-      buffer[pt.id] = hslToRgb({ hue, saturation, lightness: brightness * 0.5 });
+      buffer[pt.id] = hslToRgbFloat({ hue, saturation, lightness: brightness * 0.5 });
     }
     return buffer;
   }
@@ -141,8 +141,8 @@ export class PlasmaEffect implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 8;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
-    const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 
     for (const pt of points) {
@@ -156,7 +156,7 @@ export class PlasmaEffect implements Effect<LedPoint2D> {
 
       // Map to rainbow colors
       const hue = this.noise.normalize(combined);
-      buffer[pt.id] = hslToRgb({ hue, saturation: 1.0, lightness: 0.5 });
+      buffer[pt.id] = hslToRgbFloat({ hue, saturation: 1.0, lightness: 0.5 });
     }
     return buffer;
   }
@@ -173,7 +173,7 @@ export class GravityFountain implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 60; // Continuous effect, no loop
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Calculate delta time
     const dt = this.lastTime === 0 ? 16 : ctx.time_ms - this.lastTime;
     this.lastTime = ctx.time_ms;
@@ -198,7 +198,7 @@ export class GravityFountain implements Effect<LedPoint2D> {
     this.particles = this.particles.filter((p) => p.y <= 1.1);
 
     // 4. Render
-    const buffer: RgbValue[] = new Array(points.length).fill({ red: 0, green: 0, blue: 0 });
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     for (const p of this.particles) {
       // Find the closest LED to the particle's X, Y
       // Use a radius-based blend for better looks
@@ -206,12 +206,12 @@ export class GravityFountain implements Effect<LedPoint2D> {
         const d = Math.sqrt((pt.x - p.x) ** 2 + (pt.y - p.y) ** 2);
         if (d < 0.05) {
           const intensity = 1 - d / 0.05;
-          const color = { red: 255, green: 255, blue: 255 };
+          const color = WHITE;
           // Blend with existing color
           buffer[pt.id] = {
-            red: Math.min(255, buffer[pt.id].red + color.red * intensity),
-            green: Math.min(255, buffer[pt.id].green + color.green * intensity),
-            blue: Math.min(255, buffer[pt.id].blue + color.blue * intensity),
+            red_f: Math.min(1, buffer[pt.id].red_f + color.red_f * intensity),
+            green_f: Math.min(1, buffer[pt.id].green_f + color.green_f * intensity),
+            blue_f: Math.min(1, buffer[pt.id].blue_f + color.blue_f * intensity),
           };
         }
       }

@@ -1,10 +1,10 @@
-import { BLACK, lerp, WHITE, type RgbValue } from '../../color/Color8bit';
-import { hslToRgb } from '../../color/Hsl';
+import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
+import { hslToRgbFloat } from '../../color/Hsl';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 
 export class SingleColorEffect extends BaseSameColorEffect {
   pointType: '1D' = '1D';
-  constructor(private readonly color: RgbValue) {
+  constructor(private readonly color: RgbFloat) {
     super();
   }
   getName(): string {
@@ -13,14 +13,14 @@ export class SingleColorEffect extends BaseSameColorEffect {
   getLoopDurationSeconds(ledCount: number): number {
     return 0;
   }
-  renderColor(ctx: EffectContext): RgbValue {
+  renderColor(ctx: EffectContext): RgbFloat {
     return this.color;
   }
 }
 
 export class FlipColorEffect extends BaseSameColorEffect {
   pointType: '1D' = '1D';
-  constructor(private readonly colors: RgbValue[]) {
+  constructor(private readonly colors: RgbFloat[]) {
     super();
   }
   getName(): string {
@@ -29,7 +29,7 @@ export class FlipColorEffect extends BaseSameColorEffect {
   getLoopDurationSeconds(ledCount: number): number {
     return this.colors.length * 2;
   }
-  renderColor(ctx: EffectContext): RgbValue {
+  renderColor(ctx: EffectContext): RgbFloat {
     const totalColors = this.colors.length;
     const index = Math.floor(ctx.phase * totalColors) % totalColors;
     return this.colors[index];
@@ -38,7 +38,7 @@ export class FlipColorEffect extends BaseSameColorEffect {
 
 export class ChangeColorEffect extends BaseSameColorEffect {
   pointType: '1D' = '1D';
-  constructor(private readonly colors: RgbValue[]) {
+  constructor(private readonly colors: RgbFloat[]) {
     super();
   }
   getName(): string {
@@ -47,7 +47,7 @@ export class ChangeColorEffect extends BaseSameColorEffect {
   getLoopDurationSeconds(ledCount: number): number {
     return this.colors.length * 2;
   }
-  renderColor(ctx: EffectContext): RgbValue {
+  renderColor(ctx: EffectContext): RgbFloat {
     const totalColors = this.colors.length;
     const colorPhase = (ctx.phase * totalColors) % totalColors;
     const fromIndex = Math.floor(colorPhase);
@@ -59,8 +59,8 @@ export class ChangeColorEffect extends BaseSameColorEffect {
 
 export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
-  private colors: RgbValue[];
-  constructor(colors: RgbValue[]) {
+  private colors: RgbFloat[];
+  constructor(colors: RgbFloat[]) {
     super();
     this.colors = colors;
   }
@@ -70,7 +70,7 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 0; // Static effect has no loop
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     const scaledPos = point.distance * (this.colors.length - 1);
     const fromIndex = Math.floor(scaledPos);
@@ -82,8 +82,8 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
 
 export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
-  private colors: RgbValue[];
-  constructor(colors: RgbValue[]) {
+  private colors: RgbFloat[];
+  constructor(colors: RgbFloat[]) {
     super();
     this.colors = colors;
   }
@@ -93,7 +93,7 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5; // Rotating effect has a loop duration
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     const scaledPos = ((point.distance + ctx.phase) % 1.0) * (this.colors.length - 1);
     const fromIndex = Math.floor(scaledPos);
@@ -113,8 +113,8 @@ export class TestPerLedEffect1D implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
-    const result: RgbValue[] = new Array(points.length).fill(BLACK);
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+    const result: RgbFloat[] = new Array(points.length).fill(BLACK);
     const index = Math.floor(ctx.phase * points.length);
     result[index] = WHITE;
     return result;
@@ -129,17 +129,17 @@ export class RainbowGradientEffect1D extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // We use the normalized 'distance' for a smooth gradient
     const hue = (ctx.phase + point.distance) % 1.0;
-    return hslToRgb({ hue, saturation: 1, lightness: 0.5 });
+    return hslToRgbFloat({ hue, saturation: 1, lightness: 0.5 });
   }
 }
 
 export class MeteorEffect implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
-  private lastBuffer: RgbValue[] | null = null;
+  private lastBuffer: RgbFloat[] | null = null;
   private previousHeadIndex: number = -1;
   getName(): string {
     return 'Meteor';
@@ -147,7 +147,7 @@ export class MeteorEffect implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     // 1. Fade the whole buffer slightly (creates the trail)
     // The fade amount is scaled by deltaTime to keep it FPS-independent
     const fadeFactor = 1.0 - ctx.delta_time_ms / 500; // Lose full brightness every 500ms
@@ -185,7 +185,7 @@ export class MeteorEffect implements Effect<LedPoint1D> {
 interface Particle {
   pos: number;
   vel: number;
-  color: RgbValue;
+  color: RgbFloat;
 }
 export class RainEffect implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
@@ -197,7 +197,7 @@ export class RainEffect implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 60;
   }
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     // 1. Move existing particles based on velocity and time passed
     this.particles.forEach((p) => {
       p.pos += (p.vel * ctx.delta_time_ms) / 1000;
@@ -208,10 +208,10 @@ export class RainEffect implements Effect<LedPoint1D> {
 
     // 3. Add new particles "randomly" using a Seeded PRNG
     if (Math.random() > 0.9) {
-      this.particles.push({ pos: 0, vel: Math.random() * 10, color: { red: 0, green: 0, blue: 255 } });
+      this.particles.push({ pos: 0, vel: Math.random() * 10, color: { red_f: 0, green_f: 0, blue_f: 1 } });
     }
 
-    const buffer: RgbValue[] = new Array(points.length).fill(BLACK);
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
 
     // Draw particles
     for (const p of this.particles) {
@@ -232,7 +232,7 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 1;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     if (Math.random() < 0.01) {
       return WHITE;
     }
@@ -251,7 +251,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // We combine spatial position (pt.distance) with temporal progress (ctx.phase)
     const wave = Math.sin((point.distance * this.frequency + ctx.phase) * Math.PI * 2);
 
@@ -259,7 +259,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
     const brightness = (wave + 1) / 2;
 
     // Use HSL to keep a consistent color but vary the lightness
-    return hslToRgb({ hue: 0.1, saturation: 1.0, lightness: brightness * 0.5 });
+    return hslToRgbFloat({ hue: 0.1, saturation: 1.0, lightness: brightness * 0.5 });
   }
 }
 
@@ -271,7 +271,7 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbValue {
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // Convert 0...1 phase into 0...1...0 bounce
     const bounce = 1.0 - Math.abs(ctx.phase * 2 - 1);
 
@@ -286,6 +286,6 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
     // Shift hue based on direction
     const hue = ctx.phase < 0.5 ? 0.6 : 0.0; // Blue going one way, Red the other
 
-    return hslToRgb({ hue, saturation: 1.0, lightness: intensity * 0.5 });
+    return hslToRgbFloat({ hue, saturation: 1.0, lightness: intensity * 0.5 });
   }
 }

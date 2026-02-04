@@ -1,6 +1,8 @@
 import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import { EffectParameterStorage, EffectParameterView } from './effectParameters';
+import { floatTo8bit, RgbFloat } from './color/ColorFloat';
+import { RgbValue } from './color/Color8bit';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -152,5 +154,13 @@ export class DeviceHelper {
     }
     this.ledMappingCache = { coordinates: points };
     return this.ledMappingCache;
+  }
+
+  public floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
+    const result: RgbValue[] = new Array(colors.length);
+    for (let i = 0; i < colors.length; i++) {
+      result[i] = floatTo8bit(colors[i]);
+    }
+    return result;
   }
 }
