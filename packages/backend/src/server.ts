@@ -62,9 +62,13 @@ registerRoutes(app, backendApiContract, {
         brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
         effect_id: device.effect_id,
-        parameters: device.helper.parameters.list(),
+        parameters: (await device.helper.getParameters()).list(),
       });
     }
+
+    logger
+      .withMetadata({ devices: deviceList })
+      .info(`getInfo called, returning info for ${deviceList.length} device(s)`);
 
     res.json({
       devices: deviceList,
@@ -186,8 +190,10 @@ registerRoutes(app, backendApiContract, {
     const { device_id, parameters } = req.body;
     const device = getDeviceOrError(device_id);
 
+    logger.withMetadata({ device_id, parameters }).info(`setParameters called`);
+    const params = await device.helper.getParameters();
     for (const param of parameters) {
-      device.helper.parameters.setValue(param.id, param.value);
+      params.setValue(param.id, param.value);
     }
 
     res.json({

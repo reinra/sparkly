@@ -39,7 +39,7 @@ export async function tryToConnectAll(): Promise<void> {
       const gestalt = await device.api_client.gestalt();
       device.alias = gestalt.device_name || device.alias;
 
-      await device.helper.refrehFromDevice();
+      await device.helper.refreshFromDevice();
     } catch (error) {
       logError(error).withMetadata({ device_id: device.id }).error(`Failed to connect to device ${device.id}`);
     }

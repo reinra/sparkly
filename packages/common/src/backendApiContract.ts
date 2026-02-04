@@ -24,6 +24,7 @@ const RangeEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: z.number(),
   min: z.number(),
   max: z.number(),
+  unit: z.string().optional(),
 });
 
 const BooleanEffectParameterSchema = EffectParameterBaseSchema.extend({

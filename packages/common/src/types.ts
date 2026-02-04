@@ -25,6 +25,7 @@ export interface RangeEffectParameter extends BaseEffectParameter {
   value: number;
   min: number;
   max: number;
+  unit?: string;
 }
 
 export interface BooleanEffectParameter extends BaseEffectParameter {

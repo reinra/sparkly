@@ -4,6 +4,7 @@
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
   import { deviceStore } from '../../../stores/deviceStore.svelte';
   import { page } from '$app/state';
+  import { ParameterType, type EffectParameter } from '@twinkly-ts/common';
 
   let deviceId = $derived(page.params.id);
   let device = $derived(deviceStore.getDevice(deviceId));
@@ -39,28 +40,6 @@
       if (idx >= 0) selectedEffectIndex = idx;
     }
   });
-
-  async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
-    if (!device || updating) return;
-    const value = Number(event.currentTarget.value);
-    if (value === device.brightness) return;
-
-    updating = true;
-    await handleApiUpdate(
-      () =>
-        backendClient.setBrightness({
-          body: {
-            device_id: deviceId,
-            brightness: value,
-          },
-        }),
-      async () => {
-        await deviceStore.fetchDevice(deviceId);
-      },
-      () => {}
-    );
-    updating = false;
-  }
 
   async function updateMode(event: Event & { currentTarget: HTMLSelectElement }) {
     if (!device || updating) return;
@@ -141,6 +120,37 @@
       selectEffect(newIndex);
     }
   }
+
+  async function updateParameter(param: EffectParameter, value: number | boolean) {
+    if (!device || updating) return;
+    if (param.value === value) return;
+
+    updating = true;
+    await handleApiUpdate(
+      () =>
+        backendClient.setParameters({
+          body: {
+            device_id: deviceId,
+            parameters: [{ id: param.id, value }],
+          },
+        }),
+      async () => {
+        await deviceStore.fetchDevice(deviceId);
+      },
+      () => {}
+    );
+    updating = false;
+  }
+
+  async function handleRangeChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
+    const value = Number(event.currentTarget.value);
+    await updateParameter(param, value);
+  }
+
+  async function handleCheckboxChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
+    const value = event.currentTarget.checked;
+    await updateParameter(param, value);
+  }
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -182,21 +192,6 @@
           {/if}
         </div>
 
-        <div class="control-group">
-          <label for="brightness">
-            <strong>Brightness:</strong> {device.brightness}%
-          </label>
-          <input
-            id="brightness"
-            type="range"
-            min="0"
-            max="100"
-            value={device.brightness}
-            onchange={updateBrightness}
-            disabled={updating}
-          />
-        </div>
-
         {#if device.mode}
           <div class="control-group">
             <label for="mode">
@@ -212,9 +207,45 @@
           </div>
         {/if}
 
-        <button onclick={sendMovie} disabled={updating || !device.effect_id}>
-          Send Movie
-        </button>
+        {#if device.parameters && device.parameters.length > 0}
+          <div class="parameters-section">
+            <h4>Parameters</h4>
+            {#each device.parameters as param}
+              {#if param.type === ParameterType.RANGE}
+                <div class="control-group" title={param.description}>
+                  <label for={param.id}>
+                    <strong>{param.name}:</strong>
+                    {param.value}{param.unit || ''}
+                  </label>
+                  <input
+                    id={param.id}
+                    type="range"
+                    min={param.min}
+                    max={param.max}
+                    value={param.value}
+                    onchange={(e) => handleRangeChange(e, param)}
+                    disabled={updating}
+                  />
+                </div>
+              {:else if param.type === ParameterType.BOOLEAN}
+                <div class="control-group checkbox-group" title={param.description}>
+                  <label for={param.id}>
+                    <input
+                      id={param.id}
+                      type="checkbox"
+                      checked={param.value}
+                      onchange={(e) => handleCheckboxChange(e, param)}
+                      disabled={updating}
+                    />
+                    <strong>{param.name}</strong>
+                  </label>
+                </div>
+              {/if}
+            {/each}
+          </div>
+        {/if}
+
+        <button onclick={sendMovie} disabled={updating || !device.effect_id}> Send Movie </button>
       </div>
 
       <div class="effects-section">
@@ -282,6 +313,12 @@
     color: #ff3e00;
     font-size: 1.4rem;
     margin: 0 0 1rem 0;
+  }
+
+  h4 {
+    color: #ff3e00;
+    font-size: 1.1rem;
+    margin: 1.5rem 0 1rem 0;
   }
 
   .device-content {
@@ -357,6 +394,30 @@
   }
 
   select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .parameters-section {
+    border-top: 1px solid #eee;
+    padding-top: 0.25rem;
+    margin-top: 0.25rem;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  input[type='checkbox']:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }

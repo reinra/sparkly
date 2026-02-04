@@ -14,24 +14,42 @@ export interface LedCoordinates {
 export class DeviceHelper {
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
-  private deviceParams = new EffectParameterStorage();
+  private params = new EffectParameterStorage();
+  private paramsInitialized = false;
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
 
-  public async refrehFromDevice(): Promise<void> {
-    this.deviceParams.register({
-      id: 'brightness',
-      name: 'Brightness',
-      description: 'Current brightness of LEDs regardless of mode, not shown in previews',
-      type: ParameterType.RANGE,
-      value: (await this.getAbsoluteBrightness()) ?? 100,
-      min: 0,
-      max: 100,
-    });
+  public async refreshFromDevice(): Promise<void> {
+    await this.ensureParams();
   }
 
-  public get parameters(): EffectParameterView {
-    return this.deviceParams;
+  private async ensureParams(): Promise<void> {
+    if (this.paramsInitialized) {
+      return;
+    }
+
+    this.params.register(
+      {
+        id: 'brightness',
+        name: 'Brightness',
+        description: 'Current brightness of LEDs regardless of mode, not shown in previews',
+        type: ParameterType.RANGE,
+        value: (await this.getAbsoluteBrightness()) ?? 100,
+        min: 0,
+        max: 100,
+        unit: '%',
+      },
+      async (_parameter, _oldValue, newValue: number) => {
+        await this.apiClient.setBrightnessAbsolute(newValue);
+      }
+    );
+
+    this.paramsInitialized = true;
+  }
+
+  public async getParameters(): Promise<EffectParameterView> {
+    await this.ensureParams();
+    return this.params;
   }
 
   public async getAbsoluteBrightness(): Promise<number | undefined> {
