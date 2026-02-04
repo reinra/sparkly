@@ -13,7 +13,27 @@ export type BooleanParameterChangeListener = (
 ) => void | Promise<void>;
 export type ParameterChangeListener = RangeParameterChangeListener | BooleanParameterChangeListener;
 
-export class EffectParameterStorage {
+/**
+ * Interface for UI-focused parameter operations
+ * Provides read and write access to parameter values without registration or listener management
+ */
+export interface EffectParameterView {
+  /**
+   * Get all registered parameters
+   * @returns Array of all parameters
+   */
+  list(): EffectParameter[];
+
+  /**
+   * Set a new value for a parameter with validation
+   * @param id The ID of the parameter to update
+   * @param value The new value to set
+   * @throws Error if parameter not found or validation fails
+   */
+  setValue(id: string, value: number | boolean): void;
+}
+
+export class EffectParameterStorage implements EffectParameterView {
   private parameters: Map<string, EffectParameter> = new Map();
   private listeners: Map<string, ParameterChangeListener> = new Map();
 

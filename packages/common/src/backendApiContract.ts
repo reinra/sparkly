@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { Mode } from './types';
+import { Mode, ParameterType } from './types';
 
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id
@@ -11,6 +11,27 @@ const DeviceRequestBaseSchema = z.object({
 const HelloResponseSchema = z.object({
   message: z.string(),
 });
+
+const EffectParameterBaseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  type: z.nativeEnum(ParameterType),
+});
+
+const RangeEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.RANGE),
+  value: z.number(),
+  min: z.number(),
+  max: z.number(),
+});
+
+const BooleanEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.BOOLEAN),
+  value: z.boolean(),
+});
+
+const EffectParameterSchema = z.discriminatedUnion('type', [RangeEffectParameterSchema, BooleanEffectParameterSchema]);
 
 const GetInfoResponseSchema = z.object({
   devices: z.array(
@@ -23,6 +44,7 @@ const GetInfoResponseSchema = z.object({
       brightness: z.number().min(0).max(100).optional(),
       mode: z.nativeEnum(Mode).optional(),
       effect_id: z.string().nullable(),
+      parameters: z.array(EffectParameterSchema),
     })
   ),
   effects: z.array(
@@ -61,8 +83,20 @@ const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
 
+const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
+  parameters: z.array(
+    z.object({
+      id: z.string(),
+      value: z.union([z.number(), z.boolean()]),
+    })
+  ),
+});
+
 const GetBufferResponseSchema = z.object({
-  base64_encoded: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/, "Must be valid base64").nullable(),
+  base64_encoded: z
+    .string()
+    .regex(/^[A-Za-z0-9+/]*={0,2}$/, 'Must be valid base64')
+    .nullable(),
 });
 
 const GetLedMappingResponseSchema = z.object({
@@ -89,6 +123,7 @@ export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;
 export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
+export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
 // Backend API contract
@@ -101,6 +136,10 @@ export const backendApiContract = c.router({
       200: HelloResponseSchema,
     },
   },
+  /**
+   * Get info about connected devices and available effects
+   * Client fetches it again for single device after modifying any settings.
+   */
   getInfo: {
     method: 'GET',
     path: '/api/info',
@@ -112,6 +151,9 @@ export const backendApiContract = c.router({
       500: ErrorResponseSchema,
     },
   },
+  /**
+   * For debugging, not for main usage
+   */
   status: {
     method: 'GET',
     path: '/api/status',
@@ -173,5 +215,14 @@ export const backendApiContract = c.router({
       200: GenericSuccessResponseSchema,
       500: ErrorResponseSchema,
     },
-  }
+  },
+  setParameters: {
+    method: 'POST',
+    path: '/api/parameters',
+    body: SetParametersRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
 });
