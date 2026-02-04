@@ -249,12 +249,6 @@
     margin: 0 0 1rem 0;
   }
 
-  h4 {
-    color: #ff3e00;
-    font-size: 1.1rem;
-    margin: 1.5rem 0 1rem 0;
-  }
-
   .device-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -301,19 +295,6 @@
     display: block;
     margin-bottom: 0.5rem;
     color: #666;
-  }
-
-  input[type='range'] {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: #ddd;
-    outline: none;
-    margin-top: 0.5rem;
-  }
-
-  input[type='range']:disabled {
-    opacity: 0.5;
   }
 
   select {
