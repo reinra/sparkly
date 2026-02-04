@@ -15,10 +15,10 @@ export type AnyEffect = Effect<any>;
 export class AnyEffectRenderer implements Renderer<AnyEffect> {
   private readonly newEffectRenderer = new NewEffectRenderer();
   async renderLive(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
-    await (this.getRenderer(effect)).renderLive(effect, deviceHelper, output, signal);
+    await this.getRenderer(effect).renderLive(effect, deviceHelper, output, signal);
   }
   async renderAsap(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
-    await (this.getRenderer(effect)).renderAsap(effect, deviceHelper, output, signal);
+    await this.getRenderer(effect).renderAsap(effect, deviceHelper, output, signal);
   }
   private getRenderer(effect: AnyEffect): Renderer<AnyEffect> {
     if (isNewEffect(effect)) {
@@ -26,14 +26,19 @@ export class AnyEffectRenderer implements Renderer<AnyEffect> {
     }
     throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
   }
-} 
+}
 
 function isNewEffect(effect: AnyEffect): effect is Effect<any> {
   return 'renderGlobal' in effect;
 }
 
 export class NewEffectRenderer implements Renderer<Effect<any>> {
-  async renderLive(effect: Effect<any>, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+  async renderLive(
+    effect: Effect<any>,
+    deviceHelper: DeviceHelper,
+    output: FrameOutputStream,
+    signal: AbortSignal
+  ): Promise<void> {
     const gestalt = await deviceHelper.getGestalt();
     const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
@@ -47,13 +52,13 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       signal.throwIfAborted();
 
       const frameStartTime = performance.now();
-      const deltaTimeMs = frameStartTime - lastTime;
-      const elapsedTime = frameStartTime - firstStartTime;
+      const speed = deviceHelper.getCurrentSpeedMultiplier();
+      const deltaTimeMs = (frameStartTime - lastTime) * speed;
+      const elapsedTime = (frameStartTime - firstStartTime) * speed;
 
       const ctx: EffectContext = {
         total_leds: numberOfLeds,
         led_type: gestalt.led_profile,
-        speed: 1.0,
         time_ms: elapsedTime,
         delta_time_ms: deltaTimeMs,
         frame_index: frameIndex,
@@ -66,8 +71,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       const timeToWait = minFrameMs - processingTime;
       if (timeToWait > 0) {
         await sleep(timeToWait);
-      }
-      else {
+      } else {
         await yieldNow();
       }
 
@@ -75,17 +79,24 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       lastTime = frameStartTime;
     }
   }
-  async renderAsap(effect: Effect<any>, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
+  async renderAsap(
+    effect: Effect<any>,
+    deviceHelper: DeviceHelper,
+    output: FrameOutputStream,
+    signal: AbortSignal
+  ): Promise<void> {
     const gestalt = await deviceHelper.getGestalt();
     const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
-    const [startRecordingMs, endRecordingMs] = effect.isStateful ? [loopDurationMs, loopDurationMs * 2] : [0, loopDurationMs];
+    const [startRecordingMs, endRecordingMs] = effect.isStateful
+      ? [loopDurationMs, loopDurationMs * 2]
+      : [0, loopDurationMs];
     const frameTimeMs = 1000 / gestalt.frame_rate; // Fixed time between frames
 
     let virtualTime = 0;
     let frameIndex = 0;
-    
+
     // For static effects, just render one frame
     while (virtualTime < endRecordingMs || virtualTime === 0) {
       signal.throwIfAborted();
@@ -93,7 +104,6 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       const ctx: EffectContext = {
         total_leds: numberOfLeds,
         led_type: gestalt.led_profile,
-        speed: 1.0,
         time_ms: virtualTime,
         delta_time_ms: frameTimeMs,
         frame_index: frameIndex,
@@ -110,7 +120,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       virtualTime += frameTimeMs;
       frameIndex++;
     }
-  }  
+  }
 }
 
 function getValidLoopDurationInMs(effect: Effect<any>, numberOfLeds: number) {
@@ -119,7 +129,9 @@ function getValidLoopDurationInMs(effect: Effect<any>, numberOfLeds: number) {
     throw new Error(`Effect ${effect.getName()} does not support renderAsap() because it has no defined loop duration`);
   }
   if (loopDurationMs === 0 && effect.isStateful) {
-    throw new Error(`Effect ${effect.getName()} does not support renderAsap() because it is stateful but has zero loop duration`);
+    throw new Error(
+      `Effect ${effect.getName()} does not support renderAsap() because it is stateful but has zero loop duration`
+    );
   }
   return loopDurationMs;
 }
@@ -128,10 +140,14 @@ async function sleep(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 async function yieldNow() {
-  await new Promise(resolve => setImmediate(resolve));  
+  await new Promise((resolve) => setImmediate(resolve));
 }
 
-async function getPoints(effect: Effect<any>, deviceHelper: DeviceHelper, gestalt: GestaltResponseType): Promise<LedPoint1D[] | LedPoint2D[]> {
+async function getPoints(
+  effect: Effect<any>,
+  deviceHelper: DeviceHelper,
+  gestalt: GestaltResponseType
+): Promise<LedPoint1D[] | LedPoint2D[]> {
   if (effect.pointType === '1D') {
     return getPoints1D(gestalt);
   }

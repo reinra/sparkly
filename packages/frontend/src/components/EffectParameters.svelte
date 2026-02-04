@@ -52,13 +52,14 @@
         <div class="control-group" title={param.description}>
           <label for={param.id}>
             <strong>{param.name}:</strong>
-            {param.value}{param.unit || ''}
+            {param.step && param.step < 1 ? param.value.toFixed(1) : param.value}{param.unit || ''}
           </label>
           <input
             id={param.id}
             type="range"
             min={param.min}
             max={param.max}
+            step={param.step || 1}
             value={param.value}
             onchange={(e) => handleRangeChange(e, param)}
             disabled={updating}

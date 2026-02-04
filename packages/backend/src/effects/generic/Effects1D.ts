@@ -200,7 +200,7 @@ export class RainEffect implements Effect<LedPoint1D> {
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
     // 1. Move existing particles based on velocity and time passed
     this.particles.forEach((p) => {
-      p.pos += p.vel * (ctx.delta_time_ms / 1000) * ctx.speed;
+      p.pos += (p.vel * ctx.delta_time_ms) / 1000;
     });
 
     // 2. Remove off-screen particles

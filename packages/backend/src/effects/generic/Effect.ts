@@ -8,18 +8,13 @@ export interface EffectContext {
   // LedType of the LED buffer
   readonly led_type: LedType;
 
-  // 2. MANUALLY CHANGED
-
-  // Float, speed multiplier for the effect
-  readonly speed: number;
-
-  // 3. CONSTANTLY CHANGING
+  // 2. CONSTANTLY CHANGING
 
   // Float [0.0, 1.0) representing the progress through the effect in a loop
   readonly phase: number;
-  // Integer, time since the effect started in milliseconds
+  // Integer, scaled time since the effect started in milliseconds
   readonly time_ms: number;
-  // Integer, time since the last renderGlobal() call in milliseconds
+  // Integer, scaled time since the last renderGlobal() call in milliseconds
   readonly delta_time_ms: number;
   // Integer, current frame index since the effect started
   readonly frame_index: number;

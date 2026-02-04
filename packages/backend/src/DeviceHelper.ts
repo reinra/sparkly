@@ -1,4 +1,4 @@
-import { ParameterType } from '@twinkly-ts/common/dist/types';
+import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import { EffectParameterStorage, EffectParameterView } from './effectParameters';
 
@@ -16,6 +16,18 @@ export class DeviceHelper {
   private gestaltCache: GestaltResponseType | null = null;
   private params = new EffectParameterStorage();
   private paramsInitialized = false;
+
+  private readonly speedParameter: RangeEffectParameter = {
+    id: 'speed',
+    name: 'Speed',
+    description: 'Global speed multiplier for effects',
+    type: ParameterType.RANGE,
+    value: 1.0,
+    min: 0.0,
+    max: 5.0,
+    unit: 'x',
+    step: 0.1,
+  };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
 
@@ -38,6 +50,7 @@ export class DeviceHelper {
         min: 0,
         max: 100,
         unit: '%',
+        step: 1,
       },
       async (_parameter, _oldValue, newValue: number) => {
         await this.apiClient.setBrightnessAbsolute(newValue);
@@ -54,11 +67,14 @@ export class DeviceHelper {
         min: 0,
         max: 100,
         unit: '%',
+        step: 1,
       },
       async (_parameter, _oldValue, newValue: number) => {
         await this.apiClient.setSaturationAbsolute(newValue);
       }
     );
+
+    this.params.register(this.speedParameter);
 
     this.paramsInitialized = true;
   }
@@ -70,6 +86,10 @@ export class DeviceHelper {
 
   public async getFilterValue(name: string): Promise<number | undefined> {
     return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == name)?.config?.value;
+  }
+
+  public getCurrentSpeedMultiplier(): number {
+    return this.speedParameter.value;
   }
 
   public async getGestalt(): Promise<GestaltResponseType> {
