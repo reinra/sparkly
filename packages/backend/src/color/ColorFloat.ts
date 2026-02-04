@@ -53,11 +53,28 @@ export function floatTo8bit(color: LedFloat): RgbValue | RgbwValue {
       blue: Math.round(color.blue_f * 255),
       white: Math.round(color.white_f * 255),
     };
-  } else {
+  }
+  return {
+    red: Math.round(color.red_f * 255),
+    green: Math.round(color.green_f * 255),
+    blue: Math.round(color.blue_f * 255),
+  };
+}
+
+export function gammaCorrect(color: RgbFloat, gamma: number): RgbFloat;
+export function gammaCorrect(color: RgbwFloat, gamma: number): RgbwFloat;
+export function gammaCorrect(color: LedFloat, gamma: number): LedFloat {
+  if (hasWhiteChannel(color)) {
     return {
-      red: Math.round(color.red_f * 255),
-      green: Math.round(color.green_f * 255),
-      blue: Math.round(color.blue_f * 255),
+      red_f: Math.pow(color.red_f, gamma),
+      green_f: Math.pow(color.green_f, gamma),
+      blue_f: Math.pow(color.blue_f, gamma),
+      white_f: Math.pow(color.white_f, gamma),
     };
   }
+  return {
+    red_f: Math.pow(color.red_f, gamma),
+    green_f: Math.pow(color.green_f, gamma),
+    blue_f: Math.pow(color.blue_f, gamma),
+  };
 }

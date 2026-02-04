@@ -72,7 +72,7 @@ registerRoutes(app, backendApiContract, {
 
     logger
       .withMetadata({ devices: deviceList })
-      .info(`getInfo called, returning info for ${deviceList.length} device(s)`);
+      .trace(`getInfo called, returning info for ${deviceList.length} device(s)`);
 
     res.json({
       devices: deviceList,
@@ -194,7 +194,7 @@ registerRoutes(app, backendApiContract, {
     const { device_id, parameters } = req.body;
     const device = getDeviceOrError(device_id);
 
-    logger.withMetadata({ device_id, parameters }).info(`setParameters called`);
+    logger.withMetadata({ device_id, parameters }).trace(`setParameters called`);
     const params = await device.helper.getParameters();
     for (const param of parameters) {
       params.setValue(param.id, param.value);

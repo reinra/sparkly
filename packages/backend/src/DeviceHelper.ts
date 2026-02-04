@@ -1,7 +1,7 @@
 import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import { EffectParameterStorage, EffectParameterView } from './effectParameters';
-import { floatTo8bit, RgbFloat } from './color/ColorFloat';
+import { floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
 
 export interface LedMapping {
@@ -39,6 +39,16 @@ export class DeviceHelper {
     min: 1,
     max: 60,
     unit: 'fps',
+  };
+  private readonly gammaParameter: RangeEffectParameter = {
+    id: 'gamma',
+    name: 'Gamma correction',
+    description: 'Gamma correction value for brightness adjustment',
+    type: ParameterType.RANGE,
+    value: 2.2, // Default gamma
+    min: 1.0,
+    max: 3.0,
+    step: 0.1,
   };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
@@ -90,6 +100,8 @@ export class DeviceHelper {
 
     this.maxFpsParameter.value = (await this.getGestalt()).frame_rate;
     this.params.register(this.maxFpsParameter);
+
+    this.params.register(this.gammaParameter);
 
     this.paramsInitialized = true;
   }
@@ -157,9 +169,10 @@ export class DeviceHelper {
   }
 
   public floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
+    const gamma = this.gammaParameter.value;
     const result: RgbValue[] = new Array(colors.length);
     for (let i = 0; i < colors.length; i++) {
-      result[i] = floatTo8bit(colors[i]);
+      result[i] = floatTo8bit(gammaCorrect(colors[i], gamma));
     }
     return result;
   }
