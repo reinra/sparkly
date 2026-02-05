@@ -63,7 +63,7 @@ async function prepareForSendingLedValues(device: Device) {
 }
 
 export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signal: AbortSignal) {
-  const ledMapper = await device.helper.getLedMapper();
+  const ledMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
