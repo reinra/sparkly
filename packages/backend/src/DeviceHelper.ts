@@ -1,6 +1,8 @@
 import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import { EffectParameterStorage, EffectParameterView } from './effectParameters';
+import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
+import { RgbValue } from './color/Color8bit';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -17,7 +19,7 @@ export class DeviceHelper {
   private params = new EffectParameterStorage();
   private paramsInitialized = false;
 
-  private readonly speedParameter: RangeEffectParameter = {
+  private readonly speed: RangeEffectParameter = {
     id: 'speed',
     name: 'Speed',
     description: 'Global speed multiplier for effects',
@@ -28,7 +30,7 @@ export class DeviceHelper {
     unit: 'x',
     step: 0.1,
   };
-  private readonly maxFpsParameter: RangeEffectParameter = {
+  private readonly maxFps: RangeEffectParameter = {
     id: 'fps',
     name: 'Max rendering frequency',
     description: 'Maximum frames per second for effect rendering',
@@ -37,6 +39,26 @@ export class DeviceHelper {
     min: 1,
     max: 60,
     unit: 'fps',
+  };
+  private readonly gamma: RangeEffectParameter = {
+    id: 'gamma',
+    name: 'Gamma correction',
+    description: 'Gamma correction value for brightness adjustment',
+    type: ParameterType.RANGE,
+    value: 2.2, // Default gamma
+    min: 1.0,
+    max: 3.0,
+    step: 0.1,
+  };
+  private readonly temperature: RangeEffectParameter = {
+    id: 'temperature',
+    name: 'Color Temperature',
+    description: 'Color temperature adjustment for effects, where -1 is cool/blue, 0 is neutral, and 1 is warm/orange',
+    type: ParameterType.RANGE,
+    value: 0, // No adjustment by default
+    min: -1,
+    max: 1,
+    step: 0.1,
   };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
@@ -84,10 +106,12 @@ export class DeviceHelper {
       }
     );
 
-    this.params.register(this.speedParameter);
+    this.maxFps.value = (await this.getGestalt()).frame_rate;
 
-    this.maxFpsParameter.value = (await this.getGestalt()).frame_rate;
-    this.params.register(this.maxFpsParameter);
+    this.params.register(this.maxFps);
+    this.params.register(this.speed);
+    this.params.register(this.gamma);
+    this.params.register(this.temperature);
 
     this.paramsInitialized = true;
   }
@@ -102,10 +126,10 @@ export class DeviceHelper {
   }
 
   public getCurrentSpeedMultiplier(): number {
-    return this.speedParameter.value;
+    return this.speed.value;
   }
   public getMaxFps(): number {
-    return this.maxFpsParameter.value;
+    return this.maxFps.value;
   }
   public getMinFrameTimeMs(): number {
     return 1000 / this.getMaxFps();
@@ -152,5 +176,15 @@ export class DeviceHelper {
     }
     this.ledMappingCache = { coordinates: points };
     return this.ledMappingCache;
+  }
+
+  public floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
+    const gamma = this.gamma.value;
+    const temperature = this.temperature.value;
+    const result: RgbValue[] = new Array(colors.length);
+    for (let i = 0; i < colors.length; i++) {
+      result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(colors[i], gamma), temperature));
+    }
+    return result;
   }
 }

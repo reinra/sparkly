@@ -255,11 +255,11 @@ export class TwinklyApiClient {
   }
 
   async gestalt() {
-    logger.debug('Fetching device status');
+    logger.debug('Fetching device gestalt');
     const result = await this.clientNoAuth.gestalt();
     expect200(result);
     expect1000(result.body);
-    logger.withMetadata({ response: result.body }).debug('Status Response validated');
+    logger.withMetadata({ response: result.body }).trace('Gestalt Response validated');
     this.lastGestaltResponse = result.body;
     return result.body;
   }
@@ -270,7 +270,7 @@ export class TwinklyApiClient {
     const result = await this.client.summary();
     expect200(result);
     expect1000(result.body);
-    logger.withMetadata({ response: result.body }).debug('Summary Response validated');
+    logger.withMetadata({ response: result.body }).trace('Summary Response validated');
     return result.body;
   }
 

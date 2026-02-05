@@ -1,4 +1,5 @@
 import type { LedType, RgbValue } from '../../color/Color8bit';
+import { RgbFloat } from '../../color/ColorFloat';
 
 export interface EffectContext {
   // 1. CHANGING LESS
@@ -51,7 +52,7 @@ export interface Effect<P extends LedPoint> {
   // Returns the duration of a full effect loop in seconds
   getLoopDurationSeconds(ledCount: number): number;
   // Renders the full LED buffer for the current effect state
-  renderGlobal(ctx: EffectContext, points: P[]): RgbValue[];
+  renderGlobal(ctx: EffectContext, points: P[]): RgbFloat[];
 }
 
 export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
@@ -59,14 +60,14 @@ export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {
   isStateful: boolean = false;
   abstract getName(): string;
   abstract getLoopDurationSeconds(ledCount: number): number;
-  renderGlobal(ctx: EffectContext, points: P[]): RgbValue[] {
-    const result: RgbValue[] = new Array(points.length);
+  renderGlobal(ctx: EffectContext, points: P[]): RgbFloat[] {
+    const result: RgbFloat[] = new Array(points.length);
     for (const point of points) {
       result[point.id] = this.renderPixel(ctx, point);
     }
     return result;
   }
-  abstract renderPixel(ctx: EffectContext, point: P): RgbValue;
+  abstract renderPixel(ctx: EffectContext, point: P): RgbFloat;
 }
 
 export abstract class BaseSameColorEffect implements Effect<LedPoint1D> {
@@ -74,11 +75,11 @@ export abstract class BaseSameColorEffect implements Effect<LedPoint1D> {
   isStateful: boolean = false;
   abstract getName(): string;
   abstract getLoopDurationSeconds(ledCount: number): number;
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbValue[] {
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     const color = this.renderColor(ctx);
     return new Array(points.length).fill(color);
   }
-  abstract renderColor(ctx: EffectContext): RgbValue;
+  abstract renderColor(ctx: EffectContext): RgbFloat;
 }
 
 export function is1DEffect(effect: Effect<LedPoint>): effect is Effect<LedPoint1D> {

@@ -64,7 +64,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
         phase: (elapsedTime % loopDurationMs) / loopDurationMs,
       };
       const ledValues = effect.renderGlobal(ctx, points);
-      await output.writeFrame(ledValues);
+      await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
 
       const processingTime = performance.now() - frameStartTime;
       const timeToWait = deviceHelper.getMinFrameTimeMs() - processingTime;
@@ -110,7 +110,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       };
       const ledValues = effect.renderGlobal(ctx, points);
       if (virtualTime >= startRecordingMs) {
-        await output.writeFrame(ledValues);
+        await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
       }
       if (frameIndex % YIELD_FRAME_COUNT === 0) {
         await yieldNow();

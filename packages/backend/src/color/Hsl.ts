@@ -1,4 +1,5 @@
 import type { RgbValue } from './Color8bit';
+import type { RgbFloat } from './ColorFloat';
 
 export interface Hsl {
   hue: number; // Hue: 0-1
@@ -40,4 +41,28 @@ export function hslToRgb(hsl: Hsl): RgbValue {
   }
 
   return { red: Math.round(r * 255), green: Math.round(g * 255), blue: Math.round(b * 255) };
+}
+
+/**
+ * Converts HSL color values to RGB float format.
+ * @param hsl HSL color
+ * @returns Color in RgbFloat format with values in range [0, 1]
+ */
+export function hslToRgbFloat(hsl: Hsl): RgbFloat {
+  let r: number, g: number, b: number; // 0..1
+
+  if (hsl.saturation === 0) {
+    r = g = b = hsl.lightness; // Achromatic (gray)
+  } else {
+    const q =
+      hsl.lightness < 0.5
+        ? hsl.lightness * (1 + hsl.saturation)
+        : hsl.lightness + hsl.saturation - hsl.lightness * hsl.saturation;
+    const p = 2 * hsl.lightness - q;
+    r = hueToRgb(p, q, hsl.hue + 1 / 3);
+    g = hueToRgb(p, q, hsl.hue);
+    b = hueToRgb(p, q, hsl.hue - 1 / 3);
+  }
+
+  return { red_f: r, green_f: g, blue_f: b };
 }

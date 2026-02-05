@@ -1,4 +1,4 @@
-import { RgbValue } from '../color/Color8bit';
+import { RgbFloat } from '../color/ColorFloat';
 import type { AnyEffect } from '../render/Renderer';
 import {
   ChangeColorEffect,
@@ -24,40 +24,40 @@ import {
   Slime,
 } from './generic/Effects2D';
 
-const redGreenBlue: RgbValue[] = [
-  { red: 255, green: 0, blue: 0 },
-  { red: 0, green: 255, blue: 0 },
-  { red: 0, green: 0, blue: 255 },
+const redGreenBlue: RgbFloat[] = [
+  { red_f: 1, green_f: 0, blue_f: 0 },
+  { red_f: 0, green_f: 1, blue_f: 0 },
+  { red_f: 0, green_f: 0, blue_f: 1 },
 ];
 
 export const effects: Record<string, AnyEffect> = {
   flip_color: new FlipColorEffect(redGreenBlue),
   change_color: new ChangeColorEffect(redGreenBlue),
-  red: new SingleColorEffect({ red: 255, green: 0, blue: 0 }),
-  green: new SingleColorEffect({ red: 0, green: 255, blue: 0 }),
-  blue: new SingleColorEffect({ red: 0, green: 0, blue: 255 }),
-  black: new SingleColorEffect({ red: 0, green: 0, blue: 0 }),
-  white: new SingleColorEffect({ red: 255, green: 255, blue: 255 }),
+  red: new SingleColorEffect({ red_f: 1, green_f: 0, blue_f: 0 }),
+  green: new SingleColorEffect({ red_f: 0, green_f: 1, blue_f: 0 }),
+  blue: new SingleColorEffect({ red_f: 0, green_f: 0, blue_f: 1 }),
+  black: new SingleColorEffect({ red_f: 0, green_f: 0, blue_f: 0 }),
+  white: new SingleColorEffect({ red_f: 1, green_f: 1, blue_f: 1 }),
   gradient_2: new StaticColorGradientEffect([
-    { red: 255, green: 0, blue: 0 },
-    { red: 255, green: 255, blue: 0 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
+    { red_f: 1, green_f: 1, blue_f: 0 },
   ]),
   gradient_3: new StaticColorGradientEffect([
-    { red: 255, green: 0, blue: 0 },
-    { red: 0, green: 255, blue: 0 },
-    { red: 0, green: 0, blue: 255 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
+    { red_f: 0, green_f: 1, blue_f: 0 },
+    { red_f: 0, green_f: 0, blue_f: 1 },
   ]),
   gradient_4: new StaticColorGradientEffect([
-    { red: 255, green: 0, blue: 0 },
-    { red: 0, green: 255, blue: 0 },
-    { red: 0, green: 0, blue: 255 },
-    { red: 255, green: 0, blue: 0 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
+    { red_f: 0, green_f: 1, blue_f: 0 },
+    { red_f: 0, green_f: 0, blue_f: 1 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
   ]),
   rotating_gradient_4: new RotatingColorGradientEffect([
-    { red: 255, green: 0, blue: 0 },
-    { red: 0, green: 255, blue: 0 },
-    { red: 0, green: 0, blue: 255 },
-    { red: 255, green: 0, blue: 0 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
+    { red_f: 0, green_f: 1, blue_f: 0 },
+    { red_f: 0, green_f: 0, blue_f: 1 },
+    { red_f: 1, green_f: 0, blue_f: 0 },
   ]),
   test_per_led: new TestPerLedEffect1D(),
   new_rainbow: new RainbowGradientEffect1D(),
