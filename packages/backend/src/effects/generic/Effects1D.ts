@@ -228,9 +228,9 @@ export class RainEffect implements Effect<LedPoint1D> {
 
 export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
-  private readonly parameters = new EffectParameterStorage();
-  private readonly propability = this.parameters.register({
-    id: 'twinkle_propability',
+  readonly parameters = new EffectParameterStorage();
+  private readonly probability = this.parameters.register({
+    id: 'twinkle_probability',
     name: 'Twinkle Probability',
     description: 'Chance for each LED to twinkle on each frame (0.0 - 1.0)',
     type: ParameterType.RANGE,
@@ -239,10 +239,6 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
     max: 100,
     unit: '%',
   });
-
-  getParameters() {
-    return this.parameters;
-  }
   getName(): string {
     return 'Twinkle';
   }
@@ -250,7 +246,7 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
     return 1;
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
-    if (Math.random() < this.propability.value / 100) {
+    if (Math.random() < this.probability.value / 100) {
       return WHITE;
     }
     return BLACK;
@@ -259,18 +255,25 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
 
 export class SineEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
-  constructor(private readonly frequency: number = 2) {
-    super();
-  }
+  readonly parameters = new EffectParameterStorage();
+  private readonly frequency = this.parameters.register({
+    id: 'sine_frequency',
+    name: 'Sine Frequency',
+    description: 'Frequency of the sine wave (cycles per LED)',
+    type: ParameterType.RANGE,
+    value: 3,
+    min: 1,
+    max: 10,
+  });
   getName(): string {
-    return `Sine Wave Effect (${this.frequency} cycles)`;
+    return `Sine Wave Effect (${this.frequency.value} cycles)`;
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // We combine spatial position (pt.distance) with temporal progress (ctx.phase)
-    const wave = Math.sin((point.distance * this.frequency + ctx.phase) * Math.PI * 2);
+    const wave = Math.sin((point.distance * this.frequency.value + ctx.phase) * Math.PI * 2);
 
     // Map wave (-1 to 1) to brightness (0 to 1)
     const brightness = (wave + 1) / 2;

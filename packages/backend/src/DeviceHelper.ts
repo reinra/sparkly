@@ -34,8 +34,8 @@ export class DeviceHelper {
   );
 
   private getCurrentEffectParameters(): EffectParameterView {
-    if (this.currentEffect && this.currentEffect.getParameters) {
-      return this.currentEffect.getParameters();
+    if (this.currentEffect && this.currentEffect.parameters) {
+      return this.currentEffect.parameters;
     }
     return emptyParameterStorageView;
   }

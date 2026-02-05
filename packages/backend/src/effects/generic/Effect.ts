@@ -49,13 +49,13 @@ export interface Effect<P extends LedPoint> {
   readonly pointType: LedPointType;
   // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
   readonly isStateful: boolean;
+  // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
+  readonly parameters?: EffectParameterView;
   getName(): string;
   // Returns the duration of a full effect loop in seconds
   getLoopDurationSeconds(ledCount: number): number;
   // Renders the full LED buffer for the current effect state
   renderGlobal(ctx: EffectContext, points: P[]): RgbFloat[];
-  // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
-  getParameters?(): EffectParameterView;
 }
 
 export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {

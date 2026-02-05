@@ -67,7 +67,7 @@ export const effects: Record<string, AnyEffect> = {
   sine: new SineEffect(2),
   ping_pong: new PingPongEffect(),
   rainbow_2d: new RainbowGradientEffect2D(),
-  sine_2d: new AdapterFrom1DEffectTo2D(new SineEffect(3)),
+  sine_2d: new AdapterFrom1DEffectTo2D(new SineEffect()),
   pulse_scanner: new PulseScanner(),
   slime: new Slime(),
   clouds: new CloudsEffect(),
