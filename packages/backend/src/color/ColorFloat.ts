@@ -8,6 +8,12 @@ export interface RgbFloat {
 
 export const BLACK: RgbFloat = { red_f: 0, green_f: 0, blue_f: 0 };
 export const WHITE: RgbFloat = { red_f: 1, green_f: 1, blue_f: 1 };
+export const RED: RgbFloat = { red_f: 1, green_f: 0, blue_f: 0 };
+export const GREEN: RgbFloat = { red_f: 0, green_f: 1, blue_f: 0 };
+export const BLUE: RgbFloat = { red_f: 0, green_f: 0, blue_f: 1 };
+export const YELLOW: RgbFloat = { red_f: 1, green_f: 1, blue_f: 0 };
+export const CYAN: RgbFloat = { red_f: 0, green_f: 1, blue_f: 1 };
+export const MAGENTA: RgbFloat = { red_f: 1, green_f: 0, blue_f: 1 };
 
 export interface RgbwFloat extends RgbFloat {
   white_f: number; // 0...1

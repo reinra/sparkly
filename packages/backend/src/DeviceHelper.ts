@@ -68,8 +68,8 @@ export class DeviceHelper {
     description: 'Gamma correction value for brightness adjustment',
     type: ParameterType.RANGE,
     value: 2.2, // Default gamma
-    min: 1.0,
-    max: 3.0,
+    min: 0.1,
+    max: 4.0,
     step: 0.1,
   };
   private readonly temperature: RangeEffectParameter = {

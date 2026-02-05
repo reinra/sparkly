@@ -1,4 +1,4 @@
-import { RgbFloat } from '../color/ColorFloat';
+import { BLACK, BLUE, GREEN, RED, RgbFloat, WHITE, YELLOW } from '../color/ColorFloat';
 import type { AnyEffect } from '../render/Renderer';
 import {
   ChangeColorEffect,
@@ -24,43 +24,25 @@ import {
   Slime,
 } from './generic/Effects2D';
 
-const redGreenBlue: RgbFloat[] = [
-  { red_f: 1, green_f: 0, blue_f: 0 },
-  { red_f: 0, green_f: 1, blue_f: 0 },
-  { red_f: 0, green_f: 0, blue_f: 1 },
-];
+const redGreenBlue: RgbFloat[] = [RED, GREEN, BLUE];
 
 export const effects: Record<string, AnyEffect> = {
   flip_color: new FlipColorEffect(redGreenBlue),
   change_color: new ChangeColorEffect(redGreenBlue),
-  red: new SingleColorEffect({ red_f: 1, green_f: 0, blue_f: 0 }),
-  green: new SingleColorEffect({ red_f: 0, green_f: 1, blue_f: 0 }),
-  blue: new SingleColorEffect({ red_f: 0, green_f: 0, blue_f: 1 }),
-  black: new SingleColorEffect({ red_f: 0, green_f: 0, blue_f: 0 }),
-  white: new SingleColorEffect({ red_f: 1, green_f: 1, blue_f: 1 }),
-  gradient_2: new StaticColorGradientEffect([
-    { red_f: 1, green_f: 0, blue_f: 0 },
-    { red_f: 1, green_f: 1, blue_f: 0 },
-  ]),
-  gradient_3: new StaticColorGradientEffect([
-    { red_f: 1, green_f: 0, blue_f: 0 },
-    { red_f: 0, green_f: 1, blue_f: 0 },
-    { red_f: 0, green_f: 0, blue_f: 1 },
-  ]),
-  gradient_4: new StaticColorGradientEffect([
-    { red_f: 1, green_f: 0, blue_f: 0 },
-    { red_f: 0, green_f: 1, blue_f: 0 },
-    { red_f: 0, green_f: 0, blue_f: 1 },
-    { red_f: 1, green_f: 0, blue_f: 0 },
-  ]),
-  rotating_gradient_4: new RotatingColorGradientEffect([
-    { red_f: 1, green_f: 0, blue_f: 0 },
-    { red_f: 0, green_f: 1, blue_f: 0 },
-    { red_f: 0, green_f: 0, blue_f: 1 },
-    { red_f: 1, green_f: 0, blue_f: 0 },
-  ]),
-  test_per_led: new TestPerLedEffect1D(),
-  new_rainbow: new RainbowGradientEffect1D(),
+  red: new SingleColorEffect(RED),
+  green: new SingleColorEffect(GREEN),
+  blue: new SingleColorEffect(BLUE),
+  black: new SingleColorEffect(BLACK),
+  white: new SingleColorEffect(WHITE),
+  gradient_red_yellow: new StaticColorGradientEffect([RED, YELLOW]),
+  gradient_rgb: new StaticColorGradientEffect([RED, GREEN, BLUE]),
+  gradient_rgbr: new StaticColorGradientEffect([RED, GREEN, BLUE, RED]),
+  rotating_gradient_rgbr: new RotatingColorGradientEffect([RED, GREEN, BLUE, RED]),
+  gradient_black_red: new StaticColorGradientEffect([BLACK, RED]),
+  gradient_black_green: new StaticColorGradientEffect([BLACK, GREEN]),
+  gradient_black_blue: new StaticColorGradientEffect([BLACK, BLUE]),
+  gradient_black_white: new StaticColorGradientEffect([BLACK, WHITE]),
+  rainbow: new RainbowGradientEffect1D(),
   meteor: new MeteorEffect(),
   rain: new RainEffect(),
   twinkle: new TwinkleEffect(),
@@ -73,4 +55,5 @@ export const effects: Record<string, AnyEffect> = {
   clouds: new CloudsEffect(),
   plasma: new PlasmaEffect(),
   gravity_fountain: new GravityFountain(),
+  test_per_led: new TestPerLedEffect1D(),
 };
