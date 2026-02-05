@@ -1,8 +1,15 @@
 import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
-import { EffectParameterStorage, EffectParameterView } from './effectParameters';
+import {
+  DynamicParameterStorageView,
+  EffectParameterStorage,
+  EffectParameterView,
+  emptyParameterStorageView,
+  MultiParameterStorageView,
+} from './effectParameters';
 import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
+import { Effect } from './effects/generic/Effect';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -16,8 +23,22 @@ export interface LedCoordinates {
 export class DeviceHelper {
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
-  private params = new EffectParameterStorage();
-  private paramsInitialized = false;
+  private deviceParams = new EffectParameterStorage();
+  private deviceParamsInitialized = false;
+  private currentEffect: Effect<any> | null = null;
+  private allParams = new MultiParameterStorageView(
+    new Map<string, EffectParameterView>([
+      ['device.', this.deviceParams],
+      ['effect.', new DynamicParameterStorageView(() => this.getCurrentEffectParameters())],
+    ])
+  );
+
+  private getCurrentEffectParameters(): EffectParameterView {
+    if (this.currentEffect && this.currentEffect.getParameters) {
+      return this.currentEffect.getParameters();
+    }
+    return emptyParameterStorageView;
+  }
 
   private readonly speed: RangeEffectParameter = {
     id: 'speed',
@@ -68,11 +89,11 @@ export class DeviceHelper {
   }
 
   private async ensureParams(): Promise<void> {
-    if (this.paramsInitialized) {
+    if (this.deviceParamsInitialized) {
       return;
     }
 
-    this.params.register(
+    this.deviceParams.register(
       {
         id: 'brightness',
         name: 'Brightness',
@@ -89,7 +110,7 @@ export class DeviceHelper {
       }
     );
 
-    this.params.register(
+    this.deviceParams.register(
       {
         id: 'saturation',
         name: 'Saturation',
@@ -108,17 +129,17 @@ export class DeviceHelper {
 
     this.maxFps.value = (await this.getGestalt()).frame_rate;
 
-    this.params.register(this.maxFps);
-    this.params.register(this.speed);
-    this.params.register(this.gamma);
-    this.params.register(this.temperature);
+    this.deviceParams.register(this.maxFps);
+    this.deviceParams.register(this.speed);
+    this.deviceParams.register(this.gamma);
+    this.deviceParams.register(this.temperature);
 
-    this.paramsInitialized = true;
+    this.deviceParamsInitialized = true;
   }
 
   public async getParameters(): Promise<EffectParameterView> {
     await this.ensureParams();
-    return this.params;
+    return this.allParams;
   }
 
   public async getFilterValue(name: string): Promise<number | undefined> {
@@ -186,5 +207,9 @@ export class DeviceHelper {
       result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(colors[i], gamma), temperature));
     }
     return result;
+  }
+
+  setCurrentEffect(effect: Effect<any> | null) {
+    this.currentEffect = effect;
   }
 }

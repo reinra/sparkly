@@ -1,5 +1,7 @@
+import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
 import { hslToRgbFloat } from '../../color/Hsl';
+import { EffectParameterStorage } from '../../effectParameters';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 
 export class SingleColorEffect extends BaseSameColorEffect {
@@ -226,6 +228,21 @@ export class RainEffect implements Effect<LedPoint1D> {
 
 export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
+  private readonly parameters = new EffectParameterStorage();
+  private readonly propability = this.parameters.register({
+    id: 'twinkle_propability',
+    name: 'Twinkle Probability',
+    description: 'Chance for each LED to twinkle on each frame (0.0 - 1.0)',
+    type: ParameterType.RANGE,
+    value: 1,
+    min: 0,
+    max: 100,
+    unit: '%',
+  });
+
+  getParameters() {
+    return this.parameters;
+  }
   getName(): string {
     return 'Twinkle';
   }
@@ -233,7 +250,7 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
     return 1;
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
-    if (Math.random() < 0.01) {
+    if (Math.random() < this.propability.value / 100) {
       return WHITE;
     }
     return BLACK;

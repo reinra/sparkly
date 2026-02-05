@@ -1,5 +1,6 @@
 import type { LedType, RgbValue } from '../../color/Color8bit';
 import { RgbFloat } from '../../color/ColorFloat';
+import { EffectParameterView } from '../../effectParameters';
 
 export interface EffectContext {
   // 1. CHANGING LESS
@@ -53,6 +54,8 @@ export interface Effect<P extends LedPoint> {
   getLoopDurationSeconds(ledCount: number): number;
   // Renders the full LED buffer for the current effect state
   renderGlobal(ctx: EffectContext, points: P[]): RgbFloat[];
+  // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
+  getParameters?(): EffectParameterView;
 }
 
 export abstract class PerPixelEffect<P extends LedPoint> implements Effect<P> {

@@ -141,6 +141,7 @@ registerRoutes(app, backendApiContract, {
       }
 
       device.effect_id = effect_id;
+      device.helper.setCurrentEffect(effect);
       startAndAbortPreviousTask(taskKey, {
         run: async (signal) => {
           await startEffect(device, effect, signal);
@@ -148,6 +149,7 @@ registerRoutes(app, backendApiContract, {
       });
     } else {
       device.effect_id = null;
+      device.helper.setCurrentEffect(null);
       abortTask(taskKey);
     }
 

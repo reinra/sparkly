@@ -43,7 +43,7 @@ export class EffectParameterStorage implements EffectParameterView {
    * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
    * @throws Error if a parameter with the same ID already exists
    */
-  register(parameter: RangeEffectParameter, listener?: RangeParameterChangeListener): void;
+  register(parameter: RangeEffectParameter, listener?: RangeParameterChangeListener): RangeEffectParameter;
 
   /**
    * Register a new boolean parameter in the storage
@@ -51,9 +51,9 @@ export class EffectParameterStorage implements EffectParameterView {
    * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
    * @throws Error if a parameter with the same ID already exists
    */
-  register(parameter: BooleanEffectParameter, listener?: BooleanParameterChangeListener): void;
+  register(parameter: BooleanEffectParameter, listener?: BooleanParameterChangeListener): BooleanEffectParameter;
 
-  register(parameter: EffectParameter, listener?: ParameterChangeListener): void {
+  register(parameter: EffectParameter, listener?: ParameterChangeListener): EffectParameter {
     if (this.parameters.has(parameter.id)) {
       throw new Error(`Parameter with id '${parameter.id}' is already registered`);
     }
@@ -61,6 +61,7 @@ export class EffectParameterStorage implements EffectParameterView {
     if (listener) {
       this.listeners.set(parameter.id, listener);
     }
+    return parameter;
   }
 
   /**
@@ -165,5 +166,45 @@ export class EffectParameterStorage implements EffectParameterView {
    */
   get count(): number {
     return this.parameters.size;
+  }
+}
+
+export class MultiParameterStorageView implements EffectParameterView {
+  constructor(private prefixToStorageMap: Map<string, EffectParameterView>) {}
+  list(): EffectParameter[] {
+    const allParameters: EffectParameter[] = [];
+    for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
+      allParameters.push(...storage.list().map((param) => ({ ...param, id: `${prefix}${param.id}` })));
+    }
+    return allParameters;
+  }
+  setValue(id: string, value: number | boolean): void {
+    for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
+      if (id.startsWith(prefix)) {
+        const paramId = id.substring(prefix.length);
+        storage.setValue(paramId, value);
+        return;
+      }
+    }
+    throw new Error(`Parameter with id '${id}' not found in any storage`);
+  }
+}
+
+export const emptyParameterStorageView: EffectParameterView = {
+  list(): EffectParameter[] {
+    return [];
+  },
+  setValue(id: string, value: number | boolean): void {
+    throw new Error(`No parameters available`);
+  },
+};
+
+export class DynamicParameterStorageView implements EffectParameterView {
+  constructor(private getCurrentStorage: () => EffectParameterView) {}
+  list(): EffectParameter[] {
+    return this.getCurrentStorage().list();
+  }
+  setValue(id: string, value: number | boolean): void {
+    this.getCurrentStorage().setValue(id, value);
   }
 }
