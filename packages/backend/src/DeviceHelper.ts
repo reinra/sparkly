@@ -1,4 +1,4 @@
-import { ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
+import { BooleanEffectParameter, ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import {
   DynamicParameterStorageView,
@@ -10,6 +10,7 @@ import {
 import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
 import { Effect } from './effects/generic/Effect';
+import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -81,6 +82,13 @@ export class DeviceHelper {
     max: 1,
     step: 0.1,
   };
+  private readonly mirror: BooleanEffectParameter = {
+    id: 'mirror',
+    name: 'Mirror LEDs',
+    description: 'Whether to reverse the effect direction over LEDs (if applicable',
+    type: ParameterType.BOOLEAN,
+    value: false,
+  };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
 
@@ -131,6 +139,7 @@ export class DeviceHelper {
 
     this.deviceParams.register(this.maxFps);
     this.deviceParams.register(this.speed);
+    this.deviceParams.register(this.mirror);
     this.deviceParams.register(this.gamma);
     this.deviceParams.register(this.temperature);
 
@@ -207,6 +216,26 @@ export class DeviceHelper {
       result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(colors[i], gamma), temperature));
     }
     return result;
+  }
+
+  public async getLedMapper(fixStringsIfNeeded: boolean): Promise<LedMapper> {
+    const ledConfig = await this.apiClient.getLedConfig();
+
+    let mapper: LedMapper = new IdentityLedMapper();
+    if (fixStringsIfNeeded && ledConfig.strings.length === 2) {
+      const halfLength = ledConfig.strings[0].length;
+      mapper = new SegmentedLedMapper([
+        { startIndex: 0, mapper: new ReverseLedMapper(halfLength) },
+        { startIndex: halfLength, mapper: new IdentityLedMapper() },
+      ]);
+    }
+    const reverseMapper = new ReverseLedMapper((await this.getGestalt()).number_of_led, mapper);
+
+    return {
+      mapLedIndex: (index: number) => {
+        return this.mirror.value === true ? reverseMapper.mapLedIndex(index) : mapper.mapLedIndex(index);
+      },
+    };
   }
 
   setCurrentEffect(effect: Effect<any> | null) {

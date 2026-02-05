@@ -9,14 +9,15 @@ export class IdentityLedMapper implements LedMapper {
 }
 
 export class ReverseLedMapper implements LedMapper {
-  private readonly totalLeds: number;
-  constructor(totalLeds: number) {
-    this.totalLeds = totalLeds;
-  }
+  constructor(
+    private readonly totalLeds: number,
+    private readonly target: LedMapper = new IdentityLedMapper()
+  ) {}
   mapLedIndex(ledIndex: number): number {
-    return this.totalLeds - ledIndex - 1;
+    return this.totalLeds - 1 - this.target.mapLedIndex(ledIndex);
   }
 }
+
 export class SegmentedLedMapper implements LedMapper {
   constructor(private readonly childMappers: { startIndex: number; mapper: LedMapper }[]) {}
   mapLedIndex(ledIndex: number): number {

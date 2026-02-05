@@ -64,7 +64,7 @@ export const effects: Record<string, AnyEffect> = {
   meteor: new MeteorEffect(),
   rain: new RainEffect(),
   twinkle: new TwinkleEffect(),
-  sine: new SineEffect(2),
+  sine: new SineEffect(),
   ping_pong: new PingPongEffect(),
   rainbow_2d: new RainbowGradientEffect2D(),
   sine_2d: new AdapterFrom1DEffectTo2D(new SineEffect()),

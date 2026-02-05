@@ -7,19 +7,23 @@ import {
   ApiClientFrameOutputStream,
   MovieBufferOutputStream,
 } from '../render/FrameOutputStream';
-import { IdentityLedMapper, ReverseLedMapper, SegmentedLedMapper, type LedMapper } from '../render/LedMapper';
 import { AnyEffectRenderer, type AnyEffect } from '../render/Renderer';
 import { logger } from '../logger';
-import type { GestaltResponseType, MovieFullResponseType } from '../deviceClient/apiClient';
+import type { GestaltResponseType } from '../deviceClient/apiClient';
+import { tr } from 'zod/v4/locales';
 
 const renderer = new AnyEffectRenderer();
 
 export async function startEffect(device: Device, effect: AnyEffect, signal: AbortSignal) {
-  const ledMapper = await prepareLedMapping(device);
+  const basicLedMapper = await device.helper.getLedMapper(false);
+  const fixedLedMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
   const output = new MultipleFrameOutputStream([
-    new BufferReplacingFrameOutputStream(device.buffer),
-    new MappedFrameOutputStream(new ApiClientFrameOutputStream(device.api_client, toFrameFormat(gestalt)), ledMapper),
+    new MappedFrameOutputStream(new BufferReplacingFrameOutputStream(device.buffer), basicLedMapper),
+    new MappedFrameOutputStream(
+      new ApiClientFrameOutputStream(device.api_client, toFrameFormat(gestalt)),
+      fixedLedMapper
+    ),
   ]);
   effect = cloneEffectIfNeeded(effect);
   await prepareForSendingLedValues(device);
@@ -59,7 +63,7 @@ async function prepareForSendingLedValues(device: Device) {
 }
 
 export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signal: AbortSignal) {
-  const ledMapper = await prepareLedMapping(device);
+  const ledMapper = await device.helper.getLedMapper();
   const gestalt = await device.helper.getGestalt();
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
@@ -85,20 +89,6 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   });
 
   await device.api_client.setMode(Mode.movie);
-}
-
-async function prepareLedMapping(device: Device) {
-  const ledConfig = await device.api_client.getLedConfig();
-
-  let mapper: LedMapper = new IdentityLedMapper();
-  if (ledConfig.strings.length === 2) {
-    const halfLength = ledConfig.strings[0].length;
-    mapper = new SegmentedLedMapper([
-      { startIndex: 0, mapper: new ReverseLedMapper(halfLength) },
-      { startIndex: halfLength, mapper: new IdentityLedMapper() },
-    ]);
-  }
-  return mapper;
 }
 
 function cloneEffectIfNeeded(effect: AnyEffect) {
