@@ -67,10 +67,10 @@
   async function selectEffect(index: number) {
     if (!device || index < 0 || index >= effects.length) return;
     const effect = effects[index];
-    
+
     // Update visual selection immediately
     selectedEffectIndex = index;
-    
+
     // Only call backend if effect actually changed
     if (device.effect_id === effect.id) return;
 
@@ -114,15 +114,16 @@
 
   function handleKeyDown(event: KeyboardEvent) {
     if (!effects.length) return;
-    
+
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       event.stopPropagation();
-      
-      const newIndex = event.key === 'ArrowDown' 
-        ? Math.min(selectedEffectIndex + 1, effects.length - 1)
-        : Math.max(selectedEffectIndex - 1, 0);
-      
+
+      const newIndex =
+        event.key === 'ArrowDown'
+          ? Math.min(selectedEffectIndex + 1, effects.length - 1)
+          : Math.max(selectedEffectIndex - 1, 0);
+
       selectEffect(newIndex);
       // Keep focus on the newly selected effect button
       setTimeout(() => effectElements[newIndex]?.focus(), 0);
