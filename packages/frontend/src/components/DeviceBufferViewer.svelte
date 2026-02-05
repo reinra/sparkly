@@ -8,7 +8,7 @@
   let { deviceId }: Props = $props();
 
   type DisplayMode = 'sequence' | '2d-mapping';
-  
+
   let displayMode = $state<DisplayMode>('sequence');
   let bufferData = $state<string | null>(null);
   let colors = $state<Array<{ r: number; g: number; b: number }>>([]);
@@ -25,7 +25,7 @@
       // Decode base64 to binary string
       const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
-      
+
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
@@ -41,7 +41,7 @@
           });
         }
       }
-      
+
       return colorArray;
     } catch (error) {
       console.error('Error parsing base64 to colors:', error);
@@ -87,20 +87,20 @@
     // Draw each LED as a circle at its mapped position
     const radius = 8; // Circle radius in pixels
     const padding = 20; // Padding from canvas edges
-    const drawWidth = canvas.width - (padding * 2);
-    const drawHeight = canvas.height - (padding * 2);
-    
+    const drawWidth = canvas.width - padding * 2;
+    const drawHeight = canvas.height - padding * 2;
+
     for (const coord of ledMapping) {
       if (coord.id < colors.length) {
         const color = colors[coord.id];
-        const x = padding + (coord.x * drawWidth);
-        const y = padding + ((1 - coord.y) * drawHeight); // Invert Y axis
+        const x = padding + coord.x * drawWidth;
+        const y = padding + (1 - coord.y) * drawHeight; // Invert Y axis
 
         ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
-        
+
         // Add a subtle border
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.lineWidth = 1;
@@ -127,15 +127,15 @@
         if (bufferData) {
           isRendering = true;
           colors = parseBase64ToColors(bufferData);
-          
+
           // Render on canvas if in 2D mode
           if (displayMode === '2d-mapping') {
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
             render2DCanvas();
           }
-          
+
           // Allow browser to render before marking as complete
-          await new Promise(resolve => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 0));
           isRendering = false;
         } else {
           colors = [];
@@ -151,11 +151,11 @@
       colors = [];
     } finally {
       fetchingBuffer = false;
-      
+
       // Calculate next fetch time for live mode
       const fetchDuration = performance.now() - fetchStartTime;
       const nextInterval = Math.max(100, fetchDuration);
-      
+
       if (isLiveEnabled && liveIntervalId === null) {
         liveIntervalId = window.setTimeout(() => {
           liveIntervalId = null;
@@ -167,7 +167,7 @@
 
   function toggleLiveMode() {
     isLiveEnabled = !isLiveEnabled;
-    
+
     if (isLiveEnabled) {
       // Start live mode
       fetchBuffer();
@@ -182,15 +182,15 @@
 
   async function switchDisplayMode(mode: DisplayMode) {
     displayMode = mode;
-    
+
     // Fetch LED mapping when switching to 2D mode
     if (mode === '2d-mapping' && ledMapping === null) {
       await fetchLedMapping();
     }
-    
+
     // Re-render if we have colors
     if (colors.length > 0 && mode === '2d-mapping') {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       render2DCanvas();
     }
   }
@@ -212,17 +212,13 @@
       {isLiveEnabled ? 'Disable Live' : 'Enable Live'}
     </button>
   </div>
-  
+
   <div class="mode-toggle">
-    <button 
-      onclick={() => switchDisplayMode('sequence')} 
-      class="mode-btn"
-      class:active={displayMode === 'sequence'}
-    >
+    <button onclick={() => switchDisplayMode('sequence')} class="mode-btn" class:active={displayMode === 'sequence'}>
       Sequence
     </button>
-    <button 
-      onclick={() => switchDisplayMode('2d-mapping')} 
+    <button
+      onclick={() => switchDisplayMode('2d-mapping')}
       class="mode-btn"
       class:active={displayMode === '2d-mapping'}
       disabled={fetchingMapping}
@@ -234,7 +230,7 @@
   {#if colors.length > 0}
     <div class="buffer-data">
       <strong>Buffer Colors ({colors.length} LEDs):</strong>
-      
+
       {#if displayMode === 'sequence'}
         <div class="color-grid">
           {#each colors as color}
@@ -265,7 +261,6 @@
 <style>
   .buffer-section {
     margin-top: 1rem;
-    padding-top: 1rem;
     border-top: 1px solid #eee;
   }
 

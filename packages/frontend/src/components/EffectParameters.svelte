@@ -12,17 +12,37 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  async function updateParameter(param: EffectParameter, value: number | boolean) {
-    if (updating) return;
-    if (param.value === value) return;
+  let parameterElements: (HTMLInputElement | null)[] = [];
 
-    updating = true;
+  // Track backend call state per parameter
+  const parameterBackendState = new Map<string, {
+    isRunning: boolean;
+    scheduledTimeout: number | null;
+    pendingValue: number | boolean | null;
+  }>();
+
+  function getParamState(paramId: string) {
+    if (!parameterBackendState.has(paramId)) {
+      parameterBackendState.set(paramId, {
+        isRunning: false,
+        scheduledTimeout: null,
+        pendingValue: null,
+      });
+    }
+    return parameterBackendState.get(paramId)!;
+  }
+
+  async function sendBackendUpdate(paramId: string, value: number | boolean) {
+    const state = getParamState(paramId);
+    state.isRunning = true;
+    state.pendingValue = null;
+
     await handleApiUpdate(
       () =>
         backendClient.setParameters({
           body: {
             device_id: deviceId,
-            parameters: [{ id: param.id, value }],
+            parameters: [{ id: paramId, value }],
           },
         }),
       async () => {
@@ -30,24 +50,87 @@
       },
       () => {}
     );
-    updating = false;
+
+    state.isRunning = false;
+
+    // If there's a pending value, schedule another update
+    if (state.pendingValue !== null) {
+      const nextValue = state.pendingValue;
+      state.pendingValue = null;
+      scheduleBackendUpdate(paramId, nextValue);
+    }
   }
 
-  async function handleRangeChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
+  function scheduleBackendUpdate(paramId: string, value: number | boolean) {
+    const state = getParamState(paramId);
+
+    if (state.isRunning) {
+      // If already running, schedule for later (only keep one scheduled)
+      if (state.scheduledTimeout !== null) {
+        clearTimeout(state.scheduledTimeout);
+      }
+      state.pendingValue = value;
+      state.scheduledTimeout = setTimeout(() => {
+        state.scheduledTimeout = null;
+        sendBackendUpdate(paramId, value);
+      }, 100);
+    } else {
+      // If not running, start immediately
+      sendBackendUpdate(paramId, value);
+    }
+  }
+
+  function updateParameter(param: EffectParameter, value: number | boolean) {
+    if (param.value === value) return;
+
+    // Optimistic update - update local state immediately
+    param.value = value;
+
+    // Schedule backend update
+    scheduleBackendUpdate(param.id, value);
+  }
+
+  function handleRangeChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
     const value = Number(event.currentTarget.value);
-    await updateParameter(param, value);
+    updateParameter(param, value);
   }
 
-  async function handleCheckboxChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
+  function handleCheckboxChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
     const value = event.currentTarget.checked;
-    await updateParameter(param, value);
+    updateParameter(param, value);
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const isInParameters = target.closest('.parameters-section') !== null;
+
+    if (!isInParameters || parameterElements.length === 0) return;
+
+    // Find current focused parameter index
+    const currentIndex = parameterElements.findIndex((el) => el === document.activeElement);
+    if (currentIndex === -1) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const nextIndex = Math.min(currentIndex + 1, parameterElements.length - 1);
+      parameterElements[nextIndex]?.focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const prevIndex = Math.max(currentIndex - 1, 0);
+      parameterElements[prevIndex]?.focus();
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      // Let browser handle left/right for range inputs naturally
+      return;
+    }
   }
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 {#if parameters && parameters.length > 0}
   <div class="parameters-section">
     <h4>Parameters</h4>
-    {#each parameters as param}
+    {#each parameters as param, index}
       {#if param.type === ParameterType.RANGE}
         <div class="control-group" title={param.description}>
           <label for={param.id}>
@@ -55,25 +138,25 @@
             {param.step && param.step < 1 ? param.value.toFixed(1) : param.value}{param.unit || ''}
           </label>
           <input
+            bind:this={parameterElements[index]}
             id={param.id}
             type="range"
             min={param.min}
             max={param.max}
             step={param.step || 1}
             value={param.value}
-            onchange={(e) => handleRangeChange(e, param)}
-            disabled={updating}
+            oninput={(e) => handleRangeChange(e, param)}
           />
         </div>
       {:else if param.type === ParameterType.BOOLEAN}
         <div class="control-group checkbox-group" title={param.description}>
           <label for={param.id}>
             <input
+              bind:this={parameterElements[index]}
               id={param.id}
               type="checkbox"
               checked={param.value}
               onchange={(e) => handleCheckboxChange(e, param)}
-              disabled={updating}
             />
             <strong>{param.name}</strong>
           </label>
@@ -113,10 +196,13 @@
     background: #ddd;
     outline: none;
     margin-top: 0.5rem;
+    transition: background 0.2s ease;
   }
 
-  input[type='range']:disabled {
-    opacity: 0.5;
+  input[type='range']:focus {
+    background: #ff3e00;
+    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline-offset: 2px;
   }
 
   .checkbox-group label {
@@ -124,16 +210,18 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
+    transition: opacity 0.2s ease;
   }
 
   input[type='checkbox'] {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    transition: outline 0.2s ease;
   }
 
-  input[type='checkbox']:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  input[type='checkbox']:focus {
+    outline: 2px solid #ff3e00;
+    outline-offset: 2px;
   }
 </style>

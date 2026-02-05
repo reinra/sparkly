@@ -65,11 +65,15 @@
   }
 
   async function selectEffect(index: number) {
-    if (!device || updating || index < 0 || index >= effects.length) return;
+    if (!device || index < 0 || index >= effects.length) return;
     const effect = effects[index];
+    
+    // Update visual selection immediately
+    selectedEffectIndex = index;
+    
+    // Only call backend if effect actually changed
     if (device.effect_id === effect.id) return;
 
-    selectedEffectIndex = index;
     updating = true;
     await handleApiUpdate(
       () =>
@@ -109,21 +113,22 @@
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (!effects.length || updating) return;
-
-    if (event.key === 'ArrowDown') {
+    if (!effects.length) return;
+    
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
-      const newIndex = Math.min(selectedEffectIndex + 1, effects.length - 1);
+      event.stopPropagation();
+      
+      const newIndex = event.key === 'ArrowDown' 
+        ? Math.min(selectedEffectIndex + 1, effects.length - 1)
+        : Math.max(selectedEffectIndex - 1, 0);
+      
       selectEffect(newIndex);
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      const newIndex = Math.max(selectedEffectIndex - 1, 0);
-      selectEffect(newIndex);
+      // Keep focus on the newly selected effect button
+      setTimeout(() => effectElements[newIndex]?.focus(), 0);
     }
   }
 </script>
-
-<svelte:window onkeydown={handleKeyDown} />
 
 <div class="device-detail">
   {#if deviceStore.loading}
@@ -184,7 +189,7 @@
 
       <div class="effects-section">
         <h3>Effects</h3>
-        <p class="hint">Use ↑↓ arrow keys to navigate</p>
+        <p class="hint">Focus effects: ↑↓ to navigate | Focus params: ↑↓ to switch, ←→ to adjust</p>
         <div class="effects-list">
           {#each effects as effect, index}
             <button
@@ -193,7 +198,8 @@
               class:selected={index === selectedEffectIndex}
               class:active={device.effect_id === effect.id}
               onclick={() => selectEffect(index)}
-              disabled={updating}
+              onkeydown={handleKeyDown}
+              tabindex={index === selectedEffectIndex ? 0 : -1}
             >
               <span class="effect-name">{effect.id}</span>
               {#if device.effect_id === effect.id}
