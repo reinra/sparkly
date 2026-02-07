@@ -1,6 +1,6 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
-import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, RED_HSL_COLOR } from '../../color/Hsl';
+import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, RED_HSL_COLOR, WHITE_HSL_COLOR } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 import { backAndForthPhase, backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
@@ -341,6 +341,13 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
     max: 100,
     unit: '%',
   });
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: WHITE_HSL_COLOR,
+  });
   getName(): string {
     return 'Twinkle';
   }
@@ -349,7 +356,7 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     if (Math.random() < this.probability.value / 100) {
-      return WHITE;
+      return hslToRgbFloat(this.color.value);
     }
     return BLACK;
   }
@@ -367,6 +374,13 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
     min: 1,
     max: 10,
   });
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: { hue: 0.1, saturation: 1.0, lightness: 0.5 },
+  });  
   getName(): string {
     return `Sine Wave Effect (${this.frequency.value} cycles)`;
   }
@@ -381,7 +395,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
     const brightness = (wave + 1) / 2;
 
     // Use HSL to keep a consistent color but vary the lightness
-    return hslToRgbFloat({ hue: 0.1, saturation: 1.0, lightness: brightness * 0.5 });
+    return hslToRgbFloat({ ...this.color.value, lightness: this.color.value.lightness * brightness });
   }
 }
 

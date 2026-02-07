@@ -1,5 +1,7 @@
+import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat } from '../../color/Hsl';
+import { EffectParameterStorage } from '../../effectParameters';
 import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
 
@@ -44,6 +46,14 @@ export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
 export class PulseScanner implements Effect<LedPoint2D> {
   pointType: '2D' = '2D';
   isStateful: boolean = false;
+  readonly parameters = new EffectParameterStorage();
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
+  });  
   getName(): string {
     return 'Pulse Scanner 2D';
   }
@@ -69,7 +79,7 @@ export class PulseScanner implements Effect<LedPoint2D> {
       // Fade out as the ring gets larger
       const alpha = intensity * (1.0 - ctx.phase);
 
-      buffer[pt.id] = hslToRgbFloat({ hue: 0.6, saturation: 1.0, lightness: alpha * 0.5 });
+      buffer[pt.id] = hslToRgbFloat({ ...this.color.value, lightness: this.color.value.lightness * alpha });
     }
     return buffer;
   }

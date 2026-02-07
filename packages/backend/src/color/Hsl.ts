@@ -17,7 +17,11 @@ export const BLUE_HSL_COLOR: Hsl = {
   saturation: 1, // Full saturation
   lightness: 0.5, // Medium lightness
 };
-
+export const WHITE_HSL_COLOR: Hsl = {
+  hue: 0, // Hue is irrelevant for white
+  saturation: 0, // No saturation for white
+  lightness: 1, // White
+};
 export const BLACK_HSL_COLOR: Hsl = {
   hue: 0, // Red
   saturation: 0, // No saturation for black
