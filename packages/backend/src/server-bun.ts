@@ -61,6 +61,10 @@ app.listen(PORT, () => {
   const url = `http://localhost:${PORT}`;
   logger.info(`Bundled server running on ${url}`);
   logger.info(`Embedded assets loaded: ${Object.keys(assets).length} files`);
+
+  if (process.env.BUILD_DATE) {
+    logger.info(`Build Date: ${process.env.BUILD_DATE}`);
+  }
   
   // Open browser after a short delay
   setTimeout(() => openBrowser(url), 1000);

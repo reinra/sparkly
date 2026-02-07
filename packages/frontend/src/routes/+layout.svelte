@@ -1,13 +1,33 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { onMount } from 'svelte';
+  import { backendClient } from '../frontendApiClient';
   
   let { children } = $props();
+  let buildDate = $state<string | undefined>(undefined);
+
+  onMount(async () => {
+    try {
+      const { status, body } = await backendClient.getSystemInfo();
+      if (status === 200 && body.buildDate) {
+        // Format date to local string
+        buildDate = new Date(body.buildDate).toISOString().replace('T', ' ').split('.')[0];
+      }
+    } catch (e) {
+      console.error('Failed to fetch system info', e);
+    }
+  });
 </script>
 
 <div class="app">
   <nav>
     <div class="nav-container">
-      <h1 class="logo">Twinkly LED Controller</h1>
+      <div class="brand-container">
+        <h1 class="logo">Twinkly LED Controller</h1>
+        {#if buildDate}
+          <div class="build-date">Build: {buildDate}</div>
+        {/if}
+      </div>
       <ul class="menu">
         <li>
           <a href="/devices" class:active={page.url.pathname === '/devices'}>
@@ -61,6 +81,18 @@
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+  }
+
+  .brand-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .build-date {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-top: 0px;
+    font-weight: normal;
   }
 
   .menu {

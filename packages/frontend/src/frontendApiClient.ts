@@ -16,5 +16,6 @@ export type {
   StatusResponse,
   SetModeRequest,
   SetModeResponse,
+  SystemInfoResponse,
 } from '@twinkly-ts/common';
 export { Mode } from '@twinkly-ts/common';

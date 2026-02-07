@@ -65,7 +65,14 @@ async function buildExecutable() {
     process.exit(1);
   }
 
-  const bunCommand = `bun build ${entryPoint} --compile --minify --sourcemap --outfile ${outputPath}`;
+  const buildDate = new Date().toISOString();
+  // Using JSON.stringify ensures the string is properly quoted for the define replacement
+  // We need to escape double quotes for the shell command if necessary, but JSON.stringify wraps in double quotes
+  // For bun --define, we want: process.env.BUILD_DATE="value" or 'value'
+  // In shell execution, we usually want: --define "process.env.BUILD_DATE='value'"
+  const defineArg = `--define "process.env.BUILD_DATE='${buildDate}'"`;
+
+  const bunCommand = `bun build ${entryPoint} --compile --minify --sourcemap --outfile ${outputPath} ${defineArg}`;
 
   try {
     console.log(`Running: ${bunCommand}\n`);

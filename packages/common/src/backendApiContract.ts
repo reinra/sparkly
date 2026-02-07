@@ -129,7 +129,15 @@ export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
 // Backend API contract
+const SystemInfoResponseSchema = z.object({
+  buildDate: z.string().optional(),
+  version: z.string().optional(),
+});
+
+export type SystemInfoResponse = z.infer<typeof SystemInfoResponseSchema>;
+
 const c = initContract();
+
 export const backendApiContract = c.router({
   hello: {
     method: 'GET',
@@ -227,4 +235,13 @@ export const backendApiContract = c.router({
       500: ErrorResponseSchema,
     },
   },
+  getSystemInfo: {
+    method: 'GET',
+    path: '/api/system-info',
+    responses: {
+      200: SystemInfoResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
 });
+

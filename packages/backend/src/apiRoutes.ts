@@ -22,6 +22,14 @@ export const apiRoutes = {
     });
   },
 
+  getSystemInfo: (req: any, res: any) => {
+    res.json({
+      // @ts-ignore - Injected by Bun at build time
+      buildDate: typeof BUILD_DATE !== 'undefined' ? BUILD_DATE : process.env.BUILD_DATE || new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+    });
+  },
+
   getInfo: async (req: any, res: any) => {
     const { device_id } = req.query;
     const deviceList = [];
