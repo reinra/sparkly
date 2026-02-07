@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger, logError } from './logger';
+import { openBrowser } from './utils/browserUtils';
 import { backendApiContract } from '@twinkly-ts/common';
 import { registerRoutes } from './typedHandler';
 import { tryToConnectAll } from './deviceList';
@@ -156,8 +157,13 @@ async function startServer() {
   }
 
   app.listen(PORT, () => {
-    logger.info(`Production server running on http://localhost:${PORT}`);
+    const url = `http://localhost:${PORT}`;
+    logger.info(`Production server running on ${url}`);
     logger.info(`Serving frontend from: ${frontendPath}`);
+    logger.info(`Opening browser automatically...`);
+    
+    // Open browser after a short delay to ensure server is ready
+    setTimeout(() => openBrowser(url), 1000);
 
     tryToConnectAll().catch((error: unknown) => {
       logError(error).error('Failed to refresh device aliases on startup');
