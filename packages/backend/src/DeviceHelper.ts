@@ -11,6 +11,7 @@ import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat }
 import { RgbValue } from './color/Color8bit';
 import { Effect } from './effects/generic/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
+import { EnabledDisabledSchema } from './deviceClient/apiContract';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -152,7 +153,7 @@ export class DeviceHelper {
   }
 
   public async getFilterValue(name: string): Promise<number | undefined> {
-    return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == name)?.config?.value;
+    return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == name && filter.config.mode === EnabledDisabledSchema.Values.enabled)?.config?.value;
   }
 
   public getCurrentSpeedMultiplier(): number {
