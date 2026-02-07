@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "nodemon --watch src --ext ts,js,json --exec tsx src/server.ts",
     "start": "tsx src/server.ts",
-    "start:production": "node dist/server-production.js"
+    "start:production": "node dist/server-node.js"
   },
   "dependencies": {
     "@loglayer/transport-pino": "^2.2.17",

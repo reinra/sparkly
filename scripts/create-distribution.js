@@ -27,18 +27,8 @@ async function createDistributionPackage() {
   fs.copyFileSync(exePath, path.join(packageDir, 'twinkly-server.exe'));
   console.log('✓ Executable copied');
 
-  // 2. Copy frontend build directory
-  console.log('📋 Copying frontend files...');
-  const frontendSrc = path.join(rootDir, 'packages', 'frontend', 'build');
-  const frontendDest = path.join(packageDir, 'packages', 'frontend', 'build');
-  
-  if (!fs.existsSync(frontendSrc)) {
-    console.error('❌ Frontend build not found. Run "npm run build" first.');
-    process.exit(1);
-  }
-
-  copyDirectory(frontendSrc, frontendDest);
-  console.log('✓ Frontend files copied');
+  // 2. Frontend files are now embedded in the executable - no need to copy
+  console.log('✓ Frontend files are embedded in the executable');
 
   // 3. Copy config example
   console.log('📋 Copying configuration example...');
@@ -79,7 +69,7 @@ pause
   console.log(`📦 Total size: ${sizeMB} MB`);
   console.log('\n📋 Package contents:');
   console.log('   - twinkly-server.exe (self-contained executable)');
-  console.log('   - packages/frontend/build/ (web interface)');
+
   console.log('   - config.toml.example (configuration template)');
   console.log('   - README.md (user documentation)');
   console.log('   - start.bat (Windows startup script)');

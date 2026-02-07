@@ -37,6 +37,16 @@ async function buildExecutable() {
 
   console.log('✓ All packages are built');
 
+  // Generate asset map for embedding
+  console.log('\n📄 Generating embedded assets map...');
+  try {
+    const { stdout } = await execAsync('node scripts/generate-bun-assets.js', { cwd: rootDir });
+    console.log(stdout.trim());
+  } catch (error) {
+    console.error('❌ Failed to generate assets:', error.message);
+    process.exit(1);
+  }
+
   // Create output directory
   const distDir = path.join(rootDir, 'dist');
   if (!fs.existsSync(distDir)) {
@@ -45,13 +55,13 @@ async function buildExecutable() {
 
   // Build the executable
   console.log('\n🚀 Building executable...');
-  const entryPoint = path.join(rootDir, 'packages', 'backend', 'dist', 'server-production.js');
+  // Use server-bun.ts which statically imports assets and handler
+  const entryPoint = path.join(rootDir, 'packages', 'backend', 'src', 'server-bun.ts');
   const outputPath = path.join(distDir, 'twinkly-server.exe');
 
   // Check if entry point exists
   if (!fs.existsSync(entryPoint)) {
     console.error(`❌ Entry point not found: ${entryPoint}`);
-    console.error('Make sure server-production.ts is compiled.');
     process.exit(1);
   }
 

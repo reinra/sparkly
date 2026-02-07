@@ -6,7 +6,9 @@ import { NoiseGenerator } from './NoiseUtils';
 export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
   pointType: '2D' = '2D';
   constructor(private effect1D: Effect<LedPoint1D>) {}
-  isStateful: boolean = this.effect1D.isStateful;
+  get isStateful(): boolean {
+    return this.effect1D.isStateful;
+  }
   getName(): string {
     return `Adapter(2D<-1D): ${this.effect1D.getName()}`;
   }

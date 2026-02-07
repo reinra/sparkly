@@ -9,3 +9,4 @@ build/
 .vite/
 *.bun-build
 .vscode/settings.json
+packages/backend/src/generated/
