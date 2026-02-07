@@ -45,11 +45,39 @@ Then open your browser to http://localhost:5173
 
 ### Available Scripts
 
-- `npm run dev:server` - Start the Express backend API server on port 3001
-- `npm run dev:frontend` - Start the SvelteKit frontend on port 5173
-- `npm run build` - Build the TypeScript backend
-- `npm run build:frontend` - Build the SvelteKit frontend
-- `npm start:server` - Run the compiled backend server
+**Development:**
+- `npm run dev:backend` - Start the Express backend API server on port 3001 with hot reload
+- `npm run dev:frontend` - Start the SvelteKit frontend on port 5173 with hot reload
+
+**Building:**
+- `npm run build` - Build all packages (common, backend, frontend)
+- `npm run build:common` - Build shared types package
+- `npm run build:backend` - Build TypeScript backend
+- `npm run build:frontend` - Build SvelteKit frontend
+
+**Production:**
+- `npm run build:executable` - Build self-contained Windows executable (requires Bun)
+- `npm run package:distribution` - Create complete distribution package ready to deploy
+
+**Testing:**
+- `npm run start:backend` - Run the compiled backend server
+- `npm run start:frontend` - Preview the built frontend
+
+## Distribution
+
+This project can be built as a **self-contained executable** that runs on any Windows machine **without requiring Node.js**:
+
+```bash
+npm run package:distribution
+```
+
+This creates a complete distribution package at `dist/twinkly-server-package/` with:
+- Self-contained executable (~110 MB, includes Bun runtime)
+- Frontend web interface
+- Configuration template
+- User documentation
+
+See [BUILD_EXECUTABLE.md](BUILD_EXECUTABLE.md) for detailed instructions and [SETUP_COMPLETE.md](SETUP_COMPLETE.md) for the complete setup guide.
 
 ## Project Structure
 

@@ -12,6 +12,8 @@
     "build:common": "npm run build --workspace=@twinkly-ts/common",
     "build:backend": "npm run build --workspace=@twinkly-ts/backend",
     "build:frontend": "npm run build --workspace=@twinkly-ts/frontend",
+    "build:executable": "npm run build && node scripts/build-executable.js",
+    "package:distribution": "npm run build:executable && node scripts/create-distribution.js",
     "dev:backend": "npm run dev --workspace=@twinkly-ts/backend",
     "dev:frontend": "npm run dev --workspace=@twinkly-ts/frontend",
     "start:backend": "npm run start --workspace=@twinkly-ts/backend",

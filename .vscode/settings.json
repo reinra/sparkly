@@ -1,3 +1,25 @@
 {
-  "explorer.excludeGitIgnore": false
+  "explorer.excludeGitIgnore": false,
+  "chat.tools.terminal.autoApprove": {
+    "/^cd \\.\\.; \\$env:PATH = \"C:\\\\Users\\\\Rein\\\\\\.bun\\\\bin;\\$env:PATH\"; npm run package:distribution$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^\\$env:PATH = \"C:\\\\Users\\\\Rein\\\\\\.bun\\\\bin;\\$env:PATH\"; npm run package:distribution$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^npm run build:executable$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^node scripts/create-distribution\\.js$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^cd F:\\\\Progemine\\\\twinkly-ts; node scripts/create-distribution\\.js$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
 }

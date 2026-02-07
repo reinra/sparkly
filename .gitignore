@@ -7,3 +7,5 @@ config.toml
 .svelte-kit/
 build/
 .vite/
+*.bun-build
+.vscode/settings.json
