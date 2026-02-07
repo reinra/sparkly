@@ -2,7 +2,8 @@
   import { backendClient } from '../frontendApiClient';
   import { handleApiUpdate } from '../utils/apiHelper';
   import { deviceStore } from '../stores/deviceStore.svelte';
-  import { ParameterType, type EffectParameter } from '@twinkly-ts/common';
+  import HslColorPicker from './HslColorPicker.svelte';
+  import { ParameterType, type EffectParameter, type Hsl } from '@twinkly-ts/common';
 
   interface Props {
     deviceId: string;
@@ -12,13 +13,15 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  let parameterElements: (HTMLInputElement | null)[] = [];
+  type ParameterValue = number | boolean | Hsl;
+
+  let parameterElements: (HTMLElement | null)[] = [];
 
   // Track backend call state per parameter
   const parameterBackendState = new Map<string, {
     isRunning: boolean;
     scheduledTimeout: number | null;
-    pendingValue: number | boolean | null;
+    pendingValue: ParameterValue | null;
   }>();
 
   function getParamState(paramId: string) {
@@ -32,7 +35,7 @@
     return parameterBackendState.get(paramId)!;
   }
 
-  async function sendBackendUpdate(paramId: string, value: number | boolean) {
+  async function sendBackendUpdate(paramId: string, value: ParameterValue) {
     const state = getParamState(paramId);
     state.isRunning = true;
     state.pendingValue = null;
@@ -61,30 +64,59 @@
     }
   }
 
-  function scheduleBackendUpdate(paramId: string, value: number | boolean) {
+  function scheduleBackendUpdate(paramId: string, value: ParameterValue) {
     const state = getParamState(paramId);
+    const preparedValue = cloneValue(value);
 
     if (state.isRunning) {
       // If already running, schedule for later (only keep one scheduled)
       if (state.scheduledTimeout !== null) {
         clearTimeout(state.scheduledTimeout);
       }
-      state.pendingValue = value;
+      state.pendingValue = preparedValue;
       state.scheduledTimeout = setTimeout(() => {
         state.scheduledTimeout = null;
-        sendBackendUpdate(paramId, value);
+        sendBackendUpdate(paramId, preparedValue);
       }, 100);
     } else {
       // If not running, start immediately
-      sendBackendUpdate(paramId, value);
+      sendBackendUpdate(paramId, preparedValue);
     }
   }
 
-  function updateParameter(param: EffectParameter, value: number | boolean) {
+  function areHslEqual(a: Hsl, b: Hsl) {
+    const EPSILON = 0.0001;
+    return (
+      Math.abs(a.hue - b.hue) < EPSILON &&
+      Math.abs(a.saturation - b.saturation) < EPSILON &&
+      Math.abs(a.lightness - b.lightness) < EPSILON
+    );
+  }
+
+  function cloneValue(value: ParameterValue): ParameterValue {
+    if (typeof value === 'object') {
+      return { ...(value as Hsl) };
+    }
+    return value;
+  }
+
+  function updateParameter(param: EffectParameter, value: ParameterValue) {
+    if (param.type === ParameterType.HSL) {
+      const nextValue = cloneValue(value) as Hsl;
+      const currentValue = param.value as Hsl;
+      if (areHslEqual(currentValue, nextValue)) return;
+
+      // Optimistic update - update local state immediately
+      param.value = nextValue as never;
+
+      scheduleBackendUpdate(param.id, nextValue);
+      return;
+    }
+
     if (param.value === value) return;
 
     // Optimistic update - update local state immediately
-    param.value = value;
+    param.value = value as never;
 
     // Schedule backend update
     scheduleBackendUpdate(param.id, value);
@@ -138,7 +170,7 @@
             {param.step && param.step < 1 ? param.value.toFixed(1) : param.value}{param.unit || ''}
           </label>
           <input
-            bind:this={parameterElements[index]}
+            bind:this={(parameterElements[index] as HTMLInputElement | null)}
             id={param.id}
             type="range"
             min={param.min}
@@ -152,7 +184,7 @@
         <div class="control-group checkbox-group" title={param.description}>
           <label for={param.id}>
             <input
-              bind:this={parameterElements[index]}
+              bind:this={(parameterElements[index] as HTMLInputElement | null)}
               id={param.id}
               type="checkbox"
               checked={param.value}
@@ -160,6 +192,24 @@
             />
             <strong>{param.name}</strong>
           </label>
+        </div>
+      {:else if param.type === ParameterType.HSL}
+        <div class="control-group color-group" title={param.description}>
+          <div class="color-label" aria-live="polite">
+            <strong>{param.name}:</strong>
+            <span class="color-readout">
+              {Math.round(param.value.hue * 360)}° /
+              {Math.round(param.value.saturation * 100)}% /
+              {Math.round(param.value.lightness * 100)}%
+            </span>
+          </div>
+          <HslColorPicker
+            value={param.value}
+            on:change={(event) => updateParameter(param, event.detail)}
+            on:ready={(event) => {
+              parameterElements[index] = event.detail;
+            }}
+          />
         </div>
       {/if}
     {/each}
@@ -223,5 +273,18 @@
   input[type='checkbox']:focus {
     outline: 2px solid #ff3e00;
     outline-offset: 2px;
+  }
+
+  .color-group .color-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .color-readout {
+    font-size: 0.85rem;
+    color: #444;
+    font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 </style>

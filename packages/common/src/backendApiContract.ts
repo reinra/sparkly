@@ -12,6 +12,12 @@ const HelloResponseSchema = z.object({
   message: z.string(),
 });
 
+const HslValueSchema = z.object({
+  hue: z.number().min(0).max(1),
+  saturation: z.number().min(0).max(1),
+  lightness: z.number().min(0).max(1),
+});
+
 const EffectParameterBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -33,7 +39,16 @@ const BooleanEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: z.boolean(),
 });
 
-const EffectParameterSchema = z.discriminatedUnion('type', [RangeEffectParameterSchema, BooleanEffectParameterSchema]);
+const HslEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.HSL),
+  value: HslValueSchema,
+});
+
+const EffectParameterSchema = z.discriminatedUnion('type', [
+  RangeEffectParameterSchema,
+  BooleanEffectParameterSchema,
+  HslEffectParameterSchema,
+]);
 
 const GetInfoResponseSchema = z.object({
   devices: z.array(
@@ -85,11 +100,13 @@ const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
 
+const ParameterValueSchema = z.union([z.number(), z.boolean(), HslValueSchema]);
+
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
   parameters: z.array(
     z.object({
       id: z.string(),
-      value: z.union([z.number(), z.boolean()]),
+      value: ParameterValueSchema,
     })
   ),
 });

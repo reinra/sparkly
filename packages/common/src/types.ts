@@ -8,9 +8,16 @@ export enum Mode {
   rt = 'rt',
 }
 
+export interface Hsl {
+  hue: number; // Hue: 0-1
+  saturation: number; // Saturation: 0-1
+  lightness: number; // Lightness: 0-1
+}
+
 export enum ParameterType {
   RANGE = 'range',
   BOOLEAN = 'boolean',
+  HSL = 'hsl',
 }
 
 export interface BaseEffectParameter {
@@ -34,4 +41,9 @@ export interface BooleanEffectParameter extends BaseEffectParameter {
   value: boolean;
 }
 
-export type EffectParameter = RangeEffectParameter | BooleanEffectParameter;
+export interface HslEffectParameter extends BaseEffectParameter {
+  type: ParameterType.HSL;
+  value: Hsl;
+}
+
+export type EffectParameter = RangeEffectParameter | BooleanEffectParameter | HslEffectParameter;

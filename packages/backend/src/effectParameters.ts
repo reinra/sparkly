@@ -1,4 +1,4 @@
-import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter } from '@twinkly-ts/common';
+import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, Hsl } from '@twinkly-ts/common';
 import { ParameterType } from '@twinkly-ts/common';
 
 export type RangeParameterChangeListener = (
@@ -11,7 +11,33 @@ export type BooleanParameterChangeListener = (
   oldValue: boolean,
   newValue: boolean
 ) => void | Promise<void>;
-export type ParameterChangeListener = RangeParameterChangeListener | BooleanParameterChangeListener;
+export type HslParameterChangeListener = (
+  parameter: HslEffectParameter,
+  oldValue: Hsl,
+  newValue: Hsl
+) => void | Promise<void>;
+export type ParameterChangeListener =
+  | RangeParameterChangeListener
+  | BooleanParameterChangeListener
+  | HslParameterChangeListener;
+
+const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
+
+function validateHslValue(id: string, value: Hsl): void {
+  const ensure = (component: keyof Hsl) => {
+    const componentValue = value[component];
+    if (typeof componentValue !== 'number' || Number.isNaN(componentValue)) {
+      throw new Error(`Parameter '${id}' expects numeric ${component} value`);
+    }
+    if (componentValue < 0 || componentValue > 1) {
+      throw new Error(`Parameter '${id}': ${HSL_RANGE_ERROR} (received ${component}: ${componentValue})`);
+    }
+  };
+
+  ensure('hue');
+  ensure('saturation');
+  ensure('lightness');
+}
 
 /**
  * Interface for UI-focused parameter operations
@@ -30,7 +56,7 @@ export interface EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean): void;
+  setValue(id: string, value: number | boolean | Hsl): void;
 }
 
 export class EffectParameterStorage implements EffectParameterView {
@@ -52,6 +78,14 @@ export class EffectParameterStorage implements EffectParameterView {
    * @throws Error if a parameter with the same ID already exists
    */
   register(parameter: BooleanEffectParameter, listener?: BooleanParameterChangeListener): BooleanEffectParameter;
+
+  /**
+   * Register a new HSL parameter in the storage
+   * @param parameter The HSL parameter to register
+   * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
+   * @throws Error if a parameter with the same ID already exists
+   */
+  register(parameter: HslEffectParameter, listener?: HslParameterChangeListener): HslEffectParameter;
 
   register(parameter: EffectParameter, listener?: ParameterChangeListener): EffectParameter {
     if (this.parameters.has(parameter.id)) {
@@ -97,7 +131,7 @@ export class EffectParameterStorage implements EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean): void {
+  setValue(id: string, value: number | boolean | Hsl): void {
     const parameter = this.parameters.get(id);
 
     if (!parameter) {
@@ -120,6 +154,13 @@ export class EffectParameterStorage implements EffectParameterView {
         throw new Error(`Parameter '${id}' expects a boolean value`);
       }
       parameter.value = value;
+    } else if (parameter.type === ParameterType.HSL) {
+      if (typeof value !== 'object') {
+        throw new Error(`Parameter '${id}' expects an HSL value`);
+      }
+      const hslValue = value as Hsl;
+      validateHslValue(id, hslValue);
+      parameter.value = { ...hslValue };
     }
 
     // Invoke listener asynchronously (fire-and-forget) if registered
@@ -132,10 +173,17 @@ export class EffectParameterStorage implements EffectParameterView {
             console.error(`Error in listener for parameter '${id}':`, error);
           }
         );
-      } else {
+      } else if (parameter.type === ParameterType.BOOLEAN) {
         const booleanListener = listener as BooleanParameterChangeListener;
         Promise.resolve(
           booleanListener(parameter as BooleanEffectParameter, oldValue as boolean, value as boolean)
+        ).catch((error) => {
+          console.error(`Error in listener for parameter '${id}':`, error);
+        });
+      } else {
+        const hslListener = listener as HslParameterChangeListener;
+        Promise.resolve(
+          hslListener(parameter as HslEffectParameter, oldValue as Hsl, value as Hsl)
         ).catch((error) => {
           console.error(`Error in listener for parameter '${id}':`, error);
         });
@@ -178,7 +226,7 @@ export class MultiParameterStorageView implements EffectParameterView {
     }
     return allParameters;
   }
-  setValue(id: string, value: number | boolean): void {
+  setValue(id: string, value: number | boolean | Hsl): void {
     for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
       if (id.startsWith(prefix)) {
         const paramId = id.substring(prefix.length);
@@ -194,7 +242,7 @@ export const emptyParameterStorageView: EffectParameterView = {
   list(): EffectParameter[] {
     return [];
   },
-  setValue(id: string, value: number | boolean): void {
+  setValue(id: string, value: number | boolean | Hsl): void {
     throw new Error(`No parameters available`);
   },
 };
@@ -204,7 +252,7 @@ export class DynamicParameterStorageView implements EffectParameterView {
   list(): EffectParameter[] {
     return this.getCurrentStorage().list();
   }
-  setValue(id: string, value: number | boolean): void {
+  setValue(id: string, value: number | boolean | Hsl): void {
     this.getCurrentStorage().setValue(id, value);
   }
 }

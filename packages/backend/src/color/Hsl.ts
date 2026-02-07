@@ -1,11 +1,12 @@
+import { Hsl } from '@twinkly-ts/common';
 import type { RgbValue } from './Color8bit';
 import type { RgbFloat } from './ColorFloat';
 
-export interface Hsl {
-  hue: number; // Hue: 0-1
-  saturation: number; // Saturation: 0-1
-  lightness: number; // Lightness: 0-1
-}
+export const DEFAULT_HSL_COLOR: Hsl = {
+  hue: 0, // Red
+  saturation: 1, // Full saturation
+  lightness: 0.5, // Medium lightness
+};
 
 // Helper function to handle the hue-to-RGB math
 function hueToRgb(p: number, q: number, t: number): number {

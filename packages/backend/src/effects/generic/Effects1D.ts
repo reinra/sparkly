@@ -1,6 +1,6 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
-import { hslToRgbFloat } from '../../color/Hsl';
+import { DEFAULT_HSL_COLOR, hslToRgbFloat } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 import { backAndForthPhase, backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
@@ -18,6 +18,27 @@ export class SingleColorEffect extends BaseSameColorEffect {
   }
   renderColor(ctx: EffectContext): RgbFloat {
     return this.color;
+  }
+}
+
+export class SingleHslColorEffect extends BaseSameColorEffect {
+  pointType: '1D' = '1D';
+  readonly parameters = new EffectParameterStorage();
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: DEFAULT_HSL_COLOR,
+  });
+  getName(): string {
+    return 'Single Color';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 0;
+  }
+  renderColor(ctx: EffectContext): RgbFloat {
+    return hslToRgbFloat(this.color.value);
   }
 }
 
