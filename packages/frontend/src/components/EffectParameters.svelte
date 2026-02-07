@@ -16,13 +16,33 @@
   type ParameterValue = number | boolean | Hsl;
 
   let parameterElements: (HTMLElement | null)[] = [];
+  const optimisticValues = new Map<string, ParameterValue>();
+  let optimisticVersion = 0;
+
+  const THROTTLE_MS = 100;
 
   // Track backend call state per parameter
   const parameterBackendState = new Map<string, {
     isRunning: boolean;
     scheduledTimeout: number | null;
     pendingValue: ParameterValue | null;
+    lastSendTimestamp: number;
   }>();
+
+  function bumpOptimisticVersion() {
+    optimisticVersion += 1;
+  }
+
+  function setOptimisticValue(id: string, value: ParameterValue) {
+    optimisticValues.set(id, cloneValue(value));
+    bumpOptimisticVersion();
+  }
+
+  function clearOptimisticValue(id: string) {
+    if (optimisticValues.delete(id)) {
+      bumpOptimisticVersion();
+    }
+  }
 
   function getParamState(paramId: string) {
     if (!parameterBackendState.has(paramId)) {
@@ -30,6 +50,7 @@
         isRunning: false,
         scheduledTimeout: null,
         pendingValue: null,
+        lastSendTimestamp: 0,
       });
     }
     return parameterBackendState.get(paramId)!;
@@ -39,6 +60,7 @@
     const state = getParamState(paramId);
     state.isRunning = true;
     state.pendingValue = null;
+    state.lastSendTimestamp = Date.now();
 
     await handleApiUpdate(
       () =>
@@ -55,9 +77,9 @@
     );
 
     state.isRunning = false;
-
-    // If there's a pending value, schedule another update
-    if (state.pendingValue !== null) {
+    const hasPending = state.pendingValue !== null;
+    if (hasPending) {
+      // Re-run scheduling to respect throttle window with the latest value
       const nextValue = state.pendingValue;
       state.pendingValue = null;
       scheduleBackendUpdate(paramId, nextValue);
@@ -67,21 +89,28 @@
   function scheduleBackendUpdate(paramId: string, value: ParameterValue) {
     const state = getParamState(paramId);
     const preparedValue = cloneValue(value);
+    state.pendingValue = preparedValue;
 
     if (state.isRunning) {
-      // If already running, schedule for later (only keep one scheduled)
-      if (state.scheduledTimeout !== null) {
-        clearTimeout(state.scheduledTimeout);
-      }
-      state.pendingValue = preparedValue;
-      state.scheduledTimeout = setTimeout(() => {
-        state.scheduledTimeout = null;
-        sendBackendUpdate(paramId, preparedValue);
-      }, 100);
-    } else {
-      // If not running, start immediately
-      sendBackendUpdate(paramId, preparedValue);
+      // Let the in-flight request finish; it will reschedule if needed
+      return;
     }
+
+    const now = Date.now();
+    const elapsed = now - state.lastSendTimestamp;
+    const waitTime = Math.max(THROTTLE_MS - elapsed, 0);
+
+    if (state.scheduledTimeout !== null) {
+      clearTimeout(state.scheduledTimeout);
+    }
+
+    state.scheduledTimeout = setTimeout(() => {
+      state.scheduledTimeout = null;
+      const nextValue = state.pendingValue;
+      if (nextValue === null) return;
+      state.pendingValue = null;
+      sendBackendUpdate(paramId, nextValue);
+    }, waitTime);
   }
 
   function areHslEqual(a: Hsl, b: Hsl) {
@@ -100,26 +129,71 @@
     return value;
   }
 
-  function updateParameter(param: EffectParameter, value: ParameterValue) {
-    if (param.type === ParameterType.HSL) {
-      const nextValue = cloneValue(value) as Hsl;
-      const currentValue = param.value as Hsl;
-      if (areHslEqual(currentValue, nextValue)) return;
+  function valuesMatch(param: EffectParameter, value: ParameterValue) {
+    if (param.type === ParameterType.RANGE && typeof value === 'number') {
+      return param.value === value;
+    }
+    if (param.type === ParameterType.BOOLEAN && typeof value === 'boolean') {
+      return param.value === value;
+    }
+    if (param.type === ParameterType.HSL && typeof value === 'object') {
+      return areHslEqual(param.value as Hsl, value as Hsl);
+    }
+    return false;
+  }
 
-      // Optimistic update - update local state immediately
-      param.value = nextValue as never;
+  function getEffectiveValue(param: EffectParameter): ParameterValue {
+    optimisticVersion;
+    return optimisticValues.get(param.id) ?? (param.value as ParameterValue);
+  }
 
-      scheduleBackendUpdate(param.id, nextValue);
-      return;
+  $effect(() => {
+    const currentParams = parameters ?? [];
+    const validIds = new Set(currentParams.map((param) => param.id));
+
+    let didChange = false;
+    for (const param of currentParams) {
+      const optimistic = optimisticValues.get(param.id);
+      if (optimistic && valuesMatch(param, optimistic)) {
+        optimisticValues.delete(param.id);
+        didChange = true;
+      }
     }
 
-    if (param.value === value) return;
+    for (const id of Array.from(optimisticValues.keys())) {
+      if (!validIds.has(id)) {
+        optimisticValues.delete(id);
+        didChange = true;
+      }
+    }
 
-    // Optimistic update - update local state immediately
-    param.value = value as never;
+    if (didChange) {
+      bumpOptimisticVersion();
+    }
+  });
+
+  function updateParameter(param: EffectParameter, value: ParameterValue) {
+    const nextValue = cloneValue(value);
+    const effectiveValue = getEffectiveValue(param);
+
+    if (param.type === ParameterType.HSL) {
+      if (typeof nextValue !== 'object' || areHslEqual(effectiveValue as Hsl, nextValue as Hsl)) {
+        return;
+      }
+    } else if (param.type === ParameterType.RANGE) {
+      if (typeof nextValue !== 'number' || effectiveValue === nextValue) {
+        return;
+      }
+    } else if (param.type === ParameterType.BOOLEAN) {
+      if (typeof nextValue !== 'boolean' || effectiveValue === nextValue) {
+        return;
+      }
+    }
+
+    setOptimisticValue(param.id, nextValue);
 
     // Schedule backend update
-    scheduleBackendUpdate(param.id, value);
+    scheduleBackendUpdate(param.id, nextValue);
   }
 
   function handleRangeChange(event: Event & { currentTarget: HTMLInputElement }, param: EffectParameter) {
@@ -164,10 +238,11 @@
     <h4>Parameters</h4>
     {#each parameters as param, index}
       {#if param.type === ParameterType.RANGE}
+        {@const rangeValue = getEffectiveValue(param) as number}
         <div class="control-group" title={param.description}>
           <label for={param.id}>
             <strong>{param.name}:</strong>
-            {param.step && param.step < 1 ? param.value.toFixed(1) : param.value}{param.unit || ''}
+            {param.step && param.step < 1 ? rangeValue.toFixed(1) : rangeValue}{param.unit || ''}
           </label>
           <input
             bind:this={(parameterElements[index] as HTMLInputElement | null)}
@@ -176,35 +251,37 @@
             min={param.min}
             max={param.max}
             step={param.step || 1}
-            value={param.value}
+            value={rangeValue}
             oninput={(e) => handleRangeChange(e, param)}
           />
         </div>
       {:else if param.type === ParameterType.BOOLEAN}
+        {@const booleanValue = getEffectiveValue(param) as boolean}
         <div class="control-group checkbox-group" title={param.description}>
           <label for={param.id}>
             <input
               bind:this={(parameterElements[index] as HTMLInputElement | null)}
               id={param.id}
               type="checkbox"
-              checked={param.value}
+              checked={booleanValue}
               onchange={(e) => handleCheckboxChange(e, param)}
             />
             <strong>{param.name}</strong>
           </label>
         </div>
       {:else if param.type === ParameterType.HSL}
+        {@const hslValue = getEffectiveValue(param) as Hsl}
         <div class="control-group color-group" title={param.description}>
           <div class="color-label" aria-live="polite">
             <strong>{param.name}:</strong>
             <span class="color-readout">
-              {Math.round(param.value.hue * 360)}° /
-              {Math.round(param.value.saturation * 100)}% /
-              {Math.round(param.value.lightness * 100)}%
+              {Math.round(hslValue.hue * 360)}° /
+              {Math.round(hslValue.saturation * 100)}% /
+              {Math.round(hslValue.lightness * 100)}%
             </span>
           </div>
           <HslColorPicker
-            value={param.value}
+            value={hslValue}
             on:change={(event) => updateParameter(param, event.detail)}
             on:ready={(event) => {
               parameterElements[index] = event.detail;
