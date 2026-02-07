@@ -1,6 +1,6 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
-import { DEFAULT_HSL_COLOR, hslToRgbFloat } from '../../color/Hsl';
+import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, RED_HSL_COLOR } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
 import { backAndForthPhase, backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
@@ -163,6 +163,47 @@ export class TwoAlternatingColorFadingEffect extends PerPixelEffect<LedPoint1D> 
     }
     const color = index === 0 ? this.color1 : this.color2;
     return lerp(this.background, color, fadeFactor);
+  }
+}
+
+export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: '1D' = '1D'
+  readonly parameters = new EffectParameterStorage();
+  private readonly color1 = this.parameters.register({
+    id: 'color1',
+    name: 'Color 1',
+    description: 'HSL color value for the first color',
+    type: ParameterType.HSL,
+    value: RED_HSL_COLOR,
+  });
+  private readonly color2 = this.parameters.register({
+    id: 'color2',
+    name: 'Color 2',
+    description: 'HSL color value for the second color',
+    type: ParameterType.HSL,
+    value: BLUE_HSL_COLOR,
+  });
+  private readonly colorBg = this.parameters.register({
+    id: 'colorBg',
+    name: 'Background Color',
+    description: 'HSL color value for the background color',
+    type: ParameterType.HSL,
+    value: BLACK_HSL_COLOR,
+  });
+  getName(): string {
+    return 'Two Alternating Colors Fading';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 10;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+    const index = point.position % 2;
+    let fadeFactor = backAndForthPhaseWithPause(ctx.phase);
+    if (index === 1) {
+      fadeFactor = revertPhase(fadeFactor);
+    }
+    const color = index === 0 ? this.color1.value : this.color2.value;
+    return hslToRgbFloat(lerpHsl(this.colorBg.value, color, fadeFactor));
   }
 }
 

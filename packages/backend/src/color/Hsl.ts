@@ -2,11 +2,28 @@ import { Hsl } from '@twinkly-ts/common';
 import type { RgbValue } from './Color8bit';
 import type { RgbFloat } from './ColorFloat';
 
-export const DEFAULT_HSL_COLOR: Hsl = {
+export const RED_HSL_COLOR: Hsl = {
   hue: 0, // Red
   saturation: 1, // Full saturation
   lightness: 0.5, // Medium lightness
 };
+export const GREEN_HSL_COLOR: Hsl = {
+  hue: 1 / 3, // Green
+  saturation: 1, // Full saturation
+  lightness: 0.5, // Medium lightness
+};
+export const BLUE_HSL_COLOR: Hsl = {
+  hue: 2 / 3, // Blue
+  saturation: 1, // Full saturation
+  lightness: 0.5, // Medium lightness
+};
+
+export const BLACK_HSL_COLOR: Hsl = {
+  hue: 0, // Red
+  saturation: 0, // No saturation for black
+  lightness: 0, // Black
+};
+export const DEFAULT_HSL_COLOR: Hsl = RED_HSL_COLOR;
 
 // Helper function to handle the hue-to-RGB math
 function hueToRgb(p: number, q: number, t: number): number {
@@ -66,4 +83,18 @@ export function hslToRgbFloat(hsl: Hsl): RgbFloat {
   }
 
   return { red_f: r, green_f: g, blue_f: b };
+}
+
+export function lerpHsl(color1: Hsl, color2: Hsl, t: number): Hsl {
+  // Handle hue interpolation with wrap-around
+  let hueDiff = color2.hue - color1.hue;
+  if (hueDiff > 0.5) {
+    hueDiff -= 1; // Wrap around the hue circle
+  } else if (hueDiff < -0.5) {
+    hueDiff += 1; // Wrap around the hue circle
+  }
+  const hue = (color1.hue + hueDiff * t + 1) % 1; // Ensure hue stays in [0, 1]
+  const saturation = color1.saturation + (color2.saturation - color1.saturation) * t;
+  const lightness = color1.lightness + (color2.lightness - color1.lightness) * t;
+  return { hue, saturation, lightness };
 }

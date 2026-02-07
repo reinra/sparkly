@@ -16,6 +16,7 @@ import {
   TestPerLedEffect1D,
   TwinkleEffect,
   TwoAlternatingColorFadingEffect,
+  TwoAlternatingCustomColorFadingEffect,
 } from './generic/Effects1D';
 import {
   AdapterFrom1DEffectTo2D,
@@ -49,6 +50,7 @@ export const effects: Record<string, AnyEffect> = {
   gradient_black_blue: new StaticColorGradientEffect([BLACK, BLUE]),
   gradient_black_white: new StaticColorGradientEffect([BLACK, WHITE]),
   two_alternating_colors: new TwoAlternatingColorFadingEffect(RED, BLUE),
+  two_alternating_colors_custom: new TwoAlternatingCustomColorFadingEffect(),
   rainbow: new RainbowGradientEffect1D(),
   meteor: new MeteorEffect(),
   rain: new RainEffect(),
