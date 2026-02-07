@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.dirname(__dirname);
 
-function createDistributionPackage() {
+async function createDistributionPackage() {
   console.log('📦 Creating distribution package...\n');
 
   const distDir = path.join(rootDir, 'dist');
