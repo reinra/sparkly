@@ -52,7 +52,7 @@ export interface Effect<P extends LedPoint> {
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;
   getName(): string;
-  // Returns the duration of a full effect loop in seconds
+  // Returns the duration of a full effect loop in seconds, 0 means the effect is static.
   getLoopDurationSeconds(ledCount: number): number;
   // Renders the full LED buffer for the current effect state
   renderGlobal(ctx: EffectContext, points: P[]): RgbFloat[];

@@ -10,9 +10,11 @@ import {
   RotatingColorGradientEffect,
   SineEffect,
   SingleColorEffect,
+  StaticAlternatingColorEffect,
   StaticColorGradientEffect,
   TestPerLedEffect1D,
   TwinkleEffect,
+  TwoAlternatingColorFadingEffect,
 } from './generic/Effects1D';
 import {
   AdapterFrom1DEffectTo2D,
@@ -34,6 +36,8 @@ export const effects: Record<string, AnyEffect> = {
   blue: new SingleColorEffect(BLUE),
   black: new SingleColorEffect(BLACK),
   white: new SingleColorEffect(WHITE),
+  alternate_rgb: new StaticAlternatingColorEffect([RED, GREEN, BLUE]),
+  alternate_rgby: new StaticAlternatingColorEffect([RED, GREEN, BLUE, YELLOW]),
   gradient_red_yellow: new StaticColorGradientEffect([RED, YELLOW]),
   gradient_rgb: new StaticColorGradientEffect([RED, GREEN, BLUE]),
   gradient_rgbr: new StaticColorGradientEffect([RED, GREEN, BLUE, RED]),
@@ -42,6 +46,7 @@ export const effects: Record<string, AnyEffect> = {
   gradient_black_green: new StaticColorGradientEffect([BLACK, GREEN]),
   gradient_black_blue: new StaticColorGradientEffect([BLACK, BLUE]),
   gradient_black_white: new StaticColorGradientEffect([BLACK, WHITE]),
+  two_alternating_colors: new TwoAlternatingColorFadingEffect(RED, BLUE),
   rainbow: new RainbowGradientEffect1D(),
   meteor: new MeteorEffect(),
   rain: new RainEffect(),

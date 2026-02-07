@@ -3,6 +3,7 @@ import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
 import { hslToRgbFloat } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
+import { backAndForthPhase, backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 
 export class SingleColorEffect extends BaseSameColorEffect {
   pointType: '1D' = '1D';
@@ -59,6 +60,23 @@ export class ChangeColorEffect extends BaseSameColorEffect {
   }
 }
 
+export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: '1D' = '1D'
+  constructor(private readonly colors: RgbFloat[]) {
+    super();
+  }
+  getName(): string {
+    return 'Static Alternating Color';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 0;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+    const index = point.position % this.colors.length;
+    return this.colors[index];
+  }
+}
+
 export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
   private colors: RgbFloat[];
@@ -102,6 +120,28 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
     const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
     return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+  }
+}
+
+export class TwoAlternatingColorFadingEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: '1D' = '1D'
+  constructor(private readonly color1: RgbFloat, private readonly color2: RgbFloat, private readonly background: RgbFloat = BLACK) {
+    super();
+  }
+  getName(): string {
+    return 'Two Alternating Colors Fading';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 10;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+    const index = point.position % 2;
+    let fadeFactor = backAndForthPhaseWithPause(ctx.phase);
+    if (index === 1) {
+      fadeFactor = revertPhase(fadeFactor);
+    }
+    const color = index === 0 ? this.color1 : this.color2;
+    return lerp(this.background, color, fadeFactor);
   }
 }
 
