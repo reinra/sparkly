@@ -4,6 +4,8 @@ import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 import { logger, logError } from './logger';
+import { de } from 'zod/v4/locales';
+import { debug } from 'console';
 
 // Helper function to get device or throw error
 export function getDeviceOrError(device_id: string): Device {
@@ -81,7 +83,7 @@ export const apiRoutes = {
     });
   },
 
-  status: async (req: any, res: any) => {
+  debug: async (req: any, res: any) => {
     // Use the first device for now
     const apiClient = Object.values(devices)[0].api_client;
     const gestalt = await apiClient.gestalt();

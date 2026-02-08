@@ -22,12 +22,14 @@
   const THROTTLE_MS = 100;
 
   // Track backend call state per parameter
-  const parameterBackendState = new Map<string, {
+  type ParameterBackendState = {
     isRunning: boolean;
-    scheduledTimeout: number | null;
+    scheduledTimeout: ReturnType<typeof setTimeout> | null;
     pendingValue: ParameterValue | null;
     lastSendTimestamp: number;
-  }>();
+  };
+
+  const parameterBackendState = new Map<string, ParameterBackendState>();
 
   function bumpOptimisticVersion() {
     optimisticVersion += 1;
@@ -82,7 +84,9 @@
       // Re-run scheduling to respect throttle window with the latest value
       const nextValue = state.pendingValue;
       state.pendingValue = null;
-      scheduleBackendUpdate(paramId, nextValue);
+      if (nextValue !== null) {
+        scheduleBackendUpdate(paramId, nextValue);
+      }
     }
   }
 

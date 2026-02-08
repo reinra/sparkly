@@ -2,14 +2,14 @@
   import {
     backendClient,
     type HelloResponse,
-    type StatusResponse,
+    type DebugResponse,
     type GetInfoResponse,
   } from '../../frontendApiClient';
   import { handleApiCall } from '../../utils/apiHelper';
 
   let message = $state('');
   let info = $state<GetInfoResponse | null>(null);
-  let status = $state<StatusResponse | null>(null);
+  let status = $state<DebugResponse | null>(null);
   let loading = $state(false);
   let error = $state('');
 
@@ -44,13 +44,13 @@
     }
   }
 
-  async function fetchStatus() {
+  async function fetchDebug() {
     loading = true;
     error = '';
     try {
-      status = await handleApiCall<StatusResponse>(
-        () => backendClient.status(),
-        'Failed to get device status. Make sure config.toml is properly configured.'
+      status = await handleApiCall<DebugResponse>(
+        () => backendClient.debug(),
+        'Failed to get device debug info. Make sure config.toml is properly configured.'
       );
     } catch (e) {
       error = (e as Error).message;
@@ -126,7 +126,7 @@
   </div>
 
   <div class="card">
-    <h3>Device Status</h3>
+    <h3>Device Debug Info</h3>
     {#if status}
       <div class="status">
         <h4>Device Info</h4>
@@ -141,7 +141,7 @@
     {:else if error && !status}
       <p class="error">{error}</p>
     {/if}
-    <button onclick={fetchStatus} disabled={loading}>Get Device Status</button>
+    <button onclick={fetchDebug} disabled={loading}>Get Device Debug Info</button>
   </div>
 </div>
 

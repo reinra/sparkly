@@ -4,18 +4,20 @@
   "type": "module",
   "description": "Frontend UI for Twinkly device control",
   "scripts": {
-    "build": "svelte-kit sync && vite build",
+    "build": "npm run check && vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@twinkly-ts/common": "file:../common",
-    "@ts-rest/core": "^3.52.1"
+    "@ts-rest/core": "^3.52.1",
+    "@twinkly-ts/common": "file:../common"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.4.0",
     "@sveltejs/kit": "^2.49.2",
     "svelte": "^5.46.1",
+    "svelte-check": "^4.3.6",
     "typescript": "^5.3.3",
     "vite": "^7.3.0"
   }
