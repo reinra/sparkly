@@ -102,3 +102,13 @@ export function lerpHsl(color1: Hsl, color2: Hsl, t: number): Hsl {
   const lightness = color1.lightness + (color2.lightness - color1.lightness) * t;
   return { hue, saturation, lightness };
 }
+
+/**
+ * Multiplies the lightness of an HSL color by a given intensity, clamping the result between 0 and 1.
+ * @param color The original HSL color
+ * @param intensity The intensity multiplier (0 = black, 1 = original color, >1 = brighter)
+ * @returns A new HSL color with adjusted lightness
+ */
+export function multiplyIntensity(color: Hsl, intensity: number): Hsl {
+  return { ...color, lightness: Math.max(0, Math.min(1, color.lightness * intensity)) };
+} 

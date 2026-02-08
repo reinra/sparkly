@@ -1,9 +1,10 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
-import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, RED_HSL_COLOR, WHITE_HSL_COLOR } from '../../color/Hsl';
+import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, multiplyIntensity, RED_HSL_COLOR, WHITE_HSL_COLOR } from '../../color/Hsl';
 import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
 import { BaseSameColorEffect, type StatelessEffect, type EffectContext, type LedPoint1D, PerPixelEffect, EffectLogic, Effect, LedPointType } from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
+import { int } from 'zod/v4';
 
 export class SingleColorEffect extends BaseSameColorEffect {
   constructor(private readonly color: RgbFloat) {
@@ -416,6 +417,21 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
 
 export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
+  readonly parameters = new EffectParameterStorage();
+  private readonly color1 = this.parameters.register({
+    id: 'color1',
+    name: 'Forward color',
+    description: 'HSL color value for the first color',
+    type: ParameterType.HSL,
+    value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
+  });
+  private readonly color2 = this.parameters.register({
+    id: 'color2',
+    name: 'Backward color',
+    description: 'HSL color value for the second color',
+    type: ParameterType.HSL,
+    value: { hue: 0.0, saturation: 1.0, lightness: 0.5 },
+  });  
   getName(): string {
     return 'Ping Pong';
   }
@@ -435,8 +451,8 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
     const intensity = Math.max(0, 1.0 - dist / pulseWidth);
 
     // Shift hue based on direction
-    const hue = ctx.phase < 0.5 ? 0.6 : 0.0; // Blue going one way, Red the other
+    const color = ctx.phase < 0.5 ? this.color1.value : this.color2.value;
 
-    return hslToRgbFloat({ hue, saturation: 1.0, lightness: intensity * 0.5 });
+    return hslToRgbFloat(multiplyIntensity(color, intensity));
   }
 }
