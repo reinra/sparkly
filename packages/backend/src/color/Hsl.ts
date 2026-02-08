@@ -111,4 +111,13 @@ export function lerpHsl(color1: Hsl, color2: Hsl, t: number): Hsl {
  */
 export function multiplyIntensity(color: Hsl, intensity: number): Hsl {
   return { ...color, lightness: Math.max(0, Math.min(1, color.lightness * intensity)) };
-} 
+}
+
+export function randomColorBetween(color1: Hsl, color2: Hsl): Hsl {
+  const t = Math.random();
+  return lerpHsl(color1, color2, t);
+}
+
+export function randomColorMaxSaturation(): Hsl {
+  return { hue: Math.random(), saturation: 1, lightness: 0.5 };
+}

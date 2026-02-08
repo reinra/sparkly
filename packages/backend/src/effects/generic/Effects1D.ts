@@ -1,8 +1,27 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
-import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, multiplyIntensity, RED_HSL_COLOR, WHITE_HSL_COLOR } from '../../color/Hsl';
+import {
+  BLACK_HSL_COLOR,
+  BLUE_HSL_COLOR,
+  DEFAULT_HSL_COLOR,
+  hslToRgbFloat,
+  lerpHsl,
+  multiplyIntensity,
+  randomColorMaxSaturation,
+  RED_HSL_COLOR,
+  WHITE_HSL_COLOR,
+} from '../../color/Hsl';
 import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
-import { BaseSameColorEffect, type StatelessEffect, type EffectContext, type LedPoint1D, PerPixelEffect, EffectLogic, Effect, LedPointType } from './Effect';
+import {
+  BaseSameColorEffect,
+  type StatelessEffect,
+  type EffectContext,
+  type LedPoint1D,
+  PerPixelEffect,
+  EffectLogic,
+  Effect,
+  LedPointType,
+} from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 import { int } from 'zod/v4';
 
@@ -142,8 +161,12 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
 }
 
 export class TwoAlternatingColorFadingEffect extends PerPixelEffect<LedPoint1D> {
-  pointType: '1D' = '1D'
-  constructor(private readonly color1: RgbFloat, private readonly color2: RgbFloat, private readonly background: RgbFloat = BLACK) {
+  pointType: '1D' = '1D';
+  constructor(
+    private readonly color1: RgbFloat,
+    private readonly color2: RgbFloat,
+    private readonly background: RgbFloat = BLACK
+  ) {
     super();
   }
   getName(): string {
@@ -164,7 +187,7 @@ export class TwoAlternatingColorFadingEffect extends PerPixelEffect<LedPoint1D> 
 }
 
 export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1D> {
-  pointType: '1D' = '1D'
+  pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
     id: 'color1',
@@ -287,13 +310,32 @@ class MeteorEffectLogic implements EffectLogic<LedPoint1D> {
     this.previousHeadIndex = headIndex;
 
     return this.lastBuffer;
-  }  
+  }
 }
 
-export class RainEffect implements Effect<LedPoint1D> {
+export abstract class BaseRainEffect implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly parameters = new EffectParameterStorage();
+  readonly probability = this.parameters.register({
+    id: 'probability',
+    name: 'Chance of new particle',
+    description: 'Chance for a new raindrop particle to spawn on each frame (0.0 - 100.0)%',
+    type: ParameterType.RANGE,
+    value: 50,
+    min: 0,
+    max: 100,
+    unit: '%',
+  });
+  abstract getName(): string;
+  getLoopDurationSeconds(ledCount: number): number {
+    return 60;
+  }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new RainEffectLogic(this);
+  abstract nextColor(): RgbFloat;
+}
+
+export class SingleColorRainEffect extends BaseRainEffect {
   readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
@@ -302,21 +344,30 @@ export class RainEffect implements Effect<LedPoint1D> {
     value: BLUE_HSL_COLOR,
   });
   getName(): string {
-    return 'Rain';
+    return 'Single-Color Rain';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 60;
+  nextColor(): RgbFloat {
+    return hslToRgbFloat(this.color.value);
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RainEffectLogic(this);
 }
+
+export class MultiColorRainEffect extends BaseRainEffect {
+  getName(): string {
+    return 'Multi-Color Rain';
+  }
+  nextColor(): RgbFloat {
+    return hslToRgbFloat(randomColorMaxSaturation());
+  }
+}
+
 interface Particle {
   position: number;
   velocity: number;
   color: RgbFloat;
 }
-class RainEffectLogic implements EffectLogic<LedPoint1D> {  
+class RainEffectLogic implements EffectLogic<LedPoint1D> {
   private particles: Particle[] = [];
-  constructor(private readonly config: RainEffect) {}
+  constructor(private readonly config: BaseRainEffect) {}
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     // 1. Move existing particles based on velocity and time passed
     this.particles.forEach((p) => {
@@ -327,8 +378,8 @@ class RainEffectLogic implements EffectLogic<LedPoint1D> {
     this.particles = this.particles.filter((p) => p.position < ctx.total_leds);
 
     // 3. Add new particles "randomly" using a Seeded PRNG
-    if (Math.random() > 0.9) {
-      this.particles.push({ position: 0, velocity: Math.random() * 10, color: hslToRgbFloat(this.config.color.value) });
+    if (Math.random() < this.config.probability.value / 100) {
+      this.particles.push({ position: 0, velocity: Math.random() * 10, color: this.config.nextColor() });
     }
 
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
@@ -337,11 +388,12 @@ class RainEffectLogic implements EffectLogic<LedPoint1D> {
     for (const p of this.particles) {
       const idx = Math.floor(p.position);
       if (idx >= 0 && idx < buffer.length) {
-        buffer[idx] = p.color;
+        const previous = buffer[idx];
+        buffer[idx] = previous === BLACK ? p.color : lerp(previous, p.color, 0.5); // Blend with existing color for a nicer look
       }
     }
     return buffer;
-  }  
+  }
 }
 
 export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
@@ -396,7 +448,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
     description: 'HSL color value',
     type: ParameterType.HSL,
     value: { hue: 0.1, saturation: 1.0, lightness: 0.5 },
-  });  
+  });
   getName(): string {
     return `Sine Wave Effect (${this.frequency.value} cycles)`;
   }
@@ -431,7 +483,7 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
     description: 'HSL color value for the second color',
     type: ParameterType.HSL,
     value: { hue: 0.0, saturation: 1.0, lightness: 0.5 },
-  });  
+  });
   getName(): string {
     return 'Ping Pong';
   }

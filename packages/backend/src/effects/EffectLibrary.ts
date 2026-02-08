@@ -6,7 +6,7 @@ import {
   MeteorEffect,
   PingPongEffect,
   RainbowGradientEffect1D,
-  RainEffect,
+  SingleColorRainEffect,
   RotatingColorGradientEffect,
   SineEffect,
   SingleColorEffect,
@@ -17,6 +17,7 @@ import {
   TwinkleEffect,
   TwoAlternatingColorFadingEffect,
   TwoAlternatingCustomColorFadingEffect,
+  MultiColorRainEffect,
 } from './generic/Effects1D';
 import {
   AdapterFrom1DEffectTo2D,
@@ -53,7 +54,8 @@ export const effects: Record<string, Effect<any>> = {
   two_alternating_colors_custom: new TwoAlternatingCustomColorFadingEffect(),
   rainbow: new RainbowGradientEffect1D(),
   meteor: new MeteorEffect(),
-  rain: new RainEffect(),
+  rain_single_color: new SingleColorRainEffect(),
+  rain_multi_color: new MultiColorRainEffect(),
   twinkle: new TwinkleEffect(),
   sine: new SineEffect(),
   ping_pong: new PingPongEffect(),
