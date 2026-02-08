@@ -23,7 +23,6 @@ import {
   LedPointType,
 } from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
-import { int } from 'zod/v4';
 
 export class SingleColorEffect extends BaseSameColorEffect {
   constructor(private readonly color: RgbFloat) {
@@ -134,6 +133,35 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
     const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
     return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+  }
+}
+
+export class StaticCustomColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+  pointType: '1D' = '1D';
+  readonly parameters = new EffectParameterStorage();
+  private readonly color1 = this.parameters.register({
+    id: 'color1',
+    name: 'Color 1',
+    description: 'HSL color value for the first color',
+    type: ParameterType.HSL,
+    value: RED_HSL_COLOR,
+  });
+  private readonly color2 = this.parameters.register({
+    id: 'color2',
+    name: 'Color 2',
+    description: 'HSL color value for the second color',
+    type: ParameterType.HSL,
+    value: BLUE_HSL_COLOR,
+  });
+  getName(): string {
+    return `Static Custom Color Gradient`;
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 0; // Static effect has no loop
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+    // Map point.distance (0.0 to 1.0) to the color gradient
+    return hslToRgbFloat(lerpHsl(this.color1.value, this.color2.value, point.distance));
   }
 }
 
