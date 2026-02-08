@@ -1,6 +1,6 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
-import { hslToRgbFloat } from '../../color/Hsl';
+import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
@@ -30,7 +30,7 @@ class AdapterFrom1DEffectTo2DLogic implements EffectLogic<LedPoint2D> {
     }));
     return this.effect1D.renderGlobal(ctx, points1D);
   }
-}    
+}
 
 export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   pointType: '2D' = '2D';
@@ -121,6 +121,14 @@ export class Slime implements StatelessEffect<LedPoint2D> {
 
 export class CloudsEffect implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
+  readonly parameters = new EffectParameterStorage();
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value for the clouds',
+    type: ParameterType.HSL,
+    value: { hue: 0.55, saturation: 0.3, lightness: 0.8 },
+  });
   readonly isStateful: false = false;
   private noise = new NoiseGenerator();
 
@@ -128,7 +136,7 @@ export class CloudsEffect implements StatelessEffect<LedPoint2D> {
     return 'Clouds';
   }
   getLoopDurationSeconds(ledCount: number): number {
-    return 10;
+    return 60;
   }
   createLogic: () => EffectLogic<LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
@@ -136,14 +144,12 @@ export class CloudsEffect implements StatelessEffect<LedPoint2D> {
 
     for (const pt of points) {
       // Animate by scrolling through the Z dimension of 3D noise
-      const noiseVal = this.noise.get3D(pt.x * 3, pt.y * 3, ctx.phase * 2);
+      const noiseVal = this.noise.get3D(pt.x * 3, pt.y * 3, ctx.time_ms * 0.0002);
 
       // Use noise for brightness (clouds are white/blue)
       const brightness = this.noise.map(noiseVal, 0.2, 1.0);
-      const hue = 0.55; // Blue
-      const saturation = 0.3;
 
-      buffer[pt.id] = hslToRgbFloat({ hue, saturation, lightness: brightness * 0.5 });
+      buffer[pt.id] = hslToRgbFloat(multiplyIntensity(this.color.value, brightness));
     }
     return buffer;
   }
