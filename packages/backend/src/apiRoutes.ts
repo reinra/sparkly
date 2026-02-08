@@ -4,7 +4,6 @@ import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 import { logger, logError } from './logger';
-import { de } from 'zod/v4/locales';
 import { debug } from 'console';
 
 // Helper function to get device or throw error

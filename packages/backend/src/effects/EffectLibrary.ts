@@ -1,5 +1,5 @@
 import { BLACK, BLUE, GREEN, RED, RgbFloat, WHITE, YELLOW } from '../color/ColorFloat';
-import type { AnyEffect } from '../render/Renderer';
+import { Effect } from './generic/Effect';
 import {
   ChangeColorEffect,
   FlipColorEffect,
@@ -30,7 +30,7 @@ import {
 
 const redGreenBlue: RgbFloat[] = [RED, GREEN, BLUE];
 
-export const effects: Record<string, AnyEffect> = {
+export const effects: Record<string, Effect<any>> = {
   flip_color: new FlipColorEffect(redGreenBlue),
   change_color: new ChangeColorEffect(redGreenBlue),
   red: new SingleColorEffect(RED),

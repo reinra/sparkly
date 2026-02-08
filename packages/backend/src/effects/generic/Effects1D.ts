@@ -1,12 +1,11 @@
 import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
 import { BLACK_HSL_COLOR, BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, hslToRgbFloat, lerpHsl, RED_HSL_COLOR, WHITE_HSL_COLOR } from '../../color/Hsl';
-import { EffectParameterStorage } from '../../effectParameters';
-import { BaseSameColorEffect, PerPixelEffect, type Effect, type EffectContext, type LedPoint1D } from './Effect';
-import { backAndForthPhase, backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
+import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
+import { BaseSameColorEffect, type StatelessEffect, type EffectContext, type LedPoint1D, PerPixelEffect, EffectLogic, Effect, LedPointType } from './Effect';
+import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 
 export class SingleColorEffect extends BaseSameColorEffect {
-  pointType: '1D' = '1D';
   constructor(private readonly color: RgbFloat) {
     super();
   }
@@ -22,7 +21,6 @@ export class SingleColorEffect extends BaseSameColorEffect {
 }
 
 export class SingleHslColorEffect extends BaseSameColorEffect {
-  pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -43,7 +41,6 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
 }
 
 export class FlipColorEffect extends BaseSameColorEffect {
-  pointType: '1D' = '1D';
   constructor(private readonly colors: RgbFloat[]) {
     super();
   }
@@ -61,7 +58,6 @@ export class FlipColorEffect extends BaseSameColorEffect {
 }
 
 export class ChangeColorEffect extends BaseSameColorEffect {
-  pointType: '1D' = '1D';
   constructor(private readonly colors: RgbFloat[]) {
     super();
   }
@@ -82,7 +78,7 @@ export class ChangeColorEffect extends BaseSameColorEffect {
 }
 
 export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
-  pointType: '1D' = '1D'
+  pointType: LedPointType = '1D';
   constructor(private readonly colors: RgbFloat[]) {
     super();
   }
@@ -208,15 +204,17 @@ export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoi
 }
 
 // Also called "Marquee" if it runs a bit faster
-export class TestPerLedEffect1D implements Effect<LedPoint1D> {
+export class TestPerLedEffect1D implements StatelessEffect<LedPoint1D> {
+  parameters?: EffectParameterView | undefined;
   pointType: '1D' = '1D';
-  isStateful: boolean = false;
+  isStateful: false = false;
   getName(): string {
     return 'Test Per-Led 1D';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
+  createLogic: () => EffectLogic<LedPoint1D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     const result: RgbFloat[] = new Array(points.length).fill(BLACK);
     const index = Math.floor(ctx.phase * points.length);
@@ -241,16 +239,21 @@ export class RainbowGradientEffect1D extends PerPixelEffect<LedPoint1D> {
 }
 
 export class MeteorEffect implements Effect<LedPoint1D> {
+  parameters?: EffectParameterView | undefined;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
-  private lastBuffer: RgbFloat[] | null = null;
-  private previousHeadIndex: number = -1;
   getName(): string {
     return 'Meteor';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new MeteorEffectLogic();
+}
+
+class MeteorEffectLogic implements EffectLogic<LedPoint1D> {
+  private lastBuffer: RgbFloat[] | null = null;
+  private previousHeadIndex: number = -1;
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     // 1. Fade the whole buffer slightly (creates the trail)
     // The fade amount is scaled by deltaTime to keep it FPS-independent
@@ -283,49 +286,61 @@ export class MeteorEffect implements Effect<LedPoint1D> {
     this.previousHeadIndex = headIndex;
 
     return this.lastBuffer;
-  }
+  }  
 }
 
-interface Particle {
-  pos: number;
-  vel: number;
-  color: RgbFloat;
-}
 export class RainEffect implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
-  private particles: Particle[] = [];
+  readonly parameters = new EffectParameterStorage();
+  readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: BLUE_HSL_COLOR,
+  });
   getName(): string {
     return 'Rain';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 60;
   }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new RainEffectLogic(this);
+}
+interface Particle {
+  position: number;
+  velocity: number;
+  color: RgbFloat;
+}
+class RainEffectLogic implements EffectLogic<LedPoint1D> {  
+  private particles: Particle[] = [];
+  constructor(private readonly config: RainEffect) {}
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
     // 1. Move existing particles based on velocity and time passed
     this.particles.forEach((p) => {
-      p.pos += (p.vel * ctx.delta_time_ms) / 1000;
+      p.position += (p.velocity * ctx.delta_time_ms) / 1000;
     });
 
     // 2. Remove off-screen particles
-    this.particles = this.particles.filter((p) => p.pos < ctx.total_leds);
+    this.particles = this.particles.filter((p) => p.position < ctx.total_leds);
 
     // 3. Add new particles "randomly" using a Seeded PRNG
     if (Math.random() > 0.9) {
-      this.particles.push({ pos: 0, vel: Math.random() * 10, color: { red_f: 0, green_f: 0, blue_f: 1 } });
+      this.particles.push({ position: 0, velocity: Math.random() * 10, color: hslToRgbFloat(this.config.color.value) });
     }
 
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
 
     // Draw particles
     for (const p of this.particles) {
-      const idx = Math.floor(p.pos);
+      const idx = Math.floor(p.position);
       if (idx >= 0 && idx < buffer.length) {
         buffer[idx] = p.color;
       }
     }
     return buffer;
-  }
+  }  
 }
 
 export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {

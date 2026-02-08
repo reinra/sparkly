@@ -1,6 +1,6 @@
 import type { GestaltResponseType } from '../deviceClient/apiClient';
 import type { FrameOutputStream } from './FrameOutputStream';
-import { LedPoint2D, type Effect, type EffectContext, type LedPoint1D } from '../effects/generic/Effect';
+import { LedPoint2D, type EffectContext, type LedPoint1D, Effect } from '../effects/generic/Effect';
 import type { DeviceHelper } from '../DeviceHelper';
 
 const YIELD_FRAME_COUNT = 50;
@@ -10,29 +10,7 @@ export interface Renderer<T> {
   renderAsap(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
 }
 
-export type AnyEffect = Effect<any>;
-
-export class AnyEffectRenderer implements Renderer<AnyEffect> {
-  private readonly newEffectRenderer = new NewEffectRenderer();
-  async renderLive(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
-    await this.getRenderer(effect).renderLive(effect, deviceHelper, output, signal);
-  }
-  async renderAsap(effect: AnyEffect, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal) {
-    await this.getRenderer(effect).renderAsap(effect, deviceHelper, output, signal);
-  }
-  private getRenderer(effect: AnyEffect): Renderer<AnyEffect> {
-    if (isNewEffect(effect)) {
-      return this.newEffectRenderer;
-    }
-    throw new Error(`Unsupported effect type: ${(effect as any).constructor?.name ?? 'unknown'}`);
-  }
-}
-
-function isNewEffect(effect: AnyEffect): effect is Effect<any> {
-  return 'renderGlobal' in effect;
-}
-
-export class NewEffectRenderer implements Renderer<Effect<any>> {
+export class EffectRenderer implements Renderer<Effect<any>> {
   async renderLive(
     effect: Effect<any>,
     deviceHelper: DeviceHelper,
@@ -43,6 +21,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
     const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
+    const logic = effect.createLogic();
 
     const firstStartTime = performance.now();
     let lastTime = firstStartTime;
@@ -63,7 +42,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
         frame_index: frameIndex,
         phase: (elapsedTime % loopDurationMs) / loopDurationMs,
       };
-      const ledValues = effect.renderGlobal(ctx, points);
+      const ledValues = logic.renderGlobal(ctx, points);
       await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
 
       const processingTime = performance.now() - frameStartTime;
@@ -92,6 +71,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
       ? [loopDurationMs, loopDurationMs * 2]
       : [0, loopDurationMs];
     const frameTimeMs = deviceHelper.getMinFrameTimeMs() * deviceHelper.getCurrentSpeedMultiplier();
+    const logic = effect.createLogic();
 
     let virtualTime = 0;
     let frameIndex = 0;
@@ -108,7 +88,7 @@ export class NewEffectRenderer implements Renderer<Effect<any>> {
         frame_index: frameIndex,
         phase: (virtualTime % loopDurationMs) / loopDurationMs,
       };
-      const ledValues = effect.renderGlobal(ctx, points);
+      const ledValues = logic.renderGlobal(ctx, points);
       if (virtualTime >= startRecordingMs) {
         await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
       }

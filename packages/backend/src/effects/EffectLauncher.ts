@@ -7,14 +7,14 @@ import {
   ApiClientFrameOutputStream,
   MovieBufferOutputStream,
 } from '../render/FrameOutputStream';
-import { AnyEffectRenderer, type AnyEffect } from '../render/Renderer';
+import { EffectRenderer } from '../render/Renderer';
 import { logger } from '../logger';
 import type { GestaltResponseType } from '../deviceClient/apiClient';
-import { tr } from 'zod/v4/locales';
+import { Effect } from './generic/Effect';
 
-const renderer = new AnyEffectRenderer();
+const renderer = new EffectRenderer();
 
-export async function startEffect(device: Device, effect: AnyEffect, signal: AbortSignal) {
+export async function startEffect(device: Device, effect: Effect<any>, signal: AbortSignal) {
   const basicLedMapper = await device.helper.getLedMapper(false);
   const fixedLedMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
@@ -25,7 +25,6 @@ export async function startEffect(device: Device, effect: AnyEffect, signal: Abo
       fixedLedMapper
     ),
   ]);
-  effect = cloneEffectIfNeeded(effect);
   await prepareForSendingLedValues(device);
 
   // Schedule regular keep-alive calls every 5 minutes
@@ -62,12 +61,11 @@ async function prepareForSendingLedValues(device: Device) {
   await device.api_client.setMode(Mode.rt);
 }
 
-export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signal: AbortSignal) {
+export async function sendEffectAsMovie(device: Device, effect: Effect<any>, signal: AbortSignal) {
   const ledMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
-  effect = cloneEffectIfNeeded(effect);
 
   await prepareForSendingLedValues(device);
 
@@ -89,19 +87,6 @@ export async function sendEffectAsMovie(device: Device, effect: AnyEffect, signa
   });
 
   await device.api_client.setMode(Mode.movie);
-}
-
-function cloneEffectIfNeeded(effect: AnyEffect) {
-  if ('isStateful' in effect && effect.isStateful) {
-    return cloneEffect(effect);
-  }
-  return effect;
-}
-
-function cloneEffect(effect: AnyEffect) {
-  const effectConstructor = effect.constructor as new (...args: any[]) => AnyEffect;
-  effect = new effectConstructor(...Object.values(effect));
-  return effect;
 }
 
 function toFrameFormat(gestalt: GestaltResponseType) {

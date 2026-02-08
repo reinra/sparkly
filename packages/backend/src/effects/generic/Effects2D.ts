@@ -2,7 +2,7 @@ import { ParameterType } from '@twinkly-ts/common';
 import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
-import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, Effect } from './Effect';
+import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
 
 export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
@@ -17,6 +17,10 @@ export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return this.effect1D.getLoopDurationSeconds(ledCount);
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => new AdapterFrom1DEffectTo2DLogic(this.effect1D.createLogic());
+}
+class AdapterFrom1DEffectTo2DLogic implements EffectLogic<LedPoint2D> {
+  constructor(private effect1D: EffectLogic<LedPoint1D>) {}
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Map the 2D points to 1D points by using only the X coordinate
     const points1D: LedPoint1D[] = points.map((point) => ({
@@ -26,7 +30,7 @@ export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
     }));
     return this.effect1D.renderGlobal(ctx, points1D);
   }
-}
+}    
 
 export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   pointType: '2D' = '2D';
@@ -43,9 +47,9 @@ export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   }
 }
 
-export class PulseScanner implements Effect<LedPoint2D> {
+export class PulseScanner implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
-  isStateful: boolean = false;
+  readonly isStateful: false = false;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -53,13 +57,14 @@ export class PulseScanner implements Effect<LedPoint2D> {
     description: 'HSL color value',
     type: ParameterType.HSL,
     value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
-  });  
+  });
   getName(): string {
     return 'Pulse Scanner 2D';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     const centerX = 0.5,
       centerY = 0.5;
@@ -85,9 +90,9 @@ export class PulseScanner implements Effect<LedPoint2D> {
   }
 }
 
-export class Slime implements Effect<LedPoint2D> {
+export class Slime implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
-  isStateful: boolean = false;
+  readonly isStateful: false = false;
   private noise = new NoiseGenerator();
 
   getName(): string {
@@ -96,6 +101,7 @@ export class Slime implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Get seamless loop coordinates
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
@@ -113,9 +119,9 @@ export class Slime implements Effect<LedPoint2D> {
   }
 }
 
-export class CloudsEffect implements Effect<LedPoint2D> {
+export class CloudsEffect implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
-  isStateful: boolean = false;
+  readonly isStateful: false = false;
   private noise = new NoiseGenerator();
 
   getName(): string {
@@ -124,6 +130,7 @@ export class CloudsEffect implements Effect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
 
@@ -142,17 +149,17 @@ export class CloudsEffect implements Effect<LedPoint2D> {
   }
 }
 
-export class PlasmaEffect implements Effect<LedPoint2D> {
+export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
-  isStateful: boolean = false;
+  readonly isStateful: false = false;
   private noise = new NoiseGenerator();
-
   getName(): string {
     return 'Plasma';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 8;
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
@@ -176,15 +183,20 @@ export class PlasmaEffect implements Effect<LedPoint2D> {
 
 export class GravityFountain implements Effect<LedPoint2D> {
   pointType: '2D' = '2D';
-  isStateful: boolean = true;
-  private particles: { x: number; y: number; vy: number }[] = [];
-  private lastTime: number = 0;
+  readonly isStateful: true = true;
   getName(): string {
     return 'Gravity Fountain';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 60; // Continuous effect, no loop
   }
+  createLogic: () => EffectLogic<LedPoint2D> = () => new GravityFountainLogic();
+}
+
+class GravityFountainLogic implements EffectLogic<LedPoint2D> {
+  private particles: { x: number; y: number; vy: number }[] = [];
+  private lastTime = 0;
+
   renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
     // Calculate delta time
     const dt = this.lastTime === 0 ? 16 : ctx.time_ms - this.lastTime;

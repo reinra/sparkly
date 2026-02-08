@@ -9,7 +9,7 @@ import {
 } from './effectParameters';
 import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
-import { Effect } from './effects/generic/Effect';
+import { Effect, StatelessEffect } from './effects/generic/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { EnabledDisabledSchema } from './deviceClient/apiContract';
 
