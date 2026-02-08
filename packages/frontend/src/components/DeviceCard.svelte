@@ -107,9 +107,10 @@
 </script>
 
 <div class="device-card">
-  <a href="/devices/{device.id}" class="device-title">
-    <h3>{device.alias}</h3>
-  </a>
+  <div class="device-header">
+    <h3 class="device-title">{device.alias}</h3>
+    <a href="/devices/{device.id}" class="details-button">Details</a>
+  </div>
   <div class="device-info">
     <p><strong>ID:</strong> {device.id}</p>
     <p><strong>IP:</strong> {device.ip}</p>
@@ -163,22 +164,42 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  .device-title {
-    text-decoration: none;
-    color: inherit;
-    display: block;
+  .device-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
   .device-card h3 {
     color: #ff3e00;
-    margin: 0 0 1rem 0;
+    margin: 0;
     font-size: 1.3rem;
     transition: color 0.2s;
   }
 
-  .device-title:hover h3 {
+  .device-title {
+    font-weight: 600;
+  }
+
+  .details-button {
+    margin-left: auto;
+    text-decoration: none;
+    color: white;
+    background: #0f9d58;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+
+  .details-button:hover {
+    background: #0a7d45;
+  }
+
+  .device-title:hover {
     color: #e63900;
-    text-decoration: underline;
   }
 
   .device-info p {
