@@ -5,11 +5,14 @@
   interface Props {
     value: Hsl;
     disabled?: boolean;
+    fullWidth?: boolean;
+    showValueLabel?: boolean;
+    triggerId?: string;
   }
 
   const dispatch = createEventDispatcher<{ change: Hsl; ready: HTMLButtonElement | null }>();
 
-  let { value, disabled = false }: Props = $props();
+  let { value, disabled = false, fullWidth = true, showValueLabel = true, triggerId }: Props = $props();
 
   const INITIAL_COLOR: Hsl = { hue: 0, saturation: 0, lightness: 0 };
   let internalValue: Hsl = $state(INITIAL_COLOR);
@@ -108,10 +111,11 @@
   }
 </script>
 
-<div class="hsl-picker" bind:this={containerElement}>
+<div class={`hsl-picker${fullWidth ? '' : ' compact'}`} bind:this={containerElement}>
   <button
     type="button"
-    class="swatch-button"
+    class={`swatch-button${fullWidth ? '' : ' compact'}`}
+    id={triggerId}
     aria-haspopup="dialog"
     aria-expanded={isOpen}
     aria-label="Select color"
@@ -120,7 +124,9 @@
     bind:this={swatchButton}
   >
     <span class="swatch" style={`background: ${swatchColor};`}></span>
-    <span class="swatch-label">{formatDisplay(internalValue)}</span>
+    {#if showValueLabel}
+      <span class="swatch-label">{formatDisplay(internalValue)}</span>
+    {/if}
   </button>
 
   {#if isOpen}
@@ -183,6 +189,10 @@
     width: 100%;
   }
 
+  .hsl-picker.compact {
+    width: auto;
+  }
+
   .swatch-button {
     width: 100%;
     display: flex;
@@ -194,6 +204,12 @@
     background: #fff;
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .swatch-button.compact {
+    width: auto;
+    min-width: 0;
+    padding: 0.2rem 0.4rem;
   }
 
   .swatch-button:focus-visible {
@@ -214,6 +230,11 @@
     flex-shrink: 0;
   }
 
+  .swatch-button.compact .swatch {
+    width: 28px;
+    height: 28px;
+  }
+
   .swatch-label {
     font-size: 0.9rem;
     color: #444;
@@ -231,6 +252,10 @@
     border: 1px solid #ddd;
     background: #fff;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .hsl-picker.compact .picker-panel {
+    width: min(320px, calc(100vw - 2rem));
   }
 
   .slider-group + .slider-group {
@@ -255,7 +280,7 @@
   .slider-row input[type='range'] {
     flex: 1;
     appearance: none;
-    height: 6px;
+    height: 16px;
     border-radius: 999px;
     outline: none;
     background: #eee;

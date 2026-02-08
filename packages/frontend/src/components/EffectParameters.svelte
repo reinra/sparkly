@@ -20,8 +20,8 @@
   let optimisticVersion = 0;
 
   const THROTTLE_MS = 100;
+  const COLOR_PICKER_ID_PREFIX = 'color-picker-';
 
-  // Track backend call state per parameter
   type ParameterBackendState = {
     isRunning: boolean;
     scheduledTimeout: ReturnType<typeof setTimeout> | null;
@@ -81,7 +81,6 @@
     state.isRunning = false;
     const hasPending = state.pendingValue !== null;
     if (hasPending) {
-      // Re-run scheduling to respect throttle window with the latest value
       const nextValue = state.pendingValue;
       state.pendingValue = null;
       if (nextValue !== null) {
@@ -96,7 +95,6 @@
     state.pendingValue = preparedValue;
 
     if (state.isRunning) {
-      // Let the in-flight request finish; it will reschedule if needed
       return;
     }
 
@@ -124,6 +122,14 @@
       Math.abs(a.saturation - b.saturation) < EPSILON &&
       Math.abs(a.lightness - b.lightness) < EPSILON
     );
+  }
+
+  function formatHslDisplay(color: Hsl) {
+    const clamp = (value: number) => Math.min(1, Math.max(0, value));
+    const hue = Math.round(clamp(color.hue) * 360);
+    const saturation = Math.round(clamp(color.saturation) * 100);
+    const lightness = Math.round(clamp(color.lightness) * 100);
+    return `${hue}° / ${saturation}% / ${lightness}%`;
   }
 
   function cloneValue(value: ParameterValue): ParameterValue {
@@ -195,8 +201,6 @@
     }
 
     setOptimisticValue(param.id, nextValue);
-
-    // Schedule backend update
     scheduleBackendUpdate(param.id, nextValue);
   }
 
@@ -216,7 +220,6 @@
 
     if (!isInParameters || parameterElements.length === 0) return;
 
-    // Find current focused parameter index
     const currentIndex = parameterElements.findIndex((el) => el === document.activeElement);
     if (currentIndex === -1) return;
 
@@ -229,9 +232,38 @@
       const prevIndex = Math.max(currentIndex - 1, 0);
       parameterElements[prevIndex]?.focus();
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      // Let browser handle left/right for range inputs naturally
       return;
     }
+  }
+
+  function handleColorTriggerClick(event: MouseEvent, index: number, paramId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    activateColorPicker(index, paramId);
+  }
+
+  function handleColorTriggerKey(event: KeyboardEvent, index: number, paramId: string) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activateColorPicker(index, paramId);
+    }
+  }
+
+  function colorPickerTriggerId(paramId: string) {
+    return `${COLOR_PICKER_ID_PREFIX}${paramId}`;
+  }
+
+  function getColorPickerButton(paramId: string) {
+    return document.getElementById(colorPickerTriggerId(paramId)) as HTMLButtonElement | null;
+  }
+
+  function activateColorPicker(index: number, paramId: string) {
+    const pickerButton =
+      (parameterElements[index] as HTMLButtonElement | null) ?? getColorPickerButton(paramId);
+    if (!pickerButton) return;
+    parameterElements[index] = pickerButton;
+    pickerButton.focus();
+    pickerButton.click();
   }
 </script>
 
@@ -256,7 +288,7 @@
             max={param.max}
             step={param.step || 1}
             value={rangeValue}
-            oninput={(e) => handleRangeChange(e, param)}
+            oninput={(event) => handleRangeChange(event, param)}
           />
         </div>
       {:else if param.type === ParameterType.BOOLEAN}
@@ -268,7 +300,7 @@
               id={param.id}
               type="checkbox"
               checked={booleanValue}
-              onchange={(e) => handleCheckboxChange(e, param)}
+              onchange={(event) => handleCheckboxChange(event, param)}
             />
             <strong>{param.name}</strong>
           </label>
@@ -276,21 +308,40 @@
       {:else if param.type === ParameterType.HSL}
         {@const hslValue = getEffectiveValue(param) as Hsl}
         <div class="control-group color-group" title={param.description}>
-          <div class="color-label" aria-live="polite">
-            <strong>{param.name}:</strong>
-            <span class="color-readout">
-              {Math.round(hslValue.hue * 360)}° /
-              {Math.round(hslValue.saturation * 100)}% /
-              {Math.round(hslValue.lightness * 100)}%
+          <div class="color-row" aria-live="polite">
+            <div class="color-picker-cell">
+              <HslColorPicker
+                triggerId={colorPickerTriggerId(param.id)}
+                value={hslValue}
+                fullWidth={false}
+                showValueLabel={false}
+                on:change={(event) => updateParameter(param, event.detail)}
+                on:ready={(event) => {
+                  parameterElements[index] = event.detail;
+                }}
+              />
+            </div>
+            <span
+              class="color-name color-trigger"
+              role="button"
+              tabindex="0"
+              aria-label={`Edit ${param.name} color`}
+              onclick={(event) => handleColorTriggerClick(event, index, param.id)}
+              onkeydown={(event) => handleColorTriggerKey(event, index, param.id)}
+            >
+              <strong>{param.name}</strong>
+            </span>
+            <span
+              class="color-readout color-trigger"
+              role="button"
+              tabindex="0"
+              aria-label={`Edit ${param.name} color value`}
+              onclick={(event) => handleColorTriggerClick(event, index, param.id)}
+              onkeydown={(event) => handleColorTriggerKey(event, index, param.id)}
+            >
+              {formatHslDisplay(hslValue)}
             </span>
           </div>
-          <HslColorPicker
-            value={hslValue}
-            on:change={(event) => updateParameter(param, event.detail)}
-            on:ready={(event) => {
-              parameterElements[index] = event.detail;
-            }}
-          />
         </div>
       {/if}
     {/each}
@@ -356,16 +407,61 @@
     outline-offset: 2px;
   }
 
-  .color-group .color-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
+  .color-group {
+    display: block;
+    padding: 0.35rem 0;
+  }
+
+  .color-row {
+    display: grid;
+    grid-template-columns: auto 1fr minmax(110px, auto);
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .color-trigger {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .color-trigger:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.4);
+    border-radius: 4px;
+    padding: 0 0.15rem;
+  }
+
+  .color-name {
+    color: #333;
+  }
+
+  .color-picker-cell {
+    justify-self: start;
+    width: max-content;
+  }
+
+  .color-picker-cell :global(.swatch-button) {
+    width: auto;
   }
 
   .color-readout {
     font-size: 0.85rem;
     color: #444;
     font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    white-space: nowrap;
+    justify-self: end;
+    text-align: right;
+  }
+
+  @media (max-width: 640px) {
+    .color-row {
+      grid-template-columns: 1fr;
+    }
+
+    .color-picker-cell,
+    .color-readout {
+      justify-self: start;
+      width: 100%;
+      text-align: left;
+    }
   }
 </style>
