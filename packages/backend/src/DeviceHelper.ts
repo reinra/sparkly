@@ -153,7 +153,9 @@ export class DeviceHelper {
   }
 
   public async getFilterValue(name: string): Promise<number | undefined> {
-    return (await this.apiClient.getSummary()).filters?.find((filter) => filter.filter == name && filter.config.mode === EnabledDisabledSchema.Values.enabled)?.config?.value;
+    return (await this.apiClient.getSummary()).filters?.find(
+      (filter) => filter.filter == name && filter.config.mode === EnabledDisabledSchema.Values.enabled
+    )?.config?.value;
   }
 
   public getCurrentSpeedMultiplier(): number {
@@ -244,18 +246,22 @@ export class DeviceHelper {
   }
 
   public async getDebugInfo(): Promise<{ title: string; content: any }[]> {
-     return [
+    return [
       {
-        title: 'Gestalt', content: await this.apiClient.gestalt(),
+        title: 'Gestalt',
+        content: await this.apiClient.gestalt(),
       },
       {
-        title: 'Summary', content: await this.apiClient.getSummary(),
+        title: 'Summary',
+        content: await this.apiClient.getSummary(),
       },
       {
-        title: 'LED Config', content: await this.apiClient.getLedConfig(),
+        title: 'LED Config',
+        content: await this.apiClient.getLedConfig(),
       },
       {
-        title: 'Movie Config', content: await this.apiClient.getLedMovieConfig(),
+        title: 'Movie Config',
+        content: await this.apiClient.getLedMovieConfig(),
       },
     ];
   }

@@ -14,7 +14,7 @@ export class ReverseLedMapper implements LedMapper {
     private readonly target: LedMapper = new IdentityLedMapper()
   ) {}
   mapLedIndex(ledIndex: number): number {
-    return this.totalLeds - 1 - this.target.mapLedIndex(ledIndex);
+    return this.target.mapLedIndex(this.totalLeds - 1 - ledIndex);
   }
 }
 
