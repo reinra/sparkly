@@ -2,14 +2,12 @@
   import {
     backendClient,
     type HelloResponse,
-    type DebugResponse,
     type GetInfoResponse,
   } from '../../frontendApiClient';
   import { handleApiCall } from '../../utils/apiHelper';
 
   let message = $state('');
   let info = $state<GetInfoResponse | null>(null);
-  let status = $state<DebugResponse | null>(null);
   let loading = $state(false);
   let error = $state('');
 
@@ -44,21 +42,6 @@
     }
   }
 
-  async function fetchDebug() {
-    loading = true;
-    error = '';
-    try {
-      status = await handleApiCall<DebugResponse>(
-        () => backendClient.debug(),
-        'Failed to get device debug info. Make sure config.toml is properly configured.'
-      );
-    } catch (e) {
-      error = (e as Error).message;
-    } finally {
-      loading = false;
-    }
-  }
-
   $effect(() => {
     fetchHello();
     fetchInfo();
@@ -82,18 +65,25 @@
 
   <div class="card">
     <h3>Twinkly devices</h3>
-    {#if loading && !message}
+    {#if loading && !info}
       <p class="loading">Loading...</p>
-    {:else if error && !message}
+    {:else if error && !info}
       <p class="error">{error}</p>
-    {:else if message}
-      <p class="success">
-        {#each info?.devices as device}
-          <li><strong>{device.alias}</strong></li>
+    {:else if info?.devices?.length}
+      <ul class="device-list">
+        {#each info.devices as device}
+          <li>
+            <a
+              class="device-link"
+              href={`/debug/${device.id}?alias=${encodeURIComponent(device.alias)}`}
+              >{device.alias}</a
+            >
+          </li>
         {/each}
-      </p>
+      </ul>
+    {:else}
+      <p class="success">No devices discovered.</p>
     {/if}
-    <ul></ul>
     <button onclick={fetchInfo} disabled={loading}>Refresh</button>
   </div>
 
@@ -125,24 +115,6 @@
     <button onclick={fetchInfo} disabled={loading}>Refresh</button>
   </div>
 
-  <div class="card">
-    <h3>Device Debug Info</h3>
-    {#if status}
-      <div class="status">
-        <h4>Device Info</h4>
-        <pre>{status.device}</pre>
-        <h4>Summary</h4>
-        <pre>{status.summary}</pre>
-        <h4>LED Configuration</h4>
-        <pre>{status.ledConfig}</pre>
-        <h4>Movie Configuration</h4>
-        <pre>{status.movieConfig}</pre>
-      </div>
-    {:else if error && !status}
-      <p class="error">{error}</p>
-    {/if}
-    <button onclick={fetchDebug} disabled={loading}>Get Device Debug Info</button>
-  </div>
 </div>
 
 <style>
@@ -160,12 +132,6 @@
     color: #333;
     margin-top: 0;
     font-size: 1.3rem;
-  }
-
-  h4 {
-    color: #666;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
   }
 
   .card {
@@ -219,12 +185,23 @@
     font-weight: 500;
   }
 
-  .status pre {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-size: 0.875rem;
+  .device-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .device-link {
+    color: #ff3e00;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .device-link:hover {
+    text-decoration: underline;
   }
 
   table {

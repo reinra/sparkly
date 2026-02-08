@@ -13,7 +13,7 @@ export const backendClient = initClient(backendApiContract, {
 export type {
   HelloResponse,
   GetInfoResponse,
-  DebugResponse,
+  DeviceDebugResponse,
   SetModeRequest,
   SetModeResponse,
   SystemInfoResponse,

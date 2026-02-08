@@ -72,11 +72,12 @@ const GetInfoResponseSchema = z.object({
   ),
 });
 
-const DebugResponseSchema = z.object({
-  device: z.string(),
-  summary: z.string(),
-  ledConfig: z.string(),
-  movieConfig: z.string(),
+const DeviceDebugResponseSchema = z.object({
+  sections: z.array(
+    z.object({
+      title: z.string(),
+      content: z.string(),
+    }))
 });
 
 const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
@@ -139,7 +140,7 @@ const ErrorResponseSchema = z.object({
 // Export types
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
-export type DebugResponse = z.infer<typeof DebugResponseSchema>;
+export type DeviceDebugResponse = z.infer<typeof DeviceDebugResponseSchema>;
 export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
 export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
@@ -178,14 +179,12 @@ export const backendApiContract = c.router({
       500: ErrorResponseSchema,
     },
   },
-  /**
-   * For debugging, not for main usage
-   */
-  debug: {
+  debugDevice: {
     method: 'GET',
-    path: '/api/debug',
+    path: '/api/debug/device',
+    query: DeviceRequestBaseSchema,
     responses: {
-      200: DebugResponseSchema,
+      200: DeviceDebugResponseSchema,
       500: ErrorResponseSchema,
     },
   },

@@ -242,4 +242,21 @@ export class DeviceHelper {
   setCurrentEffect(effect: Effect<any> | null) {
     this.currentEffect = effect;
   }
+
+  public async getDebugInfo(): Promise<{ title: string; content: any }[]> {
+     return [
+      {
+        title: 'Gestalt', content: await this.apiClient.gestalt(),
+      },
+      {
+        title: 'Summary', content: await this.apiClient.getSummary(),
+      },
+      {
+        title: 'LED Config', content: await this.apiClient.getLedConfig(),
+      },
+      {
+        title: 'Movie Config', content: await this.apiClient.getLedMovieConfig(),
+      },
+    ];
+  }
 }

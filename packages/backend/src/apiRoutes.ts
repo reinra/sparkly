@@ -83,19 +83,16 @@ export const apiRoutes = {
     });
   },
 
-  debug: async (req: any, res: any) => {
-    // Use the first device for now
-    const apiClient = Object.values(devices)[0].api_client;
-    const gestalt = await apiClient.gestalt();
-    const summary = await apiClient.getSummary();
-    const ledConfig = await apiClient.getLedConfig();
-    const movieConfig = await apiClient.getLedMovieConfig();
+  debugDevice: async (req: any, res: any) => {
+    const { device_id } = req.query;
+    const device = getDeviceOrError(device_id as string);
+    const debugInfo = await device.helper.getDebugInfo();
 
     res.json({
-      device: JSON.stringify(gestalt, null, 2) as any,
-      summary: JSON.stringify(summary, null, 2) as any,
-      ledConfig: JSON.stringify(ledConfig, null, 2) as any,
-      movieConfig: JSON.stringify(movieConfig, null, 2),
+      sections: debugInfo.map((section) => ({
+        title: section.title,
+        content: JSON.stringify(section.content, null, 2),
+      })),
     });
   },
 
