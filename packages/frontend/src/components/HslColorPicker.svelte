@@ -11,7 +11,8 @@
 
   let { value, disabled = false }: Props = $props();
 
-  let internalValue: Hsl = $state(value);
+  const INITIAL_COLOR: Hsl = { hue: 0, saturation: 0, lightness: 0 };
+  let internalValue: Hsl = $state(INITIAL_COLOR);
   let isOpen = $state(false);
   let containerElement: HTMLDivElement | null = null;
   let swatchButton: HTMLButtonElement | null = null;
@@ -115,7 +116,7 @@
     aria-expanded={isOpen}
     aria-label="Select color"
     disabled={disabled}
-    on:click={toggleOpen}
+    onclick={toggleOpen}
     bind:this={swatchButton}
   >
     <span class="swatch" style={`background: ${swatchColor};`}></span>
@@ -134,7 +135,7 @@
             max="360"
             value={hueDegrees}
             style="background: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red);"
-            on:input={(event) => handleSliderChange('hue', Number(event.currentTarget.value))}
+            oninput={(event) => handleSliderChange('hue', Number(event.currentTarget.value))}
           />
           <span>{hueDegrees}°</span>
         </div>
@@ -150,7 +151,7 @@
             max="100"
             value={saturationPercent}
             style={`background: ${saturationGradient};`}
-            on:input={(event) => handleSliderChange('saturation', Number(event.currentTarget.value))}
+            oninput={(event) => handleSliderChange('saturation', Number(event.currentTarget.value))}
           />
           <span>{saturationPercent}%</span>
         </div>
@@ -166,7 +167,7 @@
             max="100"
             value={lightnessPercent}
             style={`background: ${lightnessGradient};`}
-            on:input={(event) => handleSliderChange('lightness', Number(event.currentTarget.value))}
+            oninput={(event) => handleSliderChange('lightness', Number(event.currentTarget.value))}
           />
           <span>{lightnessPercent}%</span>
         </div>
