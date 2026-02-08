@@ -145,7 +145,7 @@
     <div class="device-content">
       <div class="device-info-section">
         <h3>Device Information</h3>
-        <div class="info-grid">
+        <div class="info-list">
           <div class="info-item">
             <strong>ID:</strong>
             <span>{device.id}</span>
@@ -166,22 +166,19 @@
               <span>{device.led_count}</span>
             </div>
           {/if}
-        </div>
-
-        {#if device.mode}
-          <div class="control-group">
-            <label for="mode">
+          {#if device.mode}
+            <div class="info-item">
               <strong>Mode:</strong>
-            </label>
-            <select id="mode" value={device.mode} onchange={updateMode} disabled={updating}>
-              <option value="off">Off</option>
-              <option value="demo">Demo</option>
-              <option value="effect">Effect</option>
-              <option value="movie">Movie</option>
-              <option value="rt">RT</option>
-            </select>
-          </div>
-        {/if}
+              <select id="mode" value={device.mode} onchange={updateMode} disabled={updating}>
+                <option value="off">Off</option>
+                <option value="demo">Demo</option>
+                <option value="effect">Effect</option>
+                <option value="movie">Movie</option>
+                <option value="rt">RT</option>
+              </select>
+            </div>
+          {/if}
+        </div>
 
         <EffectParameters deviceId={device.id} parameters={device.parameters || []} bind:updating />
 
@@ -210,10 +207,10 @@
           {/each}
         </div>
       </div>
-    </div>
 
-    <div class="buffer-section">
-      <DeviceBufferViewer deviceId={device.id} />
+      <div class="buffer-section">
+        <DeviceBufferViewer deviceId={device.id} />
+      </div>
     </div>
   {:else}
     <p class="error">Device not found</p>
@@ -223,8 +220,7 @@
 
 <style>
   .device-detail {
-    max-width: 1200px;
-    padding: 1rem;
+    padding: 1rem 2rem;
   }
 
   .header {
@@ -258,50 +254,47 @@
 
   .device-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
     margin-bottom: 2rem;
   }
 
   .device-info-section,
-  .effects-section {
+  .effects-section,
+  .buffer-section {
     background: white;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
   }
 
   .info-item {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 1rem;
   }
 
   .info-item strong {
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    min-width: 120px;
+    flex-shrink: 0;
   }
 
   .info-item span {
     color: #333;
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
-  .control-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .control-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #666;
+  .info-item select {
+    flex: 1;
   }
 
   select {
@@ -386,13 +379,6 @@
     font-weight: 600;
   }
 
-  .buffer-section {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
   button {
     background: #ff3e00;
     color: white;
@@ -441,6 +427,18 @@
     background: #ffebee;
   }
 
+  /* Medium screens - 2 columns with buffer at bottom */
+  @media (max-width: 1024px) {
+    .device-content {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .buffer-section {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Small screens - single column */
   @media (max-width: 768px) {
     .device-content {
       grid-template-columns: 1fr;
