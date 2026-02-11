@@ -108,15 +108,11 @@
 
 <div class="device-card">
   <div class="device-header">
-    <h3 class="device-title">{device.alias}</h3>
+    <h3 class="device-title"><a href="/devices/{device.id}">{device.alias}</a></h3>
     <a href="/devices/{device.id}" class="details-button">Details</a>
   </div>
   <div class="device-info">
-    <p><strong>ID:</strong> {device.id}</p>
     <p><strong>IP:</strong> {device.ip}</p>
-    {#if device.name}
-      <p><strong>Name:</strong> {device.name}</p>
-    {/if}
     {#if device.led_count}
       <p><strong>LED Count:</strong> {device.led_count}</p>
     {/if}
@@ -180,6 +176,11 @@
 
   .device-title {
     font-weight: 600;
+  }
+
+  .device-title a {
+    color: inherit;
+    text-decoration: none;
   }
 
   .details-button {

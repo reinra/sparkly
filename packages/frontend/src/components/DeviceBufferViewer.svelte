@@ -206,7 +206,7 @@
 <div class="buffer-section">
   <div class="button-group">
     <button onclick={fetchBuffer} disabled={fetchingBuffer || isLiveEnabled} class="fetch-buffer-btn">
-      {fetchingBuffer && !isLiveEnabled ? 'Fetching...' : 'Fetch Device Buffer'}
+      Fetch Device Buffer
     </button>
     <button onclick={toggleLiveMode} class="live-toggle-btn" class:active={isLiveEnabled}>
       {isLiveEnabled ? 'Disable Live' : 'Enable Live'}
@@ -279,7 +279,6 @@
     cursor: pointer;
     font-size: 0.9rem;
     transition: background-color 0.2s;
-    min-width: 180px;
   }
 
   .fetch-buffer-btn:hover:not(:disabled) {

@@ -137,29 +137,20 @@
   {:else if deviceStore.error}
     <p class="error">{deviceStore.error}</p>
   {:else if device}
-    <div class="header">
-      <a href="/devices" class="back-button">← Back to Devices</a>
-      <h2>{device.alias}</h2>
-    </div>
-
     <div class="device-content">
       <div class="device-info-section">
         <h3>Device Information</h3>
         <div class="info-list">
-          <div class="info-item">
-            <strong>ID:</strong>
-            <span>{device.id}</span>
-          </div>
-          <div class="info-item">
-            <strong>IP:</strong>
-            <span>{device.ip}</span>
-          </div>
           {#if device.name}
             <div class="info-item">
               <strong>Name:</strong>
               <span>{device.name}</span>
             </div>
           {/if}
+          <div class="info-item">
+            <strong>IP:</strong>
+            <span>{device.ip}</span>
+          </div>
           {#if device.led_count}
             <div class="info-item">
               <strong>LED Count:</strong>
@@ -200,9 +191,7 @@
               tabindex={index === selectedEffectIndex ? 0 : -1}
             >
               <span class="effect-name">{effect.id}</span>
-              {#if device.effect_id === effect.id}
-                <span class="active-badge">Active</span>
-              {/if}
+              <span class="active-badge" class:visible={device.effect_id === effect.id}>Active</span>
             </button>
           {/each}
         </div>
@@ -318,6 +307,7 @@
     font-size: 0.9rem;
     font-style: italic;
     margin: -0.5rem 0 1rem 0;
+    min-width: 0;
   }
 
   .effects-list {
@@ -369,6 +359,7 @@
 
   .effect-name {
     font-weight: 500;
+    white-space: nowrap;
   }
 
   .active-badge {
@@ -377,6 +368,11 @@
     border-radius: 12px;
     font-size: 0.85rem;
     font-weight: 600;
+    visibility: hidden;
+  }
+
+  .active-badge.visible {
+    visibility: visible;
   }
 
   button {

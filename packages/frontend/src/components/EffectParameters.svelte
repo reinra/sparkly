@@ -271,7 +271,6 @@
 
 {#if parameters && parameters.length > 0}
   <div class="parameters-section">
-    <h4>Parameters</h4>
     {#each parameters as param, index}
       {#if param.type === ParameterType.RANGE}
         {@const rangeValue = getEffectiveValue(param) as number}

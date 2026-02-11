@@ -23,7 +23,7 @@
   <nav>
     <div class="nav-container">
       <div class="brand-container">
-        <h1 class="logo">Twinkly LED Controller</h1>
+        <h1 class="logo"><a href="/devices">Twinkly LED Controller</a></h1>
         {#if buildDate}
           <div class="build-date">Build: {buildDate}</div>
         {/if}
@@ -83,6 +83,11 @@
     font-weight: 600;
   }
 
+  .logo a {
+    color: inherit;
+    text-decoration: none;
+  }
+
   .brand-container {
     display: flex;
     flex-direction: column;
@@ -123,7 +128,7 @@
 
   main {
     flex: 1;
-    max-width: 1200px;
+    max-width: 1800px;
     margin: 0 auto;
     padding: 2rem;
     width: 100%;
