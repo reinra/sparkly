@@ -1,4 +1,4 @@
-import { BooleanEffectParameter, ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
+import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import {
   DynamicParameterStorageView,
@@ -9,7 +9,7 @@ import {
 } from './effectParameters';
 import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
-import { Effect, StatelessEffect } from './effects/Effect';
+import { Effect, LedPoint1D, LedPoint2D, StatelessEffect } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { EnabledDisabledSchema } from './deviceClient/apiContract';
 
@@ -22,25 +22,26 @@ export interface LedCoordinates {
   y: number; // 0...1
 }
 
+export const enum MappingMode {
+    UseXAsPosition = "UseXAsPosition",
+    UseYAsPosition = "UseYAsPosition",
+    UseDistanceAsPosition = "UseDistanceAsPosition"
+}
+
 export class DeviceHelper {
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
   private deviceParams = new EffectParameterStorage();
   private deviceParamsInitialized = false;
   private currentEffect: Effect<any> | null = null;
+  private points1DCache: LedPoint1D[] | null = null;
+
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
       ['device.', this.deviceParams],
-      ['effect.', new DynamicParameterStorageView(() => this.getCurrentEffectParameters())],
+      ['effect.', new DynamicParameterStorageView(() => getEffectParameters(this.currentEffect))],
     ])
   );
-
-  private getCurrentEffectParameters(): EffectParameterView {
-    if (this.currentEffect && this.currentEffect.parameters) {
-      return this.currentEffect.parameters;
-    }
-    return emptyParameterStorageView;
-  }
 
   private readonly speed: RangeEffectParameter = {
     id: 'speed',
@@ -83,6 +84,18 @@ export class DeviceHelper {
     max: 1,
     step: 0.1,
   };
+  private readonly mappingMode: OptionEffectParameter = {
+      id: 'mode',
+      name: 'Mapping Mode',
+      description: 'Mode for mapping 1D effect to 2D',
+      type: ParameterType.OPTION,
+      value: MappingMode.UseDistanceAsPosition,
+      options: [
+          { value: MappingMode.UseDistanceAsPosition, label: 'Sequence', description: 'Map the distance from center (0-1) to the 1D effect position' },
+          { value: MappingMode.UseXAsPosition, label: 'Horizontal', description: 'Map the X coordinate (0-1) to the 1D effect position' },
+          { value: MappingMode.UseYAsPosition, label: 'Vertical', description: 'Map the Y coordinate (0-1) to the 1D effect position' },
+      ],
+  }; 
   private readonly mirror: BooleanEffectParameter = {
     id: 'mirror',
     name: 'Mirror LEDs',
@@ -140,6 +153,9 @@ export class DeviceHelper {
 
     this.deviceParams.register(this.maxFps);
     this.deviceParams.register(this.speed);
+    this.deviceParams.register(this.mappingMode, () => {
+        this.invalidatePoints1DCache();
+    });
     this.deviceParams.register(this.mirror);
     this.deviceParams.register(this.gamma);
     this.deviceParams.register(this.temperature);
@@ -174,6 +190,52 @@ export class DeviceHelper {
     }
     this.gestaltCache = await this.apiClient.gestalt();
     return this.gestaltCache;
+  }
+
+  public async getPoints(
+    effect: Effect<any>
+  ): Promise<LedPoint1D[] | LedPoint2D[]> {
+    const ledCount = (await this.getGestalt()).number_of_led;
+    if (effect.pointType === '1D') {
+      return this.getPoints1D(ledCount);
+    }    
+    if (effect.pointType === '2D') {
+      return this.getPoints2D(ledCount);
+    }
+    throw new Error(`Unsupported effect point type: ${effect.pointType}`);
+  }
+
+  private async getPoints1D(count: number): Promise<LedPoint1D[]> {
+    if (this.points1DCache) {
+      return this.points1DCache;
+    }
+    this.points1DCache = await this.computePoints1D(count);
+    return this.points1DCache; 
+  }
+  private invalidatePoints1DCache() {
+    this.points1DCache = null;
+  }
+  private async computePoints1D(count: number): Promise<LedPoint1D[]> {
+    const mode = this.mappingMode.value as MappingMode;
+    if (mode === MappingMode.UseDistanceAsPosition) {
+      return this.getSimplePoints1D(count);
+    }
+    const points = await this.getPoints2D(count);    
+    return points.map((point) => ({
+      id: point.id,
+      position: point.id,
+      distance: getDistance(mode, point, count),
+    }));
+  }
+  private getSimplePoints1D(count: number): LedPoint1D[] {
+    const points: LedPoint1D[] = [];
+    for (let i = 0; i < count; i++) {
+      points.push({ id: i, position: i, distance: i / count });
+    }
+    return points;
+  }
+  private async getPoints2D(count: number): Promise<LedPoint2D[]> {
+      return (await this.getLedMapping()).coordinates;
   }
 
   public async getLedMapping(): Promise<LedMapping> {
@@ -269,4 +331,23 @@ export class DeviceHelper {
       }
     ];
   }
+}
+
+export function getEffectParameters(effect: Effect<any> | null): EffectParameterView {
+  if (effect && effect.parameters) {
+    return effect.parameters;
+  }
+  return emptyParameterStorageView;
+}
+
+function getDistance(mode: MappingMode, point: LedPoint2D, count: number): number {
+    switch (mode) {
+        case MappingMode.UseXAsPosition:
+            return point.x;
+        case MappingMode.UseYAsPosition:
+            return point.y;
+        case MappingMode.UseDistanceAsPosition:
+            return point.id / count;
+    }
+    throw new Error("Unreachable");
 }

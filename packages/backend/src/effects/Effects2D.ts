@@ -5,33 +5,6 @@ import { EffectParameterStorage } from '../effectParameters';
 import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
 
-export class AdapterFrom1DEffectTo2D implements Effect<LedPoint2D> {
-  pointType: '2D' = '2D';
-  constructor(private effect1D: Effect<LedPoint1D>) {}
-  get isStateful(): boolean {
-    return this.effect1D.isStateful;
-  }
-  getName(): string {
-    return `Adapter(2D<-1D): ${this.effect1D.getName()}`;
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return this.effect1D.getLoopDurationSeconds(ledCount);
-  }
-  createLogic: () => EffectLogic<LedPoint2D> = () => new AdapterFrom1DEffectTo2DLogic(this.effect1D.createLogic());
-}
-class AdapterFrom1DEffectTo2DLogic implements EffectLogic<LedPoint2D> {
-  constructor(private effect1D: EffectLogic<LedPoint1D>) {}
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
-    // Map the 2D points to 1D points by using only the X coordinate
-    const points1D: LedPoint1D[] = points.map((point) => ({
-      id: point.id,
-      position: point.id,
-      distance: point.y,
-    }));
-    return this.effect1D.renderGlobal(ctx, points1D);
-  }
-}
-
 export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   pointType: '2D' = '2D';
   getName(): string {

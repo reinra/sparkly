@@ -22,7 +22,6 @@ import {
   TestAllLedsFlash,
 } from './Effects1D';
 import {
-  AdapterFrom1DEffectTo2D,
   CloudsEffect,
   GravityFountain,
   PlasmaEffect,
@@ -63,7 +62,6 @@ export const effects: Record<string, Effect<any>> = {
   sine: new SineEffect(),
   ping_pong: new PingPongEffect(),
   rainbow_2d: new RainbowGradientEffect2D(),
-  sine_2d: new AdapterFrom1DEffectTo2D(new SineEffect()),
   pulse_scanner: new PulseScanner(),
   slime: new Slime(),
   clouds: new CloudsEffect(),

@@ -18,7 +18,6 @@ export class EffectRenderer implements Renderer<Effect<any>> {
     signal: AbortSignal
   ): Promise<void> {
     const gestalt = await deviceHelper.getGestalt();
-    const points = await getPoints(effect, deviceHelper, gestalt);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const logic = effect.createLogic();
@@ -42,6 +41,7 @@ export class EffectRenderer implements Renderer<Effect<any>> {
         frame_index: frameIndex,
         phase: (elapsedTime % loopDurationMs) / loopDurationMs,
       };
+      const points = await deviceHelper.getPoints(effect);
       const ledValues = logic.renderGlobal(ctx, points);
       await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
 
@@ -64,7 +64,7 @@ export class EffectRenderer implements Renderer<Effect<any>> {
     signal: AbortSignal
   ): Promise<void> {
     const gestalt = await deviceHelper.getGestalt();
-    const points = await getPoints(effect, deviceHelper, gestalt);
+    const points = await deviceHelper.getPoints(effect);
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const [startRecordingMs, endRecordingMs] = effect.isStateful
@@ -120,26 +120,4 @@ async function sleep(milliseconds: number) {
 }
 async function yieldNow() {
   await new Promise((resolve) => setImmediate(resolve));
-}
-
-async function getPoints(
-  effect: Effect<any>,
-  deviceHelper: DeviceHelper,
-  gestalt: GestaltResponseType
-): Promise<LedPoint1D[] | LedPoint2D[]> {
-  if (effect.pointType === '1D') {
-    return getPoints1D(gestalt);
-  }
-  if (effect.pointType === '2D') {
-    return (await deviceHelper.getLedMapping()).coordinates;
-  }
-  throw new Error(`Unsupported effect point type: ${effect.pointType}`);
-}
-
-function getPoints1D(gestalt: GestaltResponseType): LedPoint1D[] {
-  const points: LedPoint1D[] = [];
-  for (let i = 0; i < gestalt.number_of_led; i++) {
-    points.push({ id: i, position: i, distance: i / gestalt.number_of_led });
-  }
-  return points;
 }
