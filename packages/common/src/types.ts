@@ -1,14 +1,10 @@
 
-export interface Hsl {
-  hue: number; // Hue: 0-1
-  saturation: number; // Saturation: 0-1
-  lightness: number; // Lightness: 0-1
-}
 
 export enum ParameterType {
   RANGE = 'range',
   BOOLEAN = 'boolean',
   HSL = 'hsl',
+  OPTION = 'option',
 }
 
 export interface BaseEffectParameter {
@@ -32,9 +28,25 @@ export interface BooleanEffectParameter extends BaseEffectParameter {
   value: boolean;
 }
 
+export interface Hsl {
+  hue: number; // Hue: 0-1
+  saturation: number; // Saturation: 0-1
+  lightness: number; // Lightness: 0-1
+}
 export interface HslEffectParameter extends BaseEffectParameter {
   type: ParameterType.HSL;
   value: Hsl;
 }
 
-export type EffectParameter = RangeEffectParameter | BooleanEffectParameter | HslEffectParameter;
+export interface Option {
+  value: string;
+  label: string;
+  description?: string;
+}
+export interface OptionEffectParameter extends BaseEffectParameter {
+  type: ParameterType.OPTION;
+  value: string;
+  options: Option[];
+}
+
+export type EffectParameter = RangeEffectParameter | BooleanEffectParameter | HslEffectParameter | OptionEffectParameter;

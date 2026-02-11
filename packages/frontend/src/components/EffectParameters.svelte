@@ -3,7 +3,7 @@
   import { handleApiUpdate } from '../utils/apiHelper';
   import { deviceStore } from '../stores/deviceStore.svelte';
   import HslColorPicker from './HslColorPicker.svelte';
-  import { ParameterType, type EffectParameter, type Hsl } from '@twinkly-ts/common';
+  import { ParameterType, type EffectParameter, type Hsl, type OptionEffectParameter } from '@twinkly-ts/common';
 
   interface Props {
     deviceId: string;
@@ -13,7 +13,7 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  type ParameterValue = number | boolean | Hsl;
+  type ParameterValue = number | boolean | Hsl | string;
 
   let parameterElements: (HTMLElement | null)[] = [];
   const optimisticValues = new Map<string, ParameterValue>();
@@ -149,6 +149,9 @@
     if (param.type === ParameterType.HSL && typeof value === 'object') {
       return areHslEqual(param.value as Hsl, value as Hsl);
     }
+    if (param.type === ParameterType.OPTION && typeof value === 'string') {
+      return param.value === value;
+    }
     return false;
   }
 
@@ -196,6 +199,10 @@
       }
     } else if (param.type === ParameterType.BOOLEAN) {
       if (typeof nextValue !== 'boolean' || effectiveValue === nextValue) {
+        return;
+      }
+    } else if (param.type === ParameterType.OPTION) {
+      if (typeof nextValue !== 'string' || effectiveValue === nextValue) {
         return;
       }
     }
@@ -342,6 +349,26 @@
             </span>
           </div>
         </div>
+      {:else if param.type === ParameterType.OPTION}
+        {@const optionValue = getEffectiveValue(param) as string}
+        {@const optionParam = param as OptionEffectParameter}
+        <div class="control-group option-group" title={param.description}>
+          <strong>{param.name}:</strong>
+          <div class="option-tags" role="radiogroup" aria-label={param.name}>
+            {#each optionParam.options as option}
+              <button
+                class="option-tag"
+                class:active={optionValue === option.value}
+                role="radio"
+                aria-checked={optionValue === option.value}
+                title={option.description ?? ''}
+                onclick={() => updateParameter(param, option.value)}
+              >
+                {option.label}
+              </button>
+            {/each}
+          </div>
+        </div>
       {/if}
     {/each}
   </div>
@@ -384,6 +411,58 @@
     background: #ff3e00;
     outline: 2px solid rgba(255, 62, 0, 0.3);
     outline-offset: 2px;
+  }
+
+  .option-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .option-group strong {
+    color: #666;
+    white-space: nowrap;
+  }
+
+  .option-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .option-tag {
+    padding: 0.25rem 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .option-tag:hover {
+    border-color: #ff3e00;
+    color: #ff3e00;
+    background: #fff4f0;
+  }
+
+  .option-tag:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline-offset: 2px;
+  }
+
+  .option-tag.active {
+    background: #ff3e00;
+    border-color: #ff3e00;
+    color: #fff;
+  }
+
+  .option-tag.active:hover {
+    background: #e03500;
+    border-color: #e03500;
+    color: #fff;
   }
 
   .checkbox-group label {

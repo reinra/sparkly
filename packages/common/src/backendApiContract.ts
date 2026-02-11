@@ -44,10 +44,23 @@ const HslEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: HslValueSchema,
 });
 
+const OptionSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+  description: z.string().optional(),
+});
+
+const OptionEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.OPTION),
+  value: z.string(),
+  options: z.array(OptionSchema),
+});
+
 const EffectParameterSchema = z.discriminatedUnion('type', [
   RangeEffectParameterSchema,
   BooleanEffectParameterSchema,
   HslEffectParameterSchema,
+  OptionEffectParameterSchema,
 ]);
 
 const GetInfoResponseSchema = z.object({
@@ -101,7 +114,7 @@ const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
 
-const ParameterValueSchema = z.union([z.number(), z.boolean(), HslValueSchema]);
+const ParameterValueSchema = z.union([z.number(), z.boolean(), z.string(), HslValueSchema]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
   parameters: z.array(

@@ -1,10 +1,11 @@
-import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, Hsl } from '@twinkly-ts/common';
+import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, Hsl } from '@twinkly-ts/common';
 import { ParameterType } from '@twinkly-ts/common';
 
 type ParameterValueType<T extends EffectParameter> =
   T extends RangeEffectParameter ? number :
   T extends BooleanEffectParameter ? boolean :
   T extends HslEffectParameter ? Hsl :
+  T extends OptionEffectParameter ? string :
   never;
 
 export type ParameterChangeListener<T extends EffectParameter = EffectParameter> = (
@@ -48,7 +49,7 @@ export interface EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean | Hsl): void;
+  setValue(id: string, value: number | boolean | Hsl | string): void;
 }
 
 export class EffectParameterStorage implements EffectParameterView {
@@ -105,7 +106,7 @@ export class EffectParameterStorage implements EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean | Hsl): void {
+  setValue(id: string, value: number | boolean | Hsl | string): void {
     const parameter = this.parameters.get(id);
 
     if (!parameter) {
@@ -135,6 +136,15 @@ export class EffectParameterStorage implements EffectParameterView {
       const hslValue = value as Hsl;
       validateHslValue(id, hslValue);
       parameter.value = { ...hslValue };
+    } else if (parameter.type === ParameterType.OPTION) {
+      if (typeof value !== 'string') {
+        throw new Error(`Parameter '${id}' expects a string value`);
+      }
+      if (!parameter.options.some((opt) => opt.value === value)) {
+        const allowed = parameter.options.map((opt) => opt.value).join(', ');
+        throw new Error(`Value '${value}' is not a valid option for parameter '${id}'. Allowed: ${allowed}`);
+      }
+      parameter.value = value;
     }
 
     // Invoke listener asynchronously (fire-and-forget) if registered
@@ -181,7 +191,7 @@ export class MultiParameterStorageView implements EffectParameterView {
     }
     return allParameters;
   }
-  setValue(id: string, value: number | boolean | Hsl): void {
+  setValue(id: string, value: number | boolean | Hsl | string): void {
     for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
       if (id.startsWith(prefix)) {
         const paramId = id.substring(prefix.length);
@@ -197,7 +207,7 @@ export const emptyParameterStorageView: EffectParameterView = {
   list(): EffectParameter[] {
     return [];
   },
-  setValue(id: string, value: number | boolean | Hsl): void {
+  setValue(id: string, value: number | boolean | Hsl | string): void {
     throw new Error(`No parameters available`);
   },
 };
@@ -207,7 +217,7 @@ export class DynamicParameterStorageView implements EffectParameterView {
   list(): EffectParameter[] {
     return this.getCurrentStorage().list();
   }
-  setValue(id: string, value: number | boolean | Hsl): void {
+  setValue(id: string, value: number | boolean | Hsl | string): void {
     this.getCurrentStorage().setValue(id, value);
   }
 }
