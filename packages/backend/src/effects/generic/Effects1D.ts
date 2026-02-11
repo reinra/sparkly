@@ -256,8 +256,7 @@ export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoi
 }
 
 // Also called "Marquee" if it runs a bit faster
-export class TestPerLedEffect1D implements StatelessEffect<LedPoint1D> {
-  parameters?: EffectParameterView | undefined;
+export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: false = false;
   getName(): string {
@@ -272,6 +271,24 @@ export class TestPerLedEffect1D implements StatelessEffect<LedPoint1D> {
     const index = Math.floor(ctx.phase * points.length);
     result[index] = WHITE;
     return result;
+  }
+}
+
+
+// Also called "Marquee" if it runs a bit faster
+export class TestAllLedsFlash implements StatelessEffect<LedPoint1D> {
+  pointType: '1D' = '1D';
+  isStateful: false = false;
+  getName(): string {
+    return 'Test All LEDs Flash';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 1;
+  }
+  createLogic: () => EffectLogic<LedPoint1D> = () => this;
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+    const color = ctx.frame_index % 2 === 0 ? WHITE : BLACK;
+    return new Array(points.length).fill(color);
   }
 }
 

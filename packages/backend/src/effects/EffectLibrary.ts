@@ -13,12 +13,13 @@ import {
   SingleHslColorEffect,
   StaticAlternatingColorEffect,
   StaticColorGradientEffect,
-  TestPerLedEffect1D,
+  TestPerLedEffect,
   TwinkleEffect,
   TwoAlternatingColorFadingEffect,
   TwoAlternatingCustomColorFadingEffect,
   MultiColorRainEffect,
   StaticCustomColorGradientEffect,
+  TestAllLedsFlash,
 } from './generic/Effects1D';
 import {
   AdapterFrom1DEffectTo2D,
@@ -68,5 +69,6 @@ export const effects: Record<string, Effect<any>> = {
   clouds: new CloudsEffect(),
   plasma: new PlasmaEffect(),
   gravity_fountain: new GravityFountain(),
-  test_per_led: new TestPerLedEffect1D(),
+  test_per_led: new TestPerLedEffect(),
+  test_all_leds_flash: new TestAllLedsFlash(),
 };
