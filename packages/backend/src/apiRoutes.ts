@@ -1,10 +1,10 @@
-import { Mode } from '@twinkly-ts/common';
 import { effects } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 import { logger, logError } from './logger';
-import { debug } from 'console';
+import { DeviceModeSchema } from './deviceClient/apiContract';
+import { DEVICE_MODES } from './deviceClient/DeviceModes';
 
 // Helper function to get device or throw error
 export function getDeviceOrError(device_id: string): Device {
@@ -28,6 +28,7 @@ export const apiRoutes = {
       // @ts-ignore - Injected by Bun at build time
       buildDate: typeof BUILD_DATE !== 'undefined' ? BUILD_DATE : process.env.BUILD_DATE || new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
+      deviceModes: DEVICE_MODES
     });
   },
 
@@ -98,13 +99,14 @@ export const apiRoutes = {
   setMode: async (req: any, res: any) => {
     const { device_id, mode } = req.body;
     const device = getDeviceOrError(device_id);
+    const validMode = DeviceModeSchema.parse(mode);
 
-    if (mode !== Mode.rt) {
+    if (validMode !== DeviceModeSchema.Values.rt) {
       const taskKey = device_id;
       abortTask(taskKey);
     }
 
-    await device.api_client.setMode(mode);
+    await device.api_client.setMode(validMode);
 
     res.json({
       success: true,

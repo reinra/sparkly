@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { backendClient } from '../frontendApiClient';
+  import { deviceStore } from '../stores/deviceStore.svelte';
   
   let { children } = $props();
   let buildDate = $state<string | undefined>(undefined);
@@ -9,9 +10,11 @@
   onMount(async () => {
     try {
       const { status, body } = await backendClient.getSystemInfo();
-      if (status === 200 && body.buildDate) {
-        // Format date to local string
-        buildDate = new Date(body.buildDate).toISOString().replace('T', ' ').split('.')[0];
+      if (status === 200) {
+        if (body.buildDate) {
+          buildDate = new Date(body.buildDate).toISOString().replace('T', ' ').split('.')[0];
+        }
+        deviceStore.setDeviceModes(body.deviceModes);
       }
     } catch (e) {
       console.error('Failed to fetch system info', e);

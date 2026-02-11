@@ -1,14 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { LedType } from '../color/Color8bit';
-import { Mode } from '@twinkly-ts/common';
-import { get } from 'http';
 
 export const EnabledDisabledSchema = z.enum(['enabled', 'disabled']);
 export const AbsoluteOrRelativeSchema = z.enum(['A', 'R']);
-
-// Re-export Mode from common for backward compatibility
-export { Mode };
+export const DeviceModeSchema = z.enum(['off', 'color', 'demo', 'effect', 'movie', 'playlist', 'rt']);
 
 const BasicResponseSchema = z.object({
   code: z.number(),
@@ -55,7 +51,7 @@ const VerifyRequestSchema = z.object({
 
 export const SummaryResponseSchema = BasicResponseSchema.extend({
   led_mode: z.object({
-    mode: z.nativeEnum(Mode),
+    mode: DeviceModeSchema,
     detect_mode: z.number(),
     shop_mode: z.number(),
     id: z.number().optional(),
@@ -103,7 +99,7 @@ export const SummaryResponseSchema = BasicResponseSchema.extend({
 });
 
 const SetModeReqestSchema = z.object({
-  mode: z.nativeEnum(Mode),
+  mode: DeviceModeSchema,
 });
 
 const SetBrightnessRequestSchema = z.object({

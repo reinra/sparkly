@@ -1,4 +1,3 @@
-import { Mode } from '@twinkly-ts/common';
 import type { Device } from '../deviceList';
 import {
   MultipleFrameOutputStream,
@@ -11,6 +10,7 @@ import { EffectRenderer } from '../render/Renderer';
 import { logger } from '../logger';
 import type { GestaltResponseType } from '../deviceClient/apiClient';
 import { Effect } from './generic/Effect';
+import { DeviceModeSchema } from '../deviceClient/apiContract';
 
 const renderer = new EffectRenderer();
 
@@ -58,7 +58,7 @@ export async function startEffect(device: Device, effect: Effect<any>, signal: A
 }
 
 async function prepareForSendingLedValues(device: Device) {
-  await device.api_client.setMode(Mode.rt);
+  await device.api_client.setMode(DeviceModeSchema.Values.rt);
 }
 
 export async function sendEffectAsMovie(device: Device, effect: Effect<any>, signal: AbortSignal) {
@@ -86,7 +86,7 @@ export async function sendEffectAsMovie(device: Device, effect: Effect<any>, sig
     frames_number: movieBuffer.getFrameCount(),
   });
 
-  await device.api_client.setMode(Mode.movie);
+  await device.api_client.setMode(DeviceModeSchema.Values.movie);
 }
 
 function toFrameFormat(gestalt: GestaltResponseType) {

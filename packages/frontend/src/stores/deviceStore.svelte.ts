@@ -1,8 +1,10 @@
 import { backendClient, type GetInfoResponse } from '../frontendApiClient';
+import type { DeviceMode } from '@twinkly-ts/common';
 
 // Shared device state
 let devices = $state<GetInfoResponse['devices']>([]);
 let effects = $state<GetInfoResponse['effects']>([]);
+let deviceModes = $state<DeviceMode[]>([]);
 let loading = $state(false);
 let error = $state('');
 
@@ -19,7 +21,25 @@ export const deviceStore = {
   get error() {
     return error;
   },
+  get deviceModes() {
+    return deviceModes;
+  },
   
+  async fetchSystemInfo() {
+    try {
+      const response = await backendClient.getSystemInfo();
+      if (response.status === 200) {
+        deviceModes = response.body.deviceModes;
+      }
+    } catch (e) {
+      console.error('Failed to fetch system info:', e);
+    }
+  },
+
+  setDeviceModes(modes: DeviceMode[]) {
+    deviceModes = modes;
+  },
+
   async fetchAllDevices() {
     loading = true;
     error = '';

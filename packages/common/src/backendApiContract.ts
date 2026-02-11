@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { Mode, ParameterType } from './types';
+import { ParameterType } from './types';
 
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id
@@ -59,7 +59,7 @@ const GetInfoResponseSchema = z.object({
       name: z.string().optional(),
       led_count: z.number().optional(),
       brightness: z.number().min(0).max(100).optional(),
-      mode: z.nativeEnum(Mode).optional(),
+      mode: z.string().optional(),
       effect_id: z.string().nullable(),
       parameters: z.array(EffectParameterSchema),
     })
@@ -81,12 +81,12 @@ const DeviceDebugResponseSchema = z.object({
 });
 
 const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
-  mode: z.nativeEnum(Mode),
+  mode: z.string(),
 });
 
 const SetModeResponseSchema = z.object({
   success: z.boolean(),
-  mode: z.nativeEnum(Mode),
+  mode: z.string(),
 });
 
 const SetBrightnessRequestSchema = DeviceRequestBaseSchema.extend({
@@ -147,9 +147,18 @@ export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
 // Backend API contract
+const DeviceModeSchema = z.object({
+  key: z.string(),
+  title: z.string(),
+  description: z.string(),
+});
+
+export type DeviceMode = z.infer<typeof DeviceModeSchema>;
+
 const SystemInfoResponseSchema = z.object({
   buildDate: z.string().optional(),
   version: z.string().optional(),
+  deviceModes: z.array(DeviceModeSchema),
 });
 
 export type SystemInfoResponse = z.infer<typeof SystemInfoResponseSchema>;

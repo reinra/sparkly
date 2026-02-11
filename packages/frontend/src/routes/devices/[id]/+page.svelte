@@ -10,6 +10,7 @@
   let deviceId = $derived(page.params.id);
   let device = $derived(deviceStore.getDevice(deviceId));
   let effects = $derived(deviceStore.effects);
+  let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
@@ -161,11 +162,9 @@
             <div class="info-item">
               <strong>Mode:</strong>
               <select id="mode" value={device.mode} onchange={updateMode} disabled={updating}>
-                <option value="off">Off</option>
-                <option value="demo">Demo</option>
-                <option value="effect">Effect</option>
-                <option value="movie">Movie</option>
-                <option value="rt">RT</option>
+                {#each deviceModes as dm}
+                  <option value={dm.key}>{dm.title}</option>
+                {/each}
               </select>
             </div>
           {/if}

@@ -13,6 +13,7 @@
   let brightness = $derived(device.brightness);
   let mode = $derived(device.mode);
   let effect_id = $derived(device.effect_id);
+  let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
 
   async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
@@ -122,11 +123,9 @@
       <p>
         <strong>Mode:</strong>
         <select value={mode} onchange={updateMode} disabled={updating}>
-          <option value="off">Off</option>
-          <option value="demo">Demo</option>
-          <option value="effect">Effect</option>
-          <option value="movie">Movie</option>
-          <option value="rt">RT</option>
+          {#each deviceModes as dm}
+            <option value={dm.key}>{dm.title}</option>
+          {/each}
         </select>
       </p>
     {/if}

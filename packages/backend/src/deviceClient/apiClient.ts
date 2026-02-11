@@ -2,9 +2,16 @@ import { initClient, tsRestFetchApi } from '@ts-rest/core';
 import type { ApiFetcher } from '@ts-rest/core';
 import { z } from 'zod';
 import { closeUdpSocket, sendLedValues } from './udpSend';
-import { apiContract, Mode, EnabledDisabledSchema, AbsoluteOrRelativeSchema } from './apiContract';
+import { apiContract, EnabledDisabledSchema, AbsoluteOrRelativeSchema, DeviceModeSchema } from './apiContract';
 import { logger } from '../logger';
-import { config } from 'process';
+
+type ApiNoAuthClientType = typeof dummyNoAuthClient;
+type ApiClientType = typeof dummyClient;
+export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
+export type GetLedMovieConfigResponseType = z.infer<(typeof apiContract.getLedMovieConfig.responses)[200]>;
+export type SetLedMovieConfigRequestType = z.infer<typeof apiContract.setLedMovieConfig.body>;
+export type MovieFullResponseType = z.infer<(typeof apiContract.postMovieFull.responses)[200]>;
+export type DeviceModeType = z.infer<typeof DeviceModeSchema>;
 
 const challenge = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
 const UDP_PORT = 7777;
@@ -56,13 +63,6 @@ const dummyClient = initClient(apiContract, {
     'x-auth-token': 'dummy',
   },
 });
-
-type ApiNoAuthClientType = typeof dummyNoAuthClient;
-type ApiClientType = typeof dummyClient;
-export type GestaltResponseType = z.infer<(typeof apiContract.gestalt.responses)[200]>;
-export type GetLedMovieConfigResponseType = z.infer<(typeof apiContract.getLedMovieConfig.responses)[200]>;
-export type SetLedMovieConfigRequestType = z.infer<typeof apiContract.setLedMovieConfig.body>;
-export type MovieFullResponseType = z.infer<(typeof apiContract.postMovieFull.responses)[200]>;
 
 export class TwinklyApiClient {
   private readonly baseUrl: string;
@@ -297,7 +297,7 @@ export class TwinklyApiClient {
     logger.withMetadata({ response: verifyResult.body }).debug('Verify Response validated');
   }
 
-  async setMode(mode: Mode) {
+  async setMode(mode: DeviceModeType) {
     await this.ensureAuthenticated();
 
     logger.debug(`Setting device mode to "${mode}"`);
