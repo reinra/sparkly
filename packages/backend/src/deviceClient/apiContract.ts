@@ -24,6 +24,7 @@ export const GestaltResponseSchema = BasicResponseSchema.extend({
   product_code: z.string(),
   fw_family: z.string(),
   device_name: z.string(),
+  rssi: z.number(),
   uptime: z.string(),
   mac: z.string(),
   uuid: z.string(),
@@ -187,6 +188,13 @@ const SetLedMovieConfigRequestSchema = z.object({
   frames_number: z.number(),
 });
 
+const GetLedEffectsResponseSchema = BasicResponseSchema.extend({
+  effects_number: z.number(),
+  effects: z.array(
+    z.string()  
+  ),
+});
+
 const authHeaders = z.object({
   'x-auth-token': z.string().optional(),
 });
@@ -302,6 +310,14 @@ export const apiContract = c.router({
     body: SetLedMovieConfigRequestSchema,
     responses: {
       200: BasicResponseSchema,
+    },
+  },
+  getLedEffects: {
+    method: 'GET',
+    path: '/xled/v1/led/effects',
+    headers: authHeaders,
+    responses: {
+      200: GetLedEffectsResponseSchema,
     },
   },
 });

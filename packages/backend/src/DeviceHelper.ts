@@ -263,6 +263,10 @@ export class DeviceHelper {
         title: 'Movie Config',
         content: await this.apiClient.getLedMovieConfig(),
       },
+      {
+        title: 'Effects',
+        content: await this.apiClient.getLedEffects(),
+      }
     ];
   }
 }

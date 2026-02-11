@@ -426,6 +426,16 @@ export class TwinklyApiClient {
     logger.withMetadata({ response: result.body }).debug('Set LED Movie Config Response validated');
   }
 
+  async getLedEffects() {
+    await this.ensureAuthenticated();
+    logger.debug('Fetching LED effects');
+    const result = await this.client.getLedEffects();
+    expect200(result);
+    expect1000(result.body);
+    logger.withMetadata({ response: result.body }).debug('Get LED Effects Response validated');
+    return result.body;
+  }
+
   async close() {
     await closeUdpSocket();
   }
