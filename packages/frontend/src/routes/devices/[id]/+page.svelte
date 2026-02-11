@@ -211,10 +211,6 @@
     padding: 1rem 2rem;
   }
 
-  .header {
-    margin-bottom: 2rem;
-  }
-
   .back-button {
     display: inline-block;
     color: #ff3e00;
@@ -226,12 +222,6 @@
 
   .back-button:hover {
     color: #e63900;
-  }
-
-  h2 {
-    color: #333;
-    font-size: 2rem;
-    margin: 0;
   }
 
   h3 {

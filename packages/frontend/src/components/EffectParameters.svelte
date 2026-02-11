@@ -381,12 +381,6 @@
     margin-top: 0.25rem;
   }
 
-  h4 {
-    color: #ff3e00;
-    font-size: 1.1rem;
-    margin: 1.5rem 0 1rem 0;
-  }
-
   .control-group {
     margin-bottom: 1rem;
   }
