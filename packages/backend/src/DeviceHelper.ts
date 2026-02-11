@@ -114,7 +114,7 @@ export class DeviceHelper {
         unit: '%',
         step: 1,
       },
-      async (_parameter, _oldValue, newValue: number) => {
+      async (_parameter, _oldValue, newValue) => {
         await this.apiClient.setBrightnessAbsolute(newValue);
       }
     );
@@ -131,7 +131,7 @@ export class DeviceHelper {
         unit: '%',
         step: 1,
       },
-      async (_parameter, _oldValue, newValue: number) => {
+      async (_parameter, _oldValue, newValue) => {
         await this.apiClient.setSaturationAbsolute(newValue);
       }
     );

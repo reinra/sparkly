@@ -1,25 +1,17 @@
 import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, Hsl } from '@twinkly-ts/common';
 import { ParameterType } from '@twinkly-ts/common';
 
-export type RangeParameterChangeListener = (
-  parameter: RangeEffectParameter,
-  oldValue: number,
-  newValue: number
+type ParameterValueType<T extends EffectParameter> =
+  T extends RangeEffectParameter ? number :
+  T extends BooleanEffectParameter ? boolean :
+  T extends HslEffectParameter ? Hsl :
+  never;
+
+export type ParameterChangeListener<T extends EffectParameter = EffectParameter> = (
+  parameter: T,
+  oldValue: ParameterValueType<T>,
+  newValue: ParameterValueType<T>
 ) => void | Promise<void>;
-export type BooleanParameterChangeListener = (
-  parameter: BooleanEffectParameter,
-  oldValue: boolean,
-  newValue: boolean
-) => void | Promise<void>;
-export type HslParameterChangeListener = (
-  parameter: HslEffectParameter,
-  oldValue: Hsl,
-  newValue: Hsl
-) => void | Promise<void>;
-export type ParameterChangeListener =
-  | RangeParameterChangeListener
-  | BooleanParameterChangeListener
-  | HslParameterChangeListener;
 
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
 
@@ -64,36 +56,18 @@ export class EffectParameterStorage implements EffectParameterView {
   private listeners: Map<string, ParameterChangeListener> = new Map();
 
   /**
-   * Register a new range parameter in the storage
-   * @param parameter The range parameter to register
-   * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
+   * Register a new parameter in the storage
+   * @param parameter The parameter to register
+   * @param listener Optional callback invoked asynchronously when the parameter value changes
    * @throws Error if a parameter with the same ID already exists
    */
-  register(parameter: RangeEffectParameter, listener?: RangeParameterChangeListener): RangeEffectParameter;
-
-  /**
-   * Register a new boolean parameter in the storage
-   * @param parameter The boolean parameter to register
-   * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
-   * @throws Error if a parameter with the same ID already exists
-   */
-  register(parameter: BooleanEffectParameter, listener?: BooleanParameterChangeListener): BooleanEffectParameter;
-
-  /**
-   * Register a new HSL parameter in the storage
-   * @param parameter The HSL parameter to register
-   * @param listener Optional type-safe callback invoked asynchronously when the parameter value changes
-   * @throws Error if a parameter with the same ID already exists
-   */
-  register(parameter: HslEffectParameter, listener?: HslParameterChangeListener): HslEffectParameter;
-
-  register(parameter: EffectParameter, listener?: ParameterChangeListener): EffectParameter {
+  register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): T {
     if (this.parameters.has(parameter.id)) {
       throw new Error(`Parameter with id '${parameter.id}' is already registered`);
     }
     this.parameters.set(parameter.id, parameter);
     if (listener) {
-      this.listeners.set(parameter.id, listener);
+      this.listeners.set(parameter.id, listener as ParameterChangeListener);
     }
     return parameter;
   }
@@ -166,28 +140,9 @@ export class EffectParameterStorage implements EffectParameterView {
     // Invoke listener asynchronously (fire-and-forget) if registered
     const listener = this.listeners.get(id);
     if (listener && oldValue !== value) {
-      if (parameter.type === ParameterType.RANGE) {
-        const rangeListener = listener as RangeParameterChangeListener;
-        Promise.resolve(rangeListener(parameter as RangeEffectParameter, oldValue as number, value as number)).catch(
-          (error) => {
-            console.error(`Error in listener for parameter '${id}':`, error);
-          }
-        );
-      } else if (parameter.type === ParameterType.BOOLEAN) {
-        const booleanListener = listener as BooleanParameterChangeListener;
-        Promise.resolve(
-          booleanListener(parameter as BooleanEffectParameter, oldValue as boolean, value as boolean)
-        ).catch((error) => {
-          console.error(`Error in listener for parameter '${id}':`, error);
-        });
-      } else {
-        const hslListener = listener as HslParameterChangeListener;
-        Promise.resolve(
-          hslListener(parameter as HslEffectParameter, oldValue as Hsl, value as Hsl)
-        ).catch((error) => {
-          console.error(`Error in listener for parameter '${id}':`, error);
-        });
-      }
+      Promise.resolve(listener(parameter, oldValue, value)).catch((error) => {
+        console.error(`Error in listener for parameter '${id}':`, error);
+      });
     }
   }
 
