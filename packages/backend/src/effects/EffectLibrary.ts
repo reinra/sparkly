@@ -1,5 +1,5 @@
 import { BLACK, BLUE, GREEN, RED, RgbFloat, WHITE, YELLOW } from '../color/ColorFloat';
-import { Effect } from './generic/Effect';
+import { Effect } from './Effect';
 import {
   ChangeColorEffect,
   FlipColorEffect,
@@ -20,7 +20,7 @@ import {
   MultiColorRainEffect,
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
-} from './generic/Effects1D';
+} from './Effects1D';
 import {
   AdapterFrom1DEffectTo2D,
   CloudsEffect,
@@ -29,7 +29,7 @@ import {
   PulseScanner,
   RainbowGradientEffect2D,
   Slime,
-} from './generic/Effects2D';
+} from './Effects2D';
 
 const redGreenBlue: RgbFloat[] = [RED, GREEN, BLUE];
 

@@ -1,5 +1,5 @@
 import { ParameterType } from '@twinkly-ts/common';
-import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
+import { BLACK, lerp, WHITE, type RgbFloat } from '../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,
   BLUE_HSL_COLOR,
@@ -10,8 +10,8 @@ import {
   randomColorMaxSaturation,
   RED_HSL_COLOR,
   WHITE_HSL_COLOR,
-} from '../../color/Hsl';
-import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
+} from '../color/Hsl';
+import { EffectParameterStorage, EffectParameterView } from '../effectParameters';
 import {
   BaseSameColorEffect,
   type StatelessEffect,

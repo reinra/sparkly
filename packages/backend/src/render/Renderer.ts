@@ -1,6 +1,6 @@
 import type { GestaltResponseType } from '../deviceClient/apiClient';
 import type { FrameOutputStream } from './FrameOutputStream';
-import { LedPoint2D, type EffectContext, type LedPoint1D, Effect } from '../effects/generic/Effect';
+import { LedPoint2D, type EffectContext, type LedPoint1D, Effect } from '../effects/Effect';
 import type { DeviceHelper } from '../DeviceHelper';
 
 const YIELD_FRAME_COUNT = 50;

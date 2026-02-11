@@ -1,6 +1,6 @@
-import type { LedType, RgbValue } from '../../color/Color8bit';
-import { RgbFloat } from '../../color/ColorFloat';
-import { EffectParameterView } from '../../effectParameters';
+import type { LedType, RgbValue } from '../color/Color8bit';
+import { RgbFloat } from '../color/ColorFloat';
+import { EffectParameterView } from '../effectParameters';
 
 export interface EffectContext {
   // 1. CHANGING LESS

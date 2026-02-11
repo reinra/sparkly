@@ -1,7 +1,7 @@
 import { ParameterType } from '@twinkly-ts/common';
-import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
-import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
-import { EffectParameterStorage } from '../../effectParameters';
+import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../color/ColorFloat';
+import { hslToRgbFloat, multiplyIntensity } from '../color/Hsl';
+import { EffectParameterStorage } from '../effectParameters';
 import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from './Effect';
 import { NoiseGenerator } from './NoiseUtils';
 

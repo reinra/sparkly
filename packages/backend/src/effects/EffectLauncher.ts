@@ -9,7 +9,7 @@ import {
 import { EffectRenderer } from '../render/Renderer';
 import { logger } from '../logger';
 import type { GestaltResponseType } from '../deviceClient/apiClient';
-import { Effect } from './generic/Effect';
+import { Effect } from './Effect';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
 
 const renderer = new EffectRenderer();
