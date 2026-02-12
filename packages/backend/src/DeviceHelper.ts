@@ -1,4 +1,4 @@
-import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from '@twinkly-ts/common/dist/types';
+import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import {
   DynamicParameterStorageView,

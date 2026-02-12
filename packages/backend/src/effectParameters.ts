@@ -1,5 +1,5 @@
-import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, Hsl } from '@twinkly-ts/common';
-import { ParameterType } from '@twinkly-ts/common';
+import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, Hsl } from './ParameterTypes';
+import { ParameterType } from './ParameterTypes';
 
 type ParameterValueType<T extends EffectParameter> =
   T extends RangeEffectParameter ? number :

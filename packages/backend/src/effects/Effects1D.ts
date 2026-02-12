@@ -1,4 +1,4 @@
-import { ParameterType } from '@twinkly-ts/common';
+import { ParameterType } from '../ParameterTypes';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,

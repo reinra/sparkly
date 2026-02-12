@@ -1,6 +1,13 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { ParameterType } from './types';
+
+// Parameter type values — the single source of truth for the backend-frontend contract
+export const ParameterType = {
+  RANGE: 'range',
+  BOOLEAN: 'boolean',
+  HSL: 'hsl',
+  OPTION: 'option',
+} as const;
 
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id
@@ -22,7 +29,7 @@ const EffectParameterBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  type: z.nativeEnum(ParameterType),
+  type: z.enum([ParameterType.RANGE, ParameterType.BOOLEAN, ParameterType.HSL, ParameterType.OPTION]),
 });
 
 const RangeEffectParameterSchema = EffectParameterBaseSchema.extend({
@@ -158,6 +165,14 @@ export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
 export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+// Export parameter-related types inferred from Zod schemas
+export type Hsl = z.infer<typeof HslValueSchema>;
+export type EffectParameter = z.infer<typeof EffectParameterSchema>;
+export type RangeEffectParameter = z.infer<typeof RangeEffectParameterSchema>;
+export type BooleanEffectParameter = z.infer<typeof BooleanEffectParameterSchema>;
+export type HslEffectParameter = z.infer<typeof HslEffectParameterSchema>;
+export type OptionEffectParameter = z.infer<typeof OptionEffectParameterSchema>;
 
 // Backend API contract
 const DeviceModeSchema = z.object({

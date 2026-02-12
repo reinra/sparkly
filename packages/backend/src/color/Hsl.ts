@@ -1,4 +1,4 @@
-import { Hsl } from '@twinkly-ts/common';
+import type { Hsl } from '../ParameterTypes';
 import type { RgbValue } from './Color8bit';
 import type { RgbFloat } from './ColorFloat';
 
