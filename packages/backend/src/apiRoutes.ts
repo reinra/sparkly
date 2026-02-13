@@ -83,7 +83,7 @@ export const apiRoutes = {
       devices: deviceList,
       effects: Object.entries(effects).map(([id, effect]) => ({
         id,
-        name: effect.getName(),
+        name: effect.effect.getName(),
       })),
     });
   },

@@ -2,6 +2,7 @@ import type { GestaltResponseType } from '../deviceClient/apiClient';
 import type { FrameOutputStream } from './FrameOutputStream';
 import { LedPoint2D, type EffectContext, type LedPoint1D, Effect } from '../effects/Effect';
 import type { DeviceHelper } from '../DeviceHelper';
+import { EffectWrapper } from '../EffectWrapper';
 
 const YIELD_FRAME_COUNT = 50;
 
@@ -10,13 +11,14 @@ export interface Renderer<T> {
   renderAsap(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
 }
 
-export class EffectRenderer implements Renderer<Effect<any>> {
+export class EffectRenderer implements Renderer<EffectWrapper> {
   async renderLive(
-    effect: Effect<any>,
+    effectWrapper: EffectWrapper,
     deviceHelper: DeviceHelper,
     output: FrameOutputStream,
     signal: AbortSignal
   ): Promise<void> {
+    const effect = effectWrapper.effect;
     const gestalt = await deviceHelper.getGestalt();
     const numberOfLeds = gestalt.number_of_led;
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
@@ -29,7 +31,7 @@ export class EffectRenderer implements Renderer<Effect<any>> {
       signal.throwIfAborted();
 
       const frameStartTime = performance.now();
-      const speed = deviceHelper.getCurrentSpeedMultiplier();
+      const speed = effectWrapper.getCurrentSpeedMultiplier();
       const deltaTimeMs = (frameStartTime - lastTime) * speed;
       const elapsedTime = (frameStartTime - firstStartTime) * speed;
 
@@ -58,11 +60,12 @@ export class EffectRenderer implements Renderer<Effect<any>> {
     }
   }
   async renderAsap(
-    effect: Effect<any>,
+    effectWrapper: EffectWrapper,
     deviceHelper: DeviceHelper,
     output: FrameOutputStream,
     signal: AbortSignal
   ): Promise<void> {
+    const effect = effectWrapper.effect;
     const gestalt = await deviceHelper.getGestalt();
     const points = await deviceHelper.getPoints(effect);
     const numberOfLeds = gestalt.number_of_led;
@@ -70,7 +73,7 @@ export class EffectRenderer implements Renderer<Effect<any>> {
     const [startRecordingMs, endRecordingMs] = effect.isStateful
       ? [loopDurationMs, loopDurationMs * 2]
       : [0, loopDurationMs];
-    const frameTimeMs = deviceHelper.getMinFrameTimeMs() * deviceHelper.getCurrentSpeedMultiplier();
+    const frameTimeMs = deviceHelper.getMinFrameTimeMs() * effectWrapper.getCurrentSpeedMultiplier();
     const logic = effect.createLogic();
 
     let virtualTime = 0;

@@ -9,12 +9,12 @@ import {
 import { EffectRenderer } from '../render/Renderer';
 import { logger } from '../logger';
 import type { GestaltResponseType } from '../deviceClient/apiClient';
-import { Effect } from './Effect';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
+import { EffectWrapper } from '../EffectWrapper';
 
 const renderer = new EffectRenderer();
 
-export async function startEffect(device: Device, effect: Effect<any>, signal: AbortSignal) {
+export async function startEffect(device: Device, effect: EffectWrapper, signal: AbortSignal) {
   const basicLedMapper = await device.helper.getLedMapper(false);
   const fixedLedMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
@@ -39,7 +39,7 @@ export async function startEffect(device: Device, effect: Effect<any>, signal: A
 
   // Clear interval on abort signal - using unique handler per invocation
   const abortHandler = () => {
-    if (keepAliveInterval !== null) {
+    if (keepAliveInterval !== null) { 
       clearInterval(keepAliveInterval);
       keepAliveInterval = null;
     }
@@ -61,7 +61,7 @@ async function prepareForSendingLedValues(device: Device) {
   await device.api_client.setMode(DeviceModeSchema.Values.rt);
 }
 
-export async function sendEffectAsMovie(device: Device, effect: Effect<any>, signal: AbortSignal) {
+export async function sendEffectAsMovie(device: Device, effect: EffectWrapper, signal: AbortSignal) {
   const ledMapper = await device.helper.getLedMapper(true);
   const gestalt = await device.helper.getGestalt();
   const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));

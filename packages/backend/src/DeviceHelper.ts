@@ -12,6 +12,7 @@ import { RgbValue } from './color/Color8bit';
 import { Effect, LedPoint1D, LedPoint2D, StatelessEffect } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { EnabledDisabledSchema } from './deviceClient/apiContract';
+import { EffectWrapper } from './EffectWrapper';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -46,27 +47,16 @@ export class DeviceHelper {
   private gestaltCache: GestaltResponseType | null = null;
   private deviceParams = new EffectParameterStorage();
   private deviceParamsInitialized = false;
-  private currentEffect: Effect<any> | null = null;
+  private currentEffect: EffectWrapper | null = null;
   private points1DCache: LedPoint1D[] | null = null;
 
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
       [DEVICE_PREFIX, this.deviceParams],
-      [EFFECT_PREFIX, new DynamicParameterStorageView(() => getEffectParameters(this.currentEffect))],
+      [EFFECT_PREFIX, new DynamicParameterStorageView(() => this.currentEffect?.getEffectParameters() ?? emptyParameterStorageView)],
     ])
   );
 
-  private readonly speed: RangeEffectParameter = {
-    id: 'speed',
-    name: 'Speed',
-    description: 'Global speed multiplier for effects',
-    type: ParameterType.RANGE,
-    value: 1.0,
-    min: 0.0,
-    max: 5.0,
-    unit: 'x',
-    step: 0.1,
-  };
   private readonly maxFps: RangeEffectParameter = {
     id: 'fps',
     name: 'Max rendering frequency',
@@ -165,7 +155,6 @@ export class DeviceHelper {
     this.maxFps.value = (await this.getGestalt()).frame_rate;
 
     this.deviceParams.register(this.maxFps);
-    this.deviceParams.register(this.speed);
     this.deviceParams.register(this.mappingMode, () => {
         this.invalidatePoints1DCache();
     });
@@ -187,9 +176,6 @@ export class DeviceHelper {
     )?.config?.value;
   }
 
-  public getCurrentSpeedMultiplier(): number {
-    return this.speed.value;
-  }
   public getMaxFps(): number {
     return this.maxFps.value;
   }
@@ -316,13 +302,13 @@ export class DeviceHelper {
     };
   }
 
-  setCurrentEffect(effect: Effect<any> | null) {
+  setCurrentEffect(effect: EffectWrapper | null) {
     this.currentEffect = effect;
     this.onEffectChange(effect);
   }
 
-  private onEffectChange(effect: Effect<any> | null) {
-    this.mappingMode.hidden = effect?.pointType == '2D';
+  private onEffectChange(effect: EffectWrapper | null) {
+    this.mappingMode.hidden = effect?.effect.pointType == '2D';
   }
 
   public async getDebugInfo(): Promise<{ title: string; content: any }[]> {
@@ -349,13 +335,6 @@ export class DeviceHelper {
       }
     ];
   }
-}
-
-export function getEffectParameters(effect: Effect<any> | null): EffectParameterView {
-  if (effect && effect.parameters) {
-    return effect.parameters;
-  }
-  return emptyParameterStorageView;
 }
 
 function getDistance(mode: MappingMode, point: LedPoint2D, count: number): number {
