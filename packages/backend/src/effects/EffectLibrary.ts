@@ -6,7 +6,7 @@ import {
   FlipColorEffect,
   MeteorEffect,
   PingPongEffect,
-  RainbowGradientEffect1D,
+  RainbowGradientEffect,
   SingleColorRainEffect,
   RotatingColorGradientEffect,
   SineEffect,
@@ -60,7 +60,7 @@ add('gradient_black_white', new StaticColorGradientEffect([BLACK, WHITE]));
 add('gradient_custom', new StaticCustomColorGradientEffect());
 add('two_alternating_colors', new TwoAlternatingColorFadingEffect(RED, BLUE));
 add('two_alternating_colors_custom', new TwoAlternatingCustomColorFadingEffect());
-add('rainbow', new RainbowGradientEffect1D());
+add('rainbow', new RainbowGradientEffect());
 add('meteor', new MeteorEffect());
 add('rain_single_color', new SingleColorRainEffect());
 add('rain_multi_color', new MultiColorRainEffect());

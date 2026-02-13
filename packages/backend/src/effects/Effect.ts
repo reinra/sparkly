@@ -49,6 +49,8 @@ export interface Effect<P extends LedPoint> {
   readonly pointType: LedPointType;
   // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
   readonly isStateful: boolean;
+  // If true, the effect is static and does not require continuous rendering (can be rendered once and then stopped)
+  readonly isStatic?: true; 
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;
   getName(): string;  

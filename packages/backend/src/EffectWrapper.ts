@@ -38,6 +38,7 @@ export class EffectWrapper {
     private points1DCache: LedPoint1D[] | null = null;
 
     constructor(public readonly effect: Effect<any>) {
+        this.speed.hidden = effect.isStatic === true;
         this.mappingMode.hidden = effect.pointType === '2D' || effect instanceof BaseSameColorEffect;
     }
 

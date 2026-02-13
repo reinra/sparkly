@@ -25,6 +25,7 @@ import {
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 
 export class SingleColorEffect extends BaseSameColorEffect {
+  readonly isStatic = true;
   constructor(private readonly color: RgbFloat) {
     super();
   }
@@ -40,6 +41,7 @@ export class SingleColorEffect extends BaseSameColorEffect {
 }
 
 export class SingleHslColorEffect extends BaseSameColorEffect {
+  readonly isStatic = true;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -97,6 +99,7 @@ export class ChangeColorEffect extends BaseSameColorEffect {
 }
 
 export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
+  readonly isStatic = true;
   pointType: LedPointType = '1D';
   constructor(private readonly colors: RgbFloat[]) {
     super();
@@ -114,6 +117,7 @@ export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
 }
 
 export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+  readonly isStatic = true;
   pointType: '1D' = '1D';
   private colors: RgbFloat[];
   constructor(colors: RgbFloat[]) {
@@ -137,6 +141,7 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
 }
 
 export class StaticCustomColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+  readonly isStatic = true;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
@@ -292,7 +297,7 @@ export class TestAllLedsFlash implements StatelessEffect<LedPoint1D> {
   }
 }
 
-export class RainbowGradientEffect1D extends PerPixelEffect<LedPoint1D> {
+export class RainbowGradientEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
   getName(): string {
     return 'Rainbow Gradient 1D';
