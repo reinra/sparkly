@@ -62,7 +62,7 @@ export const apiRoutes = {
         brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
         effect_id: device.effect_id,
-        parameters: (await device.helper.getParameters()).list(),
+        parameters: (await device.helper.getParameters()).list().filter((param) => !param.hidden), // Filter out hidden parameters
       });
 
       logger

@@ -14,6 +14,8 @@ export type ParameterChangeListener<T extends EffectParameter = EffectParameter>
   newValue: ParameterValueType<T>
 ) => void | Promise<void>;
 
+export type ParameterValue = number | boolean | Hsl | string;
+
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
 
 function validateHslValue(id: string, value: Hsl): void {
@@ -49,7 +51,7 @@ export interface EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean | Hsl | string): void;
+  setValue(id: string, value: ParameterValue): void;
 }
 
 export class EffectParameterStorage implements EffectParameterView {
@@ -106,7 +108,7 @@ export class EffectParameterStorage implements EffectParameterView {
    * @param value The new value to set
    * @throws Error if parameter not found or validation fails
    */
-  setValue(id: string, value: number | boolean | Hsl | string): void {
+  setValue(id: string, value: ParameterValue): void {
     const parameter = this.parameters.get(id);
 
     if (!parameter) {
@@ -191,7 +193,7 @@ export class MultiParameterStorageView implements EffectParameterView {
     }
     return allParameters;
   }
-  setValue(id: string, value: number | boolean | Hsl | string): void {
+  setValue(id: string, value: ParameterValue): void {
     for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
       if (id.startsWith(prefix)) {
         const paramId = id.substring(prefix.length);
@@ -207,7 +209,7 @@ export const emptyParameterStorageView: EffectParameterView = {
   list(): EffectParameter[] {
     return [];
   },
-  setValue(id: string, value: number | boolean | Hsl | string): void {
+  setValue(id: string, value: ParameterValue): void {
     throw new Error(`No parameters available`);
   },
 };
@@ -217,7 +219,7 @@ export class DynamicParameterStorageView implements EffectParameterView {
   list(): EffectParameter[] {
     return this.getCurrentStorage().list();
   }
-  setValue(id: string, value: number | boolean | Hsl | string): void {
+  setValue(id: string, value: ParameterValue): void {
     this.getCurrentStorage().setValue(id, value);
   }
 }

@@ -305,6 +305,11 @@ export class DeviceHelper {
 
   setCurrentEffect(effect: Effect<any> | null) {
     this.currentEffect = effect;
+    this.onEffectChange(effect);
+  }
+
+  private onEffectChange(effect: Effect<any> | null) {
+    this.mappingMode.hidden = effect?.pointType == '2D';
   }
 
   public async getDebugInfo(): Promise<{ title: string; content: any }[]> {

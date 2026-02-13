@@ -11,6 +11,7 @@ export interface BaseEffectParameter {
   name: string;
   description: string;
   type: ParameterType;
+  hidden?: boolean; // If true, this parameter should not be exposed in the UI
 }
 
 export interface RangeEffectParameter extends BaseEffectParameter {
