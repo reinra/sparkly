@@ -1,4 +1,4 @@
-import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';
+import { BooleanEffectParameter, EffectParameter, OptionEffectParameter, ParameterGroup, ParameterType, RangeEffectParameter } from './ParameterTypes';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import {
   DynamicParameterStorageView,
@@ -22,6 +22,19 @@ export interface LedCoordinates {
   y: number; // 0...1
 }
 
+const DEVICE_PREFIX = 'device.';
+const EFFECT_PREFIX = 'effect.';
+
+export function getEffectGroup(parameter: EffectParameter): ParameterGroup {
+  if (parameter.id.startsWith(DEVICE_PREFIX)) {
+    return ParameterGroup.DEVICE;
+  }
+  if (parameter.id.startsWith(EFFECT_PREFIX)) {
+    return ParameterGroup.EFFECT;
+  }
+  throw new Error(`Unknown parameter group for parameter ID: ${parameter.id}`);
+}
+
 export const enum MappingMode {
     UseXAsPosition = "UseXAsPosition",
     UseYAsPosition = "UseYAsPosition",
@@ -38,8 +51,8 @@ export class DeviceHelper {
 
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
-      ['device.', this.deviceParams],
-      ['effect.', new DynamicParameterStorageView(() => getEffectParameters(this.currentEffect))],
+      [DEVICE_PREFIX, this.deviceParams],
+      [EFFECT_PREFIX, new DynamicParameterStorageView(() => getEffectParameters(this.currentEffect))],
     ])
   );
 

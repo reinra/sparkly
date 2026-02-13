@@ -9,6 +9,11 @@ export const ParameterType = {
   OPTION: 'option',
 } as const;
 
+export const ParameterGroup = {
+  DEVICE: 'device',
+  EFFECT: 'effect',
+} as const;
+
 // Request/Response schemas for backend API
 // Common base schema for requests that require device_id
 const DeviceRequestBaseSchema = z.object({
@@ -30,6 +35,7 @@ const EffectParameterBaseSchema = z.object({
   name: z.string(),
   description: z.string(),
   type: z.enum([ParameterType.RANGE, ParameterType.BOOLEAN, ParameterType.HSL, ParameterType.OPTION]),
+  group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
 
 const RangeEffectParameterSchema = EffectParameterBaseSchema.extend({
@@ -70,20 +76,20 @@ const EffectParameterSchema = z.discriminatedUnion('type', [
   OptionEffectParameterSchema,
 ]);
 
+const DeviceInfoResponseSchema = z.object({
+    id: z.string(),
+    alias: z.string(),
+    ip: z.string().ip(),
+    name: z.string().optional(),
+    led_count: z.number().optional(),
+    brightness: z.number().min(0).max(100).optional(),
+    mode: z.string().optional(),
+    effect_id: z.string().nullable(),
+    parameters: z.array(EffectParameterSchema),
+  });
+
 const GetInfoResponseSchema = z.object({
-  devices: z.array(
-    z.object({
-      id: z.string(),
-      alias: z.string(),
-      ip: z.string().ip(),
-      name: z.string().optional(),
-      led_count: z.number().optional(),
-      brightness: z.number().min(0).max(100).optional(),
-      mode: z.string().optional(),
-      effect_id: z.string().nullable(),
-      parameters: z.array(EffectParameterSchema),
-    })
-  ),
+  devices: z.array(DeviceInfoResponseSchema),
   effects: z.array(
     z.object({
       id: z.string(),
@@ -160,6 +166,7 @@ const ErrorResponseSchema = z.object({
 // Export types
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
+export type DeviceInfo = z.infer<typeof DeviceInfoResponseSchema>;
 export type DeviceDebugResponse = z.infer<typeof DeviceDebugResponseSchema>;
 export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;

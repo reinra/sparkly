@@ -5,7 +5,7 @@
   import EffectParameters from '../../../components/EffectParameters.svelte';
   import { deviceStore } from '../../../stores/deviceStore.svelte';
   import { page } from '$app/state';
-  import { ParameterType, type EffectParameter } from '@twinkly-ts/common';
+  import { ParameterGroup } from '@twinkly-ts/common';
 
   let deviceId = $derived(page.params.id);
   let device = $derived(deviceStore.getDevice(deviceId));
@@ -14,6 +14,9 @@
   let updating = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
+
+  let deviceParams = $derived((device?.parameters || []).filter(p => p.group === ParameterGroup.DEVICE));
+  let effectParams = $derived((device?.parameters || []).filter(p => p.group === ParameterGroup.EFFECT));
 
   // Fetch devices on mount or when device ID changes
   $effect(() => {
@@ -170,9 +173,25 @@
           {/if}
         </div>
 
-        <EffectParameters deviceId={device.id} parameters={device.parameters || []} bind:updating />
+        {#if deviceParams.length}
+          <EffectParameters deviceId={device.id} parameters={deviceParams} bind:updating />
+        {/if}
 
         <button onclick={sendMovie} disabled={updating || !device.effect_id}> Send Movie </button>
+      </div>
+
+      <div class="effect-info-section">
+        <h3>Effect Info</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <strong>Current Effect:</strong>
+            <span>{device.effect_id ?? 'None'}</span>
+          </div>
+        </div>
+
+        {#if effectParams.length}
+          <EffectParameters deviceId={device.id} parameters={effectParams} bind:updating />
+        {/if}
       </div>
 
       <div class="effects-section">
@@ -232,18 +251,20 @@
 
   .device-content {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
 
   .device-info-section,
+  .effect-info-section,
   .effects-section,
   .buffer-section {
     background: white;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 0;
   }
 
   .info-list {
@@ -412,19 +433,8 @@
     background: #ffebee;
   }
 
-  /* Medium screens - 2 columns with buffer at bottom */
-  @media (max-width: 1024px) {
-    .device-content {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .buffer-section {
-      grid-column: 1 / -1;
-    }
-  }
-
   /* Small screens - single column */
-  @media (max-width: 768px) {
+  @media (max-width: 600px) {
     .device-content {
       grid-template-columns: 1fr;
     }

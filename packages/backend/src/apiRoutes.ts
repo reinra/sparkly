@@ -5,6 +5,8 @@ import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
 import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
+import { DeviceInfo } from '@twinkly-ts/common';
+import { getEffectGroup } from './DeviceHelper';
 
 // Helper function to get device or throw error
 export function getDeviceOrError(device_id: string): Device {
@@ -34,7 +36,7 @@ export const apiRoutes = {
 
   getInfo: async (req: any, res: any) => {
     const { device_id } = req.query;
-    const deviceList = [];
+    const deviceList: DeviceInfo[] = [];
 
     // Filter devices if device_id is provided
     const devicesToQuery = device_id ? [getDeviceOrError(device_id as string)] : Object.values(devices);
@@ -62,7 +64,10 @@ export const apiRoutes = {
         brightness: summary?.filters?.find((filter) => filter.filter == 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
         effect_id: device.effect_id,
-        parameters: (await device.helper.getParameters()).list().filter((param) => !param.hidden), // Filter out hidden parameters
+        parameters: (await device.helper.getParameters()).list().filter((param) => !param.hidden).map((param) => ({
+          ...param,
+          group: getEffectGroup(param),
+        }))
       });
 
       logger

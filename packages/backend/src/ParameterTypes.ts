@@ -6,6 +6,11 @@ export enum ParameterType {
   OPTION = 'option',
 }
 
+export enum ParameterGroup {
+  DEVICE = 'device',
+  EFFECT = 'effect',
+}
+
 export interface BaseEffectParameter {
   id: string;
   name: string;
