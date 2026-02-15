@@ -1,9 +1,10 @@
-import { ParameterType } from '../ParameterTypes';
+import { Hsl, ParameterType } from '../ParameterTypes';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,
   BLUE_HSL_COLOR,
   DEFAULT_HSL_COLOR,
+  GREEN_HSL_COLOR,
   hslToRgbFloat,
   lerpHsl,
   multiplyIntensity,
@@ -21,6 +22,7 @@ import {
   EffectLogic,
   Effect,
   LedPointType,
+  EffectPreset,
 } from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 
@@ -52,7 +54,24 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
   });
   getName(): string {
     return 'Single Color';
+  }  
+  private preset(id: string, name: string, hsl: Hsl): EffectPreset {
+      return {
+        id,
+        name,
+        config: new Map([['custom.color', hsl]]),
+      };
   }
+  getPresets(): EffectPreset[] {
+    return [
+      this.preset('red', 'Red', RED_HSL_COLOR),
+      this.preset('green', 'Green', GREEN_HSL_COLOR),
+      this.preset('blue', 'Blue', BLUE_HSL_COLOR),
+      this.preset('white', 'White', WHITE_HSL_COLOR),
+      this.preset('black', 'Black', BLACK_HSL_COLOR),
+      this.preset('choose_hsl', 'Choose HSL', DEFAULT_HSL_COLOR),
+    ];
+  }  
   getLoopDurationSeconds(ledCount: number): number {
     return 0;
   }

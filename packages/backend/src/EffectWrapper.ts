@@ -1,5 +1,5 @@
 import { EffectParameterStorage, EffectParameterView, emptyParameterStorageView, MultiParameterStorageView } from "./effectParameters";
-import { BaseSameColorEffect, Effect, LedPoint1D, LedPoint2D } from "./effects/Effect";
+import { BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D } from "./effects/Effect";
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from "./ParameterTypes";
 
 export const enum MappingMode {
@@ -46,11 +46,15 @@ export class EffectWrapper {
     });
     private readonly mappingModeChangeListeners = new Set<() => void>();
 
-    constructor(public readonly id: string, public readonly effect: Effect<any>) {
+    constructor(public readonly id: string, public readonly effect: Effect<any>, private readonly name: string) {
         const saemColorEffect = effect instanceof BaseSameColorEffect;
         this.speed.hidden = effect.isStatic === true;
         this.mappingMode.hidden = effect.pointType === '2D' || saemColorEffect;
         this.mirror.hidden = saemColorEffect; 
+    }
+
+    public getName(): string {
+        return this.name;
     }
  
     public addMappingModeChangeListener(listener: () => void): void {
@@ -86,8 +90,8 @@ export class EffectWrapper {
         if (this.effect.parameters) {
             return new MultiParameterStorageView(
                 new Map<string, EffectParameterView>([
-                    ["wrapper", this.parameters],
-                    ["custom", this.effect.parameters],
+                    ["wrapper.", this.parameters],
+                    ["custom.", this.effect.parameters],
                 ])
             );
         }

@@ -1,6 +1,6 @@
 import { BLACK, BLUE, GREEN, RED, RgbFloat, WHITE, YELLOW } from '../color/ColorFloat';
 import { EffectWrapper } from '../EffectWrapper';
-import { Effect } from './Effect';
+import { Effect, EffectPreset } from './Effect';
 import {
   ChangeColorEffect,
   FlipColorEffect,
@@ -10,7 +10,6 @@ import {
   SingleColorRainEffect,
   RotatingColorGradientEffect,
   SineEffect,
-  SingleColorEffect,
   SingleHslColorEffect,
   StaticAlternatingColorEffect,
   StaticColorGradientEffect,
@@ -35,18 +34,26 @@ const redGreenBlue: RgbFloat[] = [RED, GREEN, BLUE];
 
 const effects: Record<string, EffectWrapper> = {};
 
+function addPresets<T extends Effect<any> & { getPresets(): EffectPreset[] }>(EffectClass: new () => T): void {
+  const template = new EffectClass();
+  const presets = template.getPresets();
+  for (const preset of presets) {
+    const effect = new EffectClass();
+    const wrapper = new EffectWrapper(preset.id, effect, preset.name);      
+    for (const [paramId, value] of preset.config.entries()) {
+      wrapper.getEffectParameters().setValue(paramId, value);
+    }
+    effects[preset.id] = wrapper;      
+  }
+}
+
 function add(id: string, effect: Effect<any>): void {
-  effects[id] = new EffectWrapper(id, effect);
+  effects[id] = new EffectWrapper(id, effect, effect.getName());
 }
 
 add('flip_color', new FlipColorEffect(redGreenBlue));
 add('change_color', new ChangeColorEffect(redGreenBlue));
-add('red', new SingleColorEffect(RED));
-add('green', new SingleColorEffect(GREEN));
-add('blue', new SingleColorEffect(BLUE));
-add('black', new SingleColorEffect(BLACK));
-add('white', new SingleColorEffect(WHITE));
-add('choose_hsl', new SingleHslColorEffect());
+addPresets(SingleHslColorEffect);
 add('alternate_rgb', new StaticAlternatingColorEffect([RED, GREEN, BLUE]));
 add('alternate_rgby', new StaticAlternatingColorEffect([RED, GREEN, BLUE, YELLOW]));
 add('gradient_red_yellow', new StaticColorGradientEffect([RED, YELLOW]));

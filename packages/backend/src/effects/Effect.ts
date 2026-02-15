@@ -1,6 +1,6 @@
 import type { LedType, RgbValue } from '../color/Color8bit';
 import { RgbFloat } from '../color/ColorFloat';
-import { EffectParameterView } from '../effectParameters';
+import { EffectParameterView, ParameterValue } from '../effectParameters';
 
 export interface EffectContext {
   // 1. CHANGING LESS
@@ -53,7 +53,8 @@ export interface Effect<P extends LedPoint> {
   readonly isStatic?: true; 
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;
-  getName(): string;  
+  getName(): string;
+  getPresets?(): EffectPreset[];
   // Returns the duration of a full effect loop in seconds, 0 means the effect is static.
   getLoopDurationSeconds(ledCount: number): number;
   // Factory function to create a new instance of the effect logic, for stateless effects this can just return 'this'
@@ -115,4 +116,10 @@ export abstract class PerPixelEffect<P extends LedPoint> extends PerPixelEffectL
   createLogic() {
     return this;
   }  
+}
+
+export interface EffectPreset {
+  readonly id: string;
+  readonly name: string;
+  readonly config: Map<string, ParameterValue>;
 }

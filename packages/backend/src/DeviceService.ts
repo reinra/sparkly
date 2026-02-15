@@ -110,7 +110,7 @@ export class DeviceService {
         effect: currentEffect
           ? {
               id: currentEffect.id,
-              name: currentEffect.effect.getName(),
+              name: currentEffect.getName(),
               type: currentEffect.effect.constructor.name,
             }
           : null,
@@ -133,7 +133,7 @@ export class DeviceService {
       devices: deviceList,
       effects: Object.entries(effects).map(([id, effect]) => ({
         id,
-        name: effect.effect.getName(),
+        name: effect.getName(),
       })),
     };
   }
