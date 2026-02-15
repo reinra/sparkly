@@ -12,7 +12,7 @@
   let { device, effects }: Props = $props();
   let brightness = $derived(device.brightness);
   let mode = $derived(device.mode);
-  let effect_id = $derived(device.effect_id);
+  let effect = $derived(device.effect);
   let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
 
@@ -64,7 +64,7 @@
 
   async function updateEffect(event: Event & { currentTarget: HTMLSelectElement }) {
     const value = event.currentTarget.value || null;
-    if (updating || value === device.effect_id) return;
+    if (updating || value === device.effect?.id) return;
 
     updating = true;
     const success = await handleApiUpdate(
@@ -79,14 +79,14 @@
         await deviceStore.fetchDevice(device.id);
       },
       () => {
-        effect_id = device.effect_id;
+        effect = device.effect;
       }
     );
     updating = false;
   }
 
   async function sendMovie() {
-    if (updating || !effect_id) return;
+    if (updating || !effect) return;
 
     updating = true;
     await handleApiUpdate(
@@ -94,7 +94,7 @@
         backendClient.sendMovie({
           body: {
             device_id: device.id,
-            effect_id: effect_id!,
+            effect_id: effect!.id,
           },
         }),
       async () => {
@@ -131,14 +131,22 @@
     {/if}
     <p>
       <strong>Effect:</strong>
-      <select value={effect_id} onchange={updateEffect} disabled={updating}>
+      <select value={effect?.id} onchange={updateEffect} disabled={updating}>
         <option value={null}>(None)</option>
-        {#each effects as effect}
-          <option value={effect.id}>{effect.id}</option>
+        {#each effects as eff}
+          <option value={eff.id}>{eff.id}</option>
         {/each}
       </select>
     </p>
-    <button onclick={sendMovie} disabled={updating || !effect_id}>Send movie</button>
+    {#if effect}
+      <div class="effect-info">
+        <h4>Effect Info</h4>
+        <p><strong>ID:</strong> {effect.id}</p>
+        <p><strong>Name:</strong> {effect.name}</p>
+        <p><strong>Type:</strong> {effect.type}</p>
+      </div>
+    {/if}
+    <button onclick={sendMovie} disabled={updating || !effect}>Send movie</button>
     <DeviceBufferViewer deviceId={device.id} />
   </div>
 </div>
@@ -234,5 +242,23 @@
     background: #ccc;
     cursor: not-allowed;
     opacity: 0.6;
+  }
+
+  .effect-info {
+    background: #f8f8f8;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .effect-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #ff3e00;
+    font-size: 1rem;
+  }
+
+  .effect-info p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
   }
 </style>

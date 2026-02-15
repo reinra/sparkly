@@ -278,6 +278,10 @@ export class DeviceHelper {
 
   private readonly onMappingModeChange = () => this.invalidatePoints1DCache();
 
+  getCurrentEffect(): EffectWrapper | null {
+    return this.currentEffect;
+  }
+
   setCurrentEffect(effect: EffectWrapper | null) {
     this.currentEffect?.removeMappingModeChangeListener(this.onMappingModeChange);
     this.currentEffect = effect;

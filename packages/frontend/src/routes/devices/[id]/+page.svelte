@@ -40,8 +40,8 @@
 
   $effect(() => {
     // Set selected effect index based on current effect
-    if (device && device.effect_id && effects.length > 0) {
-      const idx = effects.findIndex((e) => e.id === device.effect_id);
+    if (device && device.effect && effects.length > 0) {
+      const idx = effects.findIndex((e) => e.id === device.effect!.id);
       if (idx >= 0) selectedEffectIndex = idx;
     }
   });
@@ -76,7 +76,7 @@
     selectedEffectIndex = index;
 
     // Only call backend if effect actually changed
-    if (device.effect_id === effect.id) return;
+    if (device.effect?.id === effect.id) return;
 
     updating = true;
     await handleApiUpdate(
@@ -96,7 +96,7 @@
   }
 
   async function sendMovie() {
-    if (!device || updating || !device.effect_id) return;
+    if (!device || updating || !device.effect) return;
 
     updating = true;
     await handleApiUpdate(
@@ -104,7 +104,7 @@
         backendClient.sendMovie({
           body: {
             device_id: deviceId,
-            effect_id: device.effect_id!,
+            effect_id: device.effect!.id,
           },
         }),
       async () => {
@@ -177,15 +177,23 @@
           <EffectParameters deviceId={device.id} parameters={deviceParams} bind:updating />
         {/if}
 
-        <button onclick={sendMovie} disabled={updating || !device.effect_id}> Send Movie </button>
+        <button onclick={sendMovie} disabled={updating || !device.effect}> Send Movie </button>
       </div>
 
       <div class="effect-info-section">
         <h3>Effect Info</h3>
         <div class="info-list">
           <div class="info-item">
-            <strong>Current Effect:</strong>
-            <span>{device.effect_id ?? 'None'}</span>
+            <strong>ID:</strong>
+            <span>{device.effect?.id ?? 'None'}</span>
+          </div>
+          <div class="info-item">
+            <strong>Name:</strong>
+            <span>{device.effect?.name ?? '—'}</span>
+          </div>
+          <div class="info-item">
+            <strong>Type:</strong>
+            <span>{device.effect?.type ?? '—'}</span>
           </div>
         </div>
 
@@ -203,13 +211,13 @@
               bind:this={effectElements[index]}
               class="effect-item"
               class:selected={index === selectedEffectIndex}
-              class:active={device.effect_id === effect.id}
+              class:active={device.effect?.id === effect.id}
               onclick={() => selectEffect(index)}
               onkeydown={handleKeyDown}
               tabindex={index === selectedEffectIndex ? 0 : -1}
             >
               <span class="effect-name">{effect.id}</span>
-              <span class="active-badge" class:visible={device.effect_id === effect.id}>Active</span>
+              <span class="active-badge" class:visible={device.effect?.id === effect.id}>Active</span>
             </button>
           {/each}
         </div>

@@ -36,7 +36,7 @@ const redGreenBlue: RgbFloat[] = [RED, GREEN, BLUE];
 const effects: Record<string, EffectWrapper> = {};
 
 function add(id: string, effect: Effect<any>): void {
-  effects[id] = new EffectWrapper(effect);
+  effects[id] = new EffectWrapper(id, effect);
 }
 
 add('flip_color', new FlipColorEffect(redGreenBlue));

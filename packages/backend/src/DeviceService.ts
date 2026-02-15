@@ -96,6 +96,8 @@ export class DeviceService {
         logError(error).error(`Error fetching summary for device ${device.id}`);
       }
 
+      const currentEffect = device.helper.getCurrentEffect();
+
       deviceList.push({
         id: device.id,
         alias: device.alias,
@@ -104,7 +106,13 @@ export class DeviceService {
         led_count: gestalt?.number_of_led,
         brightness: summary?.filters?.find((f) => f.filter === 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
-        effect_id: device.effect_id,
+        effect: currentEffect
+          ? {
+              id: currentEffect.id,
+              name: currentEffect.effect.getName(),
+              type: currentEffect.effect.constructor.name,
+            }
+          : null,
         parameters: (await device.helper.getParameters()).list().filter((p) => !p.hidden).map((p) => ({
           ...p,
           group: getEffectGroup(p),
@@ -163,7 +171,6 @@ export class DeviceService {
         throw new EffectNotFoundError(effectId);
       }
 
-      device.effect_id = effectId;
       device.helper.setCurrentEffect(effect);
       startAndAbortPreviousTask(deviceId, {
         run: async (signal) => {
@@ -171,7 +178,6 @@ export class DeviceService {
         },
       });
     } else {
-      device.effect_id = null;
       device.helper.setCurrentEffect(null);
       abortTask(deviceId);
     }

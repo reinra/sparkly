@@ -47,7 +47,7 @@ export class EffectWrapper {
         this.mappingModeChangeListeners.delete(listener);
     }
 
-    constructor(public readonly effect: Effect<any>) {
+    constructor(public readonly id: string, public readonly effect: Effect<any>) {
         this.speed.hidden = effect.isStatic === true;
         this.mappingMode.hidden = effect.pointType === '2D' || effect instanceof BaseSameColorEffect;
     }

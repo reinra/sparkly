@@ -9,7 +9,6 @@ export interface Device {
   api_client: TwinklyApiClient;
   helper: DeviceHelper;
   alias: string;
-  effect_id: string | null;
   buffer: FrameBuffer;
 }
 
@@ -26,7 +25,6 @@ export const devices: Record<string, Device> = Object.fromEntries(
         alias: `Twinkly Device ${index + 1}`,
         api_client: apiClient,
         helper: new DeviceHelper(apiClient),
-        effect_id: null,
         buffer: { base64_encoded: null },
       },
     ];

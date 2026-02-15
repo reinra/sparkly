@@ -76,6 +76,12 @@ const EffectParameterSchema = z.discriminatedUnion('type', [
   OptionEffectParameterSchema,
 ]);
 
+const EffectInfoSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    type: z.string(),
+  });
+
 const DeviceInfoResponseSchema = z.object({
     id: z.string(),
     alias: z.string(),
@@ -84,7 +90,7 @@ const DeviceInfoResponseSchema = z.object({
     led_count: z.number().optional(),
     brightness: z.number().min(0).max(100).optional(),
     mode: z.string().optional(),
-    effect_id: z.string().nullable(),
+    effect: EffectInfoSchema.nullable(),
     parameters: z.array(EffectParameterSchema),
   });
 
@@ -172,6 +178,7 @@ export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
 export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+export type EffectInfo = z.infer<typeof EffectInfoSchema>;
 
 // Export parameter-related types inferred from Zod schemas
 export type Hsl = z.infer<typeof HslValueSchema>;
