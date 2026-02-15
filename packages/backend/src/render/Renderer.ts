@@ -1,26 +1,24 @@
-import type { GestaltResponseType } from '../deviceClient/apiClient';
 import type { FrameOutputStream } from './FrameOutputStream';
-import { LedPoint2D, type EffectContext, type LedPoint1D, Effect } from '../effects/Effect';
-import type { DeviceHelper } from '../DeviceHelper';
-import { EffectWrapper } from '../EffectWrapper';
+import type { EffectContext } from '../effects/Effect';
+import { Effect } from '../effects/Effect';
+import type { RenderContext } from './RenderContext';
 
 const YIELD_FRAME_COUNT = 50;
 
-export interface Renderer<T> {
-  renderLive(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
-  renderAsap(effect: T, deviceHelper: DeviceHelper, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
+export interface Renderer {
+  renderLive(ctx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
+  renderAsap(ctx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
 }
 
-export class EffectRenderer implements Renderer<EffectWrapper> {
+export class EffectRenderer implements Renderer {
   async renderLive(
-    effectWrapper: EffectWrapper,
-    deviceHelper: DeviceHelper,
+    renderCtx: RenderContext,
     output: FrameOutputStream,
     signal: AbortSignal
   ): Promise<void> {
-    const effect = effectWrapper.effect;
-    const gestalt = await deviceHelper.getGestalt();
-    const numberOfLeds = gestalt.number_of_led;
+    const effect = renderCtx.effect;
+    const numberOfLeds = await renderCtx.getNumberOfLeds();
+    const ledProfile = await renderCtx.getLedProfile();
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const logic = effect.createLogic();
 
@@ -31,24 +29,24 @@ export class EffectRenderer implements Renderer<EffectWrapper> {
       signal.throwIfAborted();
 
       const frameStartTime = performance.now();
-      const speed = effectWrapper.getCurrentSpeedMultiplier();
+      const speed = renderCtx.getCurrentSpeedMultiplier();
       const deltaTimeMs = (frameStartTime - lastTime) * speed;
       const elapsedTime = (frameStartTime - firstStartTime) * speed;
 
       const ctx: EffectContext = {
         total_leds: numberOfLeds,
-        led_type: gestalt.led_profile,
+        led_type: ledProfile,
         time_ms: elapsedTime,
         delta_time_ms: deltaTimeMs,
         frame_index: frameIndex,
         phase: (elapsedTime % loopDurationMs) / loopDurationMs,
       };
-      const points = await deviceHelper.getPoints(effect);
+      const points = await renderCtx.getPoints();
       const ledValues = logic.renderGlobal(ctx, points);
-      await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
+      await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
 
       const processingTime = performance.now() - frameStartTime;
-      const timeToWait = deviceHelper.getMinFrameTimeMs() - processingTime;
+      const timeToWait = renderCtx.getMinFrameTimeMs() - processingTime;
       if (timeToWait > 0) {
         await sleep(timeToWait);
       } else {
@@ -60,20 +58,19 @@ export class EffectRenderer implements Renderer<EffectWrapper> {
     }
   }
   async renderAsap(
-    effectWrapper: EffectWrapper,
-    deviceHelper: DeviceHelper,
+    renderCtx: RenderContext,
     output: FrameOutputStream,
     signal: AbortSignal
   ): Promise<void> {
-    const effect = effectWrapper.effect;
-    const gestalt = await deviceHelper.getGestalt();
-    const points = await deviceHelper.getPoints(effect);
-    const numberOfLeds = gestalt.number_of_led;
+    const effect = renderCtx.effect;
+    const numberOfLeds = await renderCtx.getNumberOfLeds();
+    const ledProfile = await renderCtx.getLedProfile();
+    const points = await renderCtx.getPoints();
     const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const [startRecordingMs, endRecordingMs] = effect.isStateful
       ? [loopDurationMs, loopDurationMs * 2]
       : [0, loopDurationMs];
-    const frameTimeMs = deviceHelper.getMinFrameTimeMs() * effectWrapper.getCurrentSpeedMultiplier();
+    const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
     const logic = effect.createLogic();
 
     let virtualTime = 0;
@@ -85,7 +82,7 @@ export class EffectRenderer implements Renderer<EffectWrapper> {
 
       const ctx: EffectContext = {
         total_leds: numberOfLeds,
-        led_type: gestalt.led_profile,
+        led_type: ledProfile,
         time_ms: virtualTime,
         delta_time_ms: frameTimeMs,
         frame_index: frameIndex,
@@ -93,7 +90,7 @@ export class EffectRenderer implements Renderer<EffectWrapper> {
       };
       const ledValues = logic.renderGlobal(ctx, points);
       if (virtualTime >= startRecordingMs) {
-        await output.writeFrame(deviceHelper.floatTo8bitColor(ledValues));
+        await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
       }
       if (frameIndex % YIELD_FRAME_COUNT === 0) {
         await yieldNow();

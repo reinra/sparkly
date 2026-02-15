@@ -6,6 +6,7 @@ import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
 import { getEffectGroup } from './DeviceHelper';
+import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
 import type { LedMapping } from './DeviceHelper';
 import type { DeviceInfo } from '@twinkly-ts/common';
@@ -172,9 +173,10 @@ export class DeviceService {
       }
 
       device.helper.setCurrentEffect(effect);
+      const renderCtx = new RenderContextImpl(device.helper, effect);
       startAndAbortPreviousTask(deviceId, {
         run: async (signal) => {
-          await startEffect(device, effect, signal);
+          await startEffect(device, renderCtx, signal);
         },
       });
     } else {
@@ -203,7 +205,8 @@ export class DeviceService {
 
     abortTask(deviceId);
 
-    await sendEffectAsMovie(device, effect, new AbortController().signal).catch((error: unknown) => {
+    const renderCtx = new RenderContextImpl(device.helper, effect);
+    await sendEffectAsMovie(device, renderCtx, new AbortController().signal).catch((error: unknown) => {
       logError(error).error(`Error sending effect as movie to device ${device.id}`);
     });
   }

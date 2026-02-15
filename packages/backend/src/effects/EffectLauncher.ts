@@ -5,23 +5,30 @@ import {
   MappedFrameOutputStream,
   ApiClientFrameOutputStream,
   MovieBufferOutputStream,
+  type FrameFormat,
 } from '../render/FrameOutputStream';
 import { EffectRenderer } from '../render/Renderer';
 import { logger } from '../logger';
-import type { GestaltResponseType } from '../deviceClient/apiClient';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
-import { EffectWrapper } from '../EffectWrapper';
+import type { RenderContext } from '../render/RenderContext';
 
 const renderer = new EffectRenderer();
 
-export async function startEffect(device: Device, effect: EffectWrapper, signal: AbortSignal) {
-  const basicLedMapper = await device.helper.getLedMapper(false);
-  const fixedLedMapper = await device.helper.getLedMapper(true);
-  const gestalt = await device.helper.getGestalt();
+async function buildFrameFormat(renderCtx: RenderContext): Promise<FrameFormat> {
+  return {
+    led_type: await renderCtx.getLedProfile(),
+    led_count: await renderCtx.getNumberOfLeds(),
+  };
+}
+
+export async function startEffect(device: Device, renderCtx: RenderContext, signal: AbortSignal) {
+  const basicLedMapper = await renderCtx.getLedMapper(false);
+  const fixedLedMapper = await renderCtx.getLedMapper(true);
+  const frameFormat = await buildFrameFormat(renderCtx);
   const output = new MultipleFrameOutputStream([
     new MappedFrameOutputStream(new BufferReplacingFrameOutputStream(device.buffer), basicLedMapper),
     new MappedFrameOutputStream(
-      new ApiClientFrameOutputStream(device.api_client, toFrameFormat(gestalt)),
+      new ApiClientFrameOutputStream(device.api_client, frameFormat),
       fixedLedMapper
     ),
   ]);
@@ -47,7 +54,7 @@ export async function startEffect(device: Device, effect: EffectWrapper, signal:
   signal.addEventListener('abort', abortHandler);
 
   try {
-    await renderer.renderLive(effect, device.helper, output, signal);
+    await renderer.renderLive(renderCtx, output, signal);
   } finally {
     if (keepAliveInterval !== null) {
       clearInterval(keepAliveInterval);
@@ -61,16 +68,16 @@ async function prepareForSendingLedValues(device: Device) {
   await device.api_client.setMode(DeviceModeSchema.Values.rt);
 }
 
-export async function sendEffectAsMovie(device: Device, effect: EffectWrapper, signal: AbortSignal) {
-  const ledMapper = await device.helper.getLedMapper(true);
-  const gestalt = await device.helper.getGestalt();
-  const movieBuffer = new MovieBufferOutputStream(toFrameFormat(gestalt));
+export async function sendEffectAsMovie(device: Device, renderCtx: RenderContext, signal: AbortSignal) {
+  const ledMapper = await renderCtx.getLedMapper(true);
+  const frameFormat = await buildFrameFormat(renderCtx);
+  const movieBuffer = new MovieBufferOutputStream(frameFormat);
   const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
 
   await prepareForSendingLedValues(device);
 
   const renderStart = Date.now();
-  await renderer.renderAsap(effect, device.helper, output, signal);
+  await renderer.renderAsap(renderCtx, output, signal);
   const renderDuration = Date.now() - renderStart;
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
 
@@ -79,19 +86,12 @@ export async function sendEffectAsMovie(device: Device, effect: EffectWrapper, s
   const postDuration = Date.now() - postStart;
   logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
 
-  const frameMs = device.helper.getMinFrameTimeMs();
+  const frameMs = renderCtx.getMinFrameTimeMs();
   await device.api_client.setLedMovieConfig({
     frame_delay: frameMs,
-    leds_number: gestalt.number_of_led,
+    leds_number: frameFormat.led_count,
     frames_number: movieBuffer.getFrameCount(),
   });
 
   await device.api_client.setMode(DeviceModeSchema.Values.movie);
-}
-
-function toFrameFormat(gestalt: GestaltResponseType) {
-  return {
-    led_type: gestalt.led_profile,
-    led_count: gestalt.number_of_led,
-  };
 }
