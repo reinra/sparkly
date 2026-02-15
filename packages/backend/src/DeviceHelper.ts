@@ -42,6 +42,7 @@ export class DeviceHelper {
   private deviceParams = new EffectParameterStorage();
   private deviceParamsInitialized = false;
   private currentEffect: EffectWrapper | null = null;
+  private points1DCache: LedPoint1D[] | null = null;
 
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
@@ -177,12 +178,24 @@ export class DeviceHelper {
       if (!this.currentEffect) {
         throw new Error('No current effect set');
       }
-      return this.currentEffect.getPoints1D(ledCount, () => this.getPoints2D(ledCount));
+      return this.getPoints1D(ledCount);
     }    
     if (effect.pointType === '2D') {
       return this.getPoints2D(ledCount);
     }
     throw new Error(`Unsupported effect point type: ${effect.pointType}`);
+  }
+
+  private async getPoints1D(count: number): Promise<LedPoint1D[]> {
+    if (this.points1DCache) {
+      return this.points1DCache;
+    }
+    this.points1DCache = await this.currentEffect!.computePoints1D(count, () => this.getPoints2D(count));
+    return this.points1DCache;
+  }
+
+  private invalidatePoints1DCache() {
+    this.points1DCache = null;
   }
 
   private async getPoints2D(count: number): Promise<LedPoint2D[]> {
@@ -254,8 +267,13 @@ export class DeviceHelper {
     };
   }
 
+  private readonly onMappingModeChange = () => this.invalidatePoints1DCache();
+
   setCurrentEffect(effect: EffectWrapper | null) {
+    this.currentEffect?.removeMappingModeChangeListener(this.onMappingModeChange);
     this.currentEffect = effect;
+    this.invalidatePoints1DCache();
+    effect?.addMappingModeChangeListener(this.onMappingModeChange);
   }
 
   public async getDebugInfo(): Promise<{ title: string; content: any }[]> {

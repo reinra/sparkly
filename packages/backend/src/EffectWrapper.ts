@@ -33,24 +33,26 @@ export class EffectWrapper {
             { value: MappingMode.UseYAsPosition, label: 'Vertical', description: 'Map the Y coordinate (0-1) to the 1D effect position' },
         ],
     }, () => {
-        this.points1DCache = null;
+        for (const listener of this.mappingModeChangeListeners) {
+            listener();
+        }
     });
-    private points1DCache: LedPoint1D[] | null = null;
+    private readonly mappingModeChangeListeners = new Set<() => void>();
+
+    public addMappingModeChangeListener(listener: () => void): void {
+        this.mappingModeChangeListeners.add(listener);
+    }
+
+    public removeMappingModeChangeListener(listener: () => void): void {
+        this.mappingModeChangeListeners.delete(listener);
+    }
 
     constructor(public readonly effect: Effect<any>) {
         this.speed.hidden = effect.isStatic === true;
         this.mappingMode.hidden = effect.pointType === '2D' || effect instanceof BaseSameColorEffect;
     }
 
-    public async getPoints1D(count: number, getPoints2D: () => Promise<LedPoint2D[]>): Promise<LedPoint1D[]> {
-        if (this.points1DCache) {
-            return this.points1DCache;
-        }
-        this.points1DCache = await this.computePoints1D(count, getPoints2D);
-        return this.points1DCache;
-    }
-
-    private async computePoints1D(count: number, getPoints2D: () => Promise<LedPoint2D[]>): Promise<LedPoint1D[]> {
+    public async computePoints1D(count: number, getPoints2D: () => Promise<LedPoint2D[]>): Promise<LedPoint1D[]> {
         const mode = this.mappingMode.value as MappingMode;
         if (mode === MappingMode.UseDistanceAsPosition) {
             return EffectWrapper.getSimplePoints1D(count);
