@@ -84,7 +84,7 @@ export class DeviceHelper {
   private readonly mirror: BooleanEffectParameter = {
     id: 'mirror',
     name: 'Mirror LEDs',
-    description: 'Whether to reverse the effect direction over LEDs (if applicable',
+    description: 'Reverse LED order for the entire device (e.g. for strips mounted in opposite orientation)',
     type: ParameterType.BOOLEAN,
     value: false,
   };
@@ -271,7 +271,8 @@ export class DeviceHelper {
 
     return {
       mapLedIndex: (index: number) => {
-        return this.mirror.value === true ? reverseMapper.mapLedIndex(index) : mapper.mapLedIndex(index);
+        const shouldReverse = this.mirror.value !== (this.currentEffect?.getMirror() ?? false);
+        return shouldReverse ? reverseMapper.mapLedIndex(index) : mapper.mapLedIndex(index);
       },
     };
   }

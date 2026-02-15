@@ -1,6 +1,6 @@
 import { EffectParameterStorage, EffectParameterView, emptyParameterStorageView, MultiParameterStorageView } from "./effectParameters";
 import { BaseSameColorEffect, Effect, LedPoint1D, LedPoint2D } from "./effects/Effect";
-import { OptionEffectParameter, ParameterType, RangeEffectParameter } from "./ParameterTypes";
+import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from "./ParameterTypes";
 
 export const enum MappingMode {
     UseXAsPosition = "UseXAsPosition",
@@ -37,19 +37,28 @@ export class EffectWrapper {
             listener();
         }
     });
+    private readonly mirror: BooleanEffectParameter = this.parameters.register({
+        id: 'mirror',
+        name: 'Mirror effect',
+        description: 'Reverse the effect direction for this effect',
+        type: ParameterType.BOOLEAN,
+        value: false,
+    });
     private readonly mappingModeChangeListeners = new Set<() => void>();
 
+    constructor(public readonly id: string, public readonly effect: Effect<any>) {
+        const saemColorEffect = effect instanceof BaseSameColorEffect;
+        this.speed.hidden = effect.isStatic === true;
+        this.mappingMode.hidden = effect.pointType === '2D' || saemColorEffect;
+        this.mirror.hidden = saemColorEffect; 
+    }
+ 
     public addMappingModeChangeListener(listener: () => void): void {
         this.mappingModeChangeListeners.add(listener);
     }
 
     public removeMappingModeChangeListener(listener: () => void): void {
         this.mappingModeChangeListeners.delete(listener);
-    }
-
-    constructor(public readonly id: string, public readonly effect: Effect<any>) {
-        this.speed.hidden = effect.isStatic === true;
-        this.mappingMode.hidden = effect.pointType === '2D' || effect instanceof BaseSameColorEffect;
     }
 
     public async computePoints1D(count: number, getPoints2D: () => Promise<LedPoint2D[]>): Promise<LedPoint1D[]> {
@@ -86,6 +95,9 @@ export class EffectWrapper {
     }
     public getCurrentSpeedMultiplier(): number {
         return this.speed.value;
+    }
+    public getMirror(): boolean {
+        return this.mirror.value;
     }
 }
 
