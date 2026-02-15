@@ -95,10 +95,19 @@ export class DeviceHelper {
     await this.ensureParams();
   }
 
+  private initPromise: Promise<void> | null = null;
+
   private async ensureParams(): Promise<void> {
     if (this.deviceParamsInitialized) {
       return;
     }
+    if (!this.initPromise) {
+      this.initPromise = this.initParams();
+    }
+    await this.initPromise;
+  }
+
+  private async initParams(): Promise<void> {
 
     this.deviceParams.register(
       {
