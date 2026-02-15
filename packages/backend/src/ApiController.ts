@@ -1,0 +1,65 @@
+import type { TypedHandlers } from './typedHandler';
+import { backendApiContract } from '@twinkly-ts/common';
+import { deviceService } from './DeviceService';
+
+/**
+ * Controller layer. Receives HTTP requests, validates required params,
+ * delegates to DeviceService, and returns TS-Rest-style responses.
+ *
+ * Does NOT trust input data types — validated by typed handler middleware.
+ */
+export const apiController: TypedHandlers<typeof backendApiContract> = {
+  hello: (_req, res) => {
+    res.json({ message: 'Hello from Twinkly Backend!' });
+  },
+
+  getSystemInfo: (_req, res) => {
+    const info = deviceService.getSystemInfo();
+    res.json(info);
+  },
+
+  getInfo: async (req, res) => {
+    const result = await deviceService.getInfo(req.query.device_id);
+    res.json(result);
+  },
+
+  debugDevice: async (req, res) => {
+    const sections = await deviceService.debugDevice(req.query.device_id);
+    res.json({ sections });
+  },
+
+  setMode: async (req, res) => {
+    await deviceService.setMode(req.body.device_id, req.body.mode);
+    res.json({ success: true, mode: req.body.mode });
+  },
+
+  setBrightness: async (req, res) => {
+    await deviceService.setBrightness(req.body.device_id, req.body.brightness);
+    res.json({ success: true });
+  },
+
+  chooseEffect: async (req, res) => {
+    await deviceService.chooseEffect(req.body.device_id, req.body.effect_id);
+    res.json({ success: true });
+  },
+
+  getBuffer: async (req, res) => {
+    const buffer = deviceService.getBuffer(req.query.device_id);
+    res.json(buffer);
+  },
+
+  getLedMapping: async (req, res) => {
+    const ledMapping = await deviceService.getLedMapping(req.query.device_id);
+    res.json(ledMapping);
+  },
+
+  sendMovie: async (req, res) => {
+    await deviceService.sendMovie(req.body.device_id, req.body.effect_id);
+    res.json({ success: true });
+  },
+
+  setParameters: async (req, res) => {
+    await deviceService.setParameters(req.body.device_id, req.body.parameters);
+    res.json({ success: true });
+  },
+};
