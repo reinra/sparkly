@@ -1,0 +1,276 @@
+<script lang="ts">
+  import type { MultiHslEffectParameter, Hsl } from '@twinkly-ts/common';
+  import HslColorPicker from '../HslColorPicker.svelte';
+  import { formatHslDisplay } from '../../utils/hslUtils';
+
+  interface Props {
+    param: MultiHslEffectParameter;
+    value: Hsl[];
+    onchange: (value: Hsl[]) => void;
+    onregister?: (element: HTMLElement | null) => void;
+  }
+
+  let { param, value, onchange, onregister }: Props = $props();
+
+  let containerEl: HTMLElement | null = null;
+  let dragFromIndex: number | null = $state(null);
+  let dragOverIndex: number | null = $state(null);
+
+  function setupContainer(node: HTMLElement) {
+    containerEl = node;
+    onregister?.(node);
+    return {
+      destroy() {
+        containerEl = null;
+        onregister?.(null);
+      }
+    };
+  }
+
+  function handleContainerFocus(event: FocusEvent) {
+    if (event.target !== containerEl) return;
+    const firstFocusable = containerEl?.querySelector('button, [tabindex="0"]') as HTMLElement | null;
+    firstFocusable?.focus();
+  }
+
+  function cloneColors(): Hsl[] {
+    return value.map((c) => ({ ...c }));
+  }
+
+  function updateColor(colorIndex: number, newColor: Hsl) {
+    const colors = cloneColors();
+    colors[colorIndex] = { ...newColor };
+    onchange(colors);
+  }
+
+  function addColor() {
+    const colors = cloneColors();
+    colors.push({ ...colors[colors.length - 1] });
+    onchange(colors);
+  }
+
+  function removeColor(colorIndex: number) {
+    if (value.length <= 1) return;
+    const colors = cloneColors();
+    colors.splice(colorIndex, 1);
+    onchange(colors);
+  }
+
+  function handleDragStart(colorIndex: number) {
+    dragFromIndex = colorIndex;
+  }
+
+  function handleDragOver(event: DragEvent, colorIndex: number) {
+    event.preventDefault();
+    dragOverIndex = colorIndex;
+  }
+
+  function handleDrop(toIndex: number) {
+    if (dragFromIndex === null || dragFromIndex === toIndex) {
+      resetDrag();
+      return;
+    }
+    const colors = cloneColors();
+    const [moved] = colors.splice(dragFromIndex, 1);
+    colors.splice(toIndex, 0, moved);
+    onchange(colors);
+    resetDrag();
+  }
+
+  function resetDrag() {
+    dragFromIndex = null;
+    dragOverIndex = null;
+  }
+</script>
+
+<div
+  use:setupContainer
+  class="control-group multi-color-group"
+  tabindex="-1"
+  title={param.description}
+  onfocus={handleContainerFocus}
+>
+  <div class="multi-color-label"><strong>{param.name}</strong></div>
+  <div class="multi-color-list">
+    {#each value as color, colorIndex}
+      {@const colorTriggerId = `color-picker-${param.id}-${colorIndex}`}
+      <div
+        class="multi-color-row"
+        class:drag-over={dragOverIndex === colorIndex}
+        draggable="true"
+        ondragstart={() => handleDragStart(colorIndex)}
+        ondragover={(e) => handleDragOver(e, colorIndex)}
+        ondrop={() => handleDrop(colorIndex)}
+        ondragend={resetDrag}
+        role="listitem"
+      >
+        <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
+        <div class="color-picker-cell">
+          <HslColorPicker
+            triggerId={colorTriggerId}
+            value={color}
+            fullWidth={false}
+            showValueLabel={false}
+            on:change={(event) => updateColor(colorIndex, event.detail)}
+          />
+        </div>
+        <span
+          class="color-readout color-trigger"
+          role="button"
+          tabindex="0"
+          aria-label={`Edit ${param.name} color ${colorIndex + 1}`}
+          onclick={() => document.getElementById(colorTriggerId)?.click()}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              document.getElementById(colorTriggerId)?.click();
+            }
+          }}
+        >
+          {formatHslDisplay(color)}
+        </span>
+        {#if value.length > 1}
+          <button
+            class="multi-color-remove"
+            title="Remove color"
+            aria-label={`Remove color ${colorIndex + 1}`}
+            onclick={() => removeColor(colorIndex)}
+          >✕</button>
+        {:else}
+          <span class="multi-color-remove-spacer"></span>
+        {/if}
+      </div>
+    {/each}
+  </div>
+  <button class="multi-color-add" onclick={addColor}>+ Add Color</button>
+</div>
+
+<style>
+  .control-group {
+    margin-bottom: 1rem;
+  }
+
+  .multi-color-group {
+    display: block;
+    padding: 0.35rem 0;
+    outline: none;
+  }
+
+  .multi-color-label {
+    color: #666;
+    margin-bottom: 0.4rem;
+  }
+
+  .multi-color-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .multi-color-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.2rem 0.3rem;
+    border-radius: 0.4rem;
+    transition: background 0.15s ease;
+  }
+
+  .multi-color-row:hover {
+    background: #f8f8f8;
+  }
+
+  .multi-color-row.drag-over {
+    background: #fff4f0;
+    outline: 2px dashed #ff3e00;
+    outline-offset: -2px;
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: #bbb;
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+    padding: 0 0.1rem;
+  }
+
+  .drag-handle:hover {
+    color: #888;
+  }
+
+  .color-picker-cell {
+    justify-self: start;
+    width: max-content;
+  }
+
+  .color-picker-cell :global(.swatch-button) {
+    width: auto;
+  }
+
+  .color-trigger {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .color-trigger:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.4);
+    border-radius: 4px;
+    padding: 0 0.15rem;
+  }
+
+  .color-readout {
+    font-size: 0.85rem;
+    color: #444;
+    font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    white-space: nowrap;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .multi-color-remove {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+    color: #bbb;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.15rem 0.35rem;
+    transition: all 0.15s ease;
+    line-height: 1;
+  }
+
+  .multi-color-remove:hover {
+    color: #e03500;
+    border-color: #e03500;
+    background: #fff4f0;
+  }
+
+  .multi-color-remove-spacer {
+    width: 28px;
+  }
+
+  .multi-color-add {
+    margin-top: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px dashed #ccc;
+    border-radius: 999px;
+    background: #fafafa;
+    color: #888;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .multi-color-add:hover {
+    border-color: #ff3e00;
+    color: #ff3e00;
+    background: #fff4f0;
+  }
+
+  .multi-color-add:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline-offset: 2px;
+  }
+</style>
