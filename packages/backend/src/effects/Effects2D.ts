@@ -66,6 +66,17 @@ export class PulseScanner implements StatelessEffect<LedPoint2D> {
 export class Slime implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
+  readonly parameters = new EffectParameterStorage();
+  private readonly hueShift = this.parameters.register({
+    id: 'hueShift',
+    name: 'Hue Shift',
+    description: 'Shifts the hue of the slime colors',
+    type: ParameterType.RANGE,
+    value: 0,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  });
   private noise = new NoiseGenerator();
 
   getName(): string {
@@ -84,8 +95,8 @@ export class Slime implements StatelessEffect<LedPoint2D> {
       // Scale coordinates to control "blob" size
       const noiseVal = this.noise.get4D(pt.x * 2, pt.y * 2, nz, nw);
 
-      // Use noise to pick a Hue
-      const hue = this.noise.normalize(noiseVal);
+      // Use noise to pick a Hue with hue shift
+      const hue = (this.noise.normalize(noiseVal) + this.hueShift.value) % 1.0;
       buffer[pt.id] = hslToRgbFloat({ hue, saturation: 0.8, lightness: 0.5 });
     }
     return buffer;
@@ -131,6 +142,17 @@ export class CloudsEffect implements StatelessEffect<LedPoint2D> {
 export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
+  readonly parameters = new EffectParameterStorage();
+  private readonly hueShift = this.parameters.register({
+    id: 'hueShift',
+    name: 'Hue Shift',
+    description: 'Shifts the hue of the plasma colors',
+    type: ParameterType.RANGE,
+    value: 0,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  });
   private noise = new NoiseGenerator();
   getName(): string {
     return 'Plasma';
@@ -152,8 +174,8 @@ export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
       // Blend the noise layers
       const combined = (noise1 + noise2 * 0.5 + noise3 * 0.25) / 1.75;
 
-      // Map to rainbow colors
-      const hue = this.noise.normalize(combined);
+      // Map to rainbow colors with hue shift
+      const hue = (this.noise.normalize(combined) + this.hueShift.value) % 1.0;
       buffer[pt.id] = hslToRgbFloat({ hue, saturation: 1.0, lightness: 0.5 });
     }
     return buffer;
