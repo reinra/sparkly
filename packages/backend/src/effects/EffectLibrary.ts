@@ -13,21 +13,14 @@ import {
   StaticColorGradientEffect,
   TestPerLedEffect,
   TwinkleEffect,
-  TwoAlternatingCustomColorFadingEffect,
+  AlternatingCustomColorFadingEffect,
   MultiColorRainEffect,
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
   FlipColorCustomEffect,
 } from './Effects1D';
-import {
-  CloudsEffect,
-  GravityFountain,
-  PlasmaEffect,
-  PulseScanner,
-  RainbowGradientEffect2D,
-  Slime,
-} from './Effects2D';
+import { CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './Effects2D';
 
 const effects: Record<string, EffectWrapper> = {};
 
@@ -36,26 +29,26 @@ function addPresets<T extends Effect<any> & { getPresets(): EffectPreset[] }>(Ef
   const presets = template.getPresets();
   for (const preset of presets) {
     const effect = new EffectClass();
-    const wrapper = new EffectWrapper(preset.id, effect, preset.name);      
+    const wrapper = new EffectWrapper(preset.id, effect, preset.name);
     for (const [paramId, value] of preset.config.entries()) {
       wrapper.getEffectParameters().setValue(paramId, value);
     }
-    effects[preset.id] = wrapper;      
+    effects[preset.id] = wrapper;
   }
 }
 
 function add(id: string, effect: Effect<any>): void {
   effects[id] = new EffectWrapper(id, effect, effect.getName());
 }
- 
+
 addPresets(FlipColorCustomEffect);
 addPresets(ChangeColorEffect);
 addPresets(SingleHslColorEffect);
 addPresets(StaticAlternatingColorCustomEffect);
 addPresets(StaticColorGradientEffect);
 addPresets(RotatingColorGradientEffect);
+addPresets(AlternatingCustomColorFadingEffect);
 add('gradient_custom', new StaticCustomColorGradientEffect());
-add('two_alternating_colors_custom', new TwoAlternatingCustomColorFadingEffect());
 add('rainbow', new RainbowGradientEffect());
 add('meteor', new MeteorEffect());
 add('rain_single_color', new SingleColorRainEffect());

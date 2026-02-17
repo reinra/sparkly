@@ -282,48 +282,15 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
-export class TwoAlternatingColorFadingEffect extends PerPixelEffect<LedPoint1D> {
-  pointType: '1D' = '1D';
-  constructor(
-    private readonly color1: RgbFloat,
-    private readonly color2: RgbFloat,
-    private readonly background: RgbFloat = BLACK
-  ) {
-    super();
-  }
-  getName(): string {
-    return 'Two Alternating Colors Fading';
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 10;
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
-    const index = point.position % 2;
-    let fadeFactor = backAndForthPhaseWithPause(ctx.phase);
-    if (index === 1) {
-      fadeFactor = revertPhase(fadeFactor);
-    }
-    const color = index === 0 ? this.color1 : this.color2;
-    return lerp(this.background, color, fadeFactor);
-  }
-}
-
-export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1D> {
+export class AlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
-  private readonly color1 = this.parameters.register({
-    id: 'color1',
-    name: 'Color 1',
-    description: 'HSL color value for the first color',
-    type: ParameterType.HSL,
-    value: RED_HSL_COLOR,
-  });
-  private readonly color2 = this.parameters.register({
-    id: 'color2',
-    name: 'Color 2',
-    description: 'HSL color value for the second color',
-    type: ParameterType.HSL,
-    value: BLUE_HSL_COLOR,
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values for the alternating colors',
+    type: ParameterType.MULTI_HSL,
+    value: [RED_HSL_COLOR, BLUE_HSL_COLOR],
   });
   private readonly colorBg = this.parameters.register({
     id: 'colorBg',
@@ -332,19 +299,30 @@ export class TwoAlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoi
     type: ParameterType.HSL,
     value: BLACK_HSL_COLOR,
   });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('alternating_rb', 'Alternating Fading: Red-Blue', [RED_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('alternating_rgb', 'Alternating Fading: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+    ];
+  }
   getName(): string {
-    return 'Two Alternating Colors Fading';
+    return 'Alternating Colors Fading';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
-    const index = point.position % 2;
-    let fadeFactor = backAndForthPhaseWithPause(ctx.phase);
-    if (index === 1) {
-      fadeFactor = revertPhase(fadeFactor);
+    const totalColors = this.colors.value.length;
+    const index = point.position % totalColors;
+    // Divide phase into N segments, one per color — only the active color's LEDs light up
+    const activeIndex = Math.floor(ctx.phase * totalColors);
+    if (index !== activeIndex) {
+      return hslToRgbFloat(this.colorBg.value);
     }
-    const color = index === 0 ? this.color1.value : this.color2.value;
+    const segmentPhase = (ctx.phase * totalColors) % 1.0;
+    const fadeFactor = backAndForthPhaseWithPause(segmentPhase);
+    const color = this.colors.value[index];
     return hslToRgbFloat(lerpHsl(this.colorBg.value, color, fadeFactor));
   }
 }
