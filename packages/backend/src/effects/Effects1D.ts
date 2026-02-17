@@ -24,7 +24,7 @@ import {
   EffectLogic,
   Effect,
   LedPointType,
-  EffectPreset
+  EffectPreset,
 } from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
 
@@ -67,7 +67,7 @@ export class FlipColorCustomEffect extends BaseSameColorEffect {
     name: 'Colors',
     description: 'HSL color values',
     type: ParameterType.MULTI_HSL,
-    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+    value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
@@ -96,13 +96,18 @@ export class ChangeColorEffect extends BaseSameColorEffect {
     name: 'Colors',
     description: 'HSL color values',
     type: ParameterType.MULTI_HSL,
-    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+    value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
     return [
       factory('change_color_rgb', 'Change Color: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
-      factory('change_color_rgby', 'Change Color: RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
+      factory('change_color_rgby', 'Change Color: RGBY', [
+        RED_HSL_COLOR,
+        GREEN_HSL_COLOR,
+        BLUE_HSL_COLOR,
+        YELLOW_HSL_COLOR,
+      ]),
     ];
   }
   getName(): string {
@@ -148,7 +153,7 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1
     name: 'Colors',
     description: 'HSL color values',
     type: ParameterType.MULTI_HSL,
-    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+    value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
@@ -179,7 +184,7 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
     name: 'Colors',
     description: 'HSL color values for the gradient',
     type: ParameterType.MULTI_HSL,
-    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+    value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
@@ -247,12 +252,17 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
     name: 'Colors',
     description: 'HSL color values for the gradient',
     type: ParameterType.MULTI_HSL,
-    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR ],
+    value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
     return [
-      factory('rotating_gradient_rgbr', 'Rotating Gradient: RGBR', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR]),
+      factory('rotating_gradient_rgbr', 'Rotating Gradient: RGBR', [
+        RED_HSL_COLOR,
+        GREEN_HSL_COLOR,
+        BLUE_HSL_COLOR,
+        RED_HSL_COLOR,
+      ]),
       factory('rotating_gradient_rgb', 'Rotating Gradient: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
     ];
   }
@@ -357,7 +367,6 @@ export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
     return result;
   }
 }
-
 
 // Also called "Marquee" if it runs a bit faster
 export class TestAllLedsFlash implements StatelessEffect<LedPoint1D> {

@@ -40,6 +40,16 @@ export class EffectWrapper {
             listener();
         }
     });
+    private readonly gamma: RangeEffectParameter = this.parameters.register({
+        id: 'gamma',
+        name: 'Gamma correction',
+        description: 'Gamma correction value for this effect (multiplied with device gamma)',
+        type: ParameterType.RANGE,
+        value: 1.0,
+        min: 0.1,
+        max: 4.0,
+        step: 0.1,
+    });
     private readonly mirror: BooleanEffectParameter = this.parameters.register({
         id: 'mirror',
         name: 'Mirror effect',
@@ -102,6 +112,9 @@ export class EffectWrapper {
     }
     public getCurrentSpeedMultiplier(): number {
         return this.speed.value;
+    }
+    public getGamma(): number {
+        return this.gamma.value;
     }
     public getMirror(): boolean {
         return this.mirror.value;

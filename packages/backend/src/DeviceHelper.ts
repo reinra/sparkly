@@ -246,8 +246,8 @@ export class DeviceHelper {
     return this.ledMappingCache;
   }
 
-  public floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
-    const gamma = this.gamma.value;
+  public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0): RgbValue[] {
+    const gamma = this.gamma.value * effectGamma;
     const temperature = this.temperature.value;
     const result: RgbValue[] = new Array(colors.length);
     for (let i = 0; i < colors.length; i++) {
