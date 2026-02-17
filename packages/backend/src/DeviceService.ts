@@ -112,6 +112,7 @@ export class DeviceService {
               id: currentEffect.id,
               name: currentEffect.getName(),
               type: currentEffect.effect.constructor.name,
+              pointType: currentEffect.effect.pointType,
             }
           : null,
         parameters: (await device.helper.getParameters()).list().filter((p) => !p.hidden).map((p) => ({

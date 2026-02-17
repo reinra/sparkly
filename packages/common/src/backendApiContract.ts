@@ -87,6 +87,7 @@ const EffectInfoSchema = z.object({
     id: z.string(),
     name: z.string(),
     type: z.string(),
+    pointType: z.enum(['1D', '2D']),
   });
 
 const DeviceInfoResponseSchema = z.object({

@@ -220,6 +220,10 @@
             <strong>Type:</strong>
             <span>{device.effect?.type ?? '—'}</span>
           </div>
+          <div class="info-item">
+            <strong>Point Type:</strong>
+            <span>{device.effect?.pointType ?? '—'}</span>
+          </div>
         </div>
 
         {#if effectParams.length}

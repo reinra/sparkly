@@ -144,6 +144,7 @@
         <p><strong>ID:</strong> {effect.id}</p>
         <p><strong>Name:</strong> {effect.name}</p>
         <p><strong>Type:</strong> {effect.type}</p>
+        <p><strong>Point Type:</strong> {effect.pointType}</p>
       </div>
     {/if}
     <button onclick={sendMovie} disabled={updating || !effect}>Send movie</button>
