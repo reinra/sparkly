@@ -1,4 +1,4 @@
-import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, Hsl } from './ParameterTypes';
+import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, MultiHslEffectParameter, Hsl } from './ParameterTypes';
 import { ParameterType } from './ParameterTypes';
 
 type ParameterValueType<T extends EffectParameter> =
@@ -6,6 +6,7 @@ type ParameterValueType<T extends EffectParameter> =
   T extends BooleanEffectParameter ? boolean :
   T extends HslEffectParameter ? Hsl :
   T extends OptionEffectParameter ? string :
+  T extends MultiHslEffectParameter ? Hsl[] :
   never;
 
 export type ParameterChangeListener<T extends EffectParameter = EffectParameter> = (
@@ -14,7 +15,7 @@ export type ParameterChangeListener<T extends EffectParameter = EffectParameter>
   newValue: ParameterValueType<T>
 ) => void | Promise<void>;
 
-export type ParameterValue = number | boolean | Hsl | string;
+export type ParameterValue = number | boolean | Hsl | string | Hsl[];
 
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
 
@@ -147,6 +148,17 @@ export class EffectParameterStorage implements EffectParameterView {
         throw new Error(`Value '${value}' is not a valid option for parameter '${id}'. Allowed: ${allowed}`);
       }
       parameter.value = value;
+    } else if (parameter.type === ParameterType.MULTI_HSL) {
+      if (!Array.isArray(value)) {
+        throw new Error(`Parameter '${id}' expects an array of HSL values`);
+      }
+      if (value.length < 1) {
+        throw new Error(`Parameter '${id}' requires at least one HSL color`);
+      }
+      for (const hsl of value) {
+        validateHslValue(id, hsl);
+      }
+      parameter.value = value.map((hsl) => ({ ...hsl }));
     }
 
     // Invoke listener asynchronously (fire-and-forget) if registered

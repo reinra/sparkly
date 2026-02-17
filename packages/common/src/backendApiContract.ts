@@ -7,6 +7,7 @@ export const ParameterType = {
   BOOLEAN: 'boolean',
   HSL: 'hsl',
   OPTION: 'option',
+  MULTI_HSL: 'multi_hsl',
 } as const;
 
 export const ParameterGroup = {
@@ -34,7 +35,7 @@ const EffectParameterBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  type: z.enum([ParameterType.RANGE, ParameterType.BOOLEAN, ParameterType.HSL, ParameterType.OPTION]),
+  type: z.enum([ParameterType.RANGE, ParameterType.BOOLEAN, ParameterType.HSL, ParameterType.OPTION, ParameterType.MULTI_HSL]),
   group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
 
@@ -69,11 +70,17 @@ const OptionEffectParameterSchema = EffectParameterBaseSchema.extend({
   options: z.array(OptionSchema),
 });
 
+const MultiHslEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.MULTI_HSL),
+  value: z.array(HslValueSchema).min(1),
+});
+
 const EffectParameterSchema = z.discriminatedUnion('type', [
   RangeEffectParameterSchema,
   BooleanEffectParameterSchema,
   HslEffectParameterSchema,
   OptionEffectParameterSchema,
+  MultiHslEffectParameterSchema,
 ]);
 
 const EffectInfoSchema = z.object({
@@ -133,7 +140,7 @@ const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
 
-const ParameterValueSchema = z.union([z.number(), z.boolean(), z.string(), HslValueSchema]);
+const ParameterValueSchema = z.union([z.number(), z.boolean(), z.string(), HslValueSchema, z.array(HslValueSchema)]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
   parameters: z.array(
@@ -187,6 +194,7 @@ export type RangeEffectParameter = z.infer<typeof RangeEffectParameterSchema>;
 export type BooleanEffectParameter = z.infer<typeof BooleanEffectParameterSchema>;
 export type HslEffectParameter = z.infer<typeof HslEffectParameterSchema>;
 export type OptionEffectParameter = z.infer<typeof OptionEffectParameterSchema>;
+export type MultiHslEffectParameter = z.infer<typeof MultiHslEffectParameterSchema>;
 
 // Backend API contract
 const DeviceModeSchema = z.object({

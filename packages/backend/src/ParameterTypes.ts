@@ -4,6 +4,7 @@ export enum ParameterType {
   BOOLEAN = 'boolean',
   HSL = 'hsl',
   OPTION = 'option',
+  MULTI_HSL = 'multi_hsl',
 }
 
 export enum ParameterGroup {
@@ -54,8 +55,14 @@ export interface OptionEffectParameter extends BaseEffectParameter {
   options: Option[];
 }
 
+export interface MultiHslEffectParameter extends BaseEffectParameter {
+  type: ParameterType.MULTI_HSL;
+  value: Hsl[];
+}
+
 export type EffectParameter =
   | RangeEffectParameter
   | BooleanEffectParameter
   | HslEffectParameter
-  | OptionEffectParameter;
+  | OptionEffectParameter
+  | MultiHslEffectParameter;

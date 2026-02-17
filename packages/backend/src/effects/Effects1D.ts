@@ -135,6 +135,29 @@ export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
+export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1D> {
+  readonly isStatic = true;
+  pointType: LedPointType = '1D';
+  readonly parameters = new EffectParameterStorage();
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values',
+    type: ParameterType.MULTI_HSL,
+    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+  });
+  getName(): string {
+    return 'Static Alternating Colors';
+  }
+  getLoopDurationSeconds(ledCount: number): number {
+    return 0;
+  }
+  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+    const index = point.position % this.colors.value.length;
+    return hslToRgbFloat(this.colors.value[index]);
+  }
+}
+
 export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   readonly isStatic = true;
   pointType: '1D' = '1D';

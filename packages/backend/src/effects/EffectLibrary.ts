@@ -20,6 +20,7 @@ import {
   MultiColorRainEffect,
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
+  StaticAlternatingColorCustomEffect,
 } from './Effects1D';
 import {
   CloudsEffect,
@@ -56,6 +57,7 @@ add('change_color', new ChangeColorEffect(redGreenBlue));
 addPresets(SingleHslColorEffect);
 add('alternate_rgb', new StaticAlternatingColorEffect([RED, GREEN, BLUE]));
 add('alternate_rgby', new StaticAlternatingColorEffect([RED, GREEN, BLUE, YELLOW]));
+add('alternate_custom', new StaticAlternatingColorCustomEffect());
 add('gradient_red_yellow', new StaticColorGradientEffect([RED, YELLOW]));
 add('gradient_rgb', new StaticColorGradientEffect([RED, GREEN, BLUE]));
 add('gradient_rgbr', new StaticColorGradientEffect([RED, GREEN, BLUE, RED]));

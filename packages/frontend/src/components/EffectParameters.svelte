@@ -13,7 +13,7 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  type ParameterValue = number | boolean | Hsl | string;
+  type ParameterValue = number | boolean | Hsl | string | Hsl[];
 
   let parameterElements: (HTMLElement | null)[] = [];
   const optimisticValues = new Map<string, ParameterValue>();
@@ -133,26 +133,32 @@
   }
 
   function cloneValue(value: ParameterValue): ParameterValue {
+    if (Array.isArray(value)) {
+      return value.map((v) => ({ ...v }));
+    }
     if (typeof value === 'object') {
       return { ...(value as Hsl) };
     }
     return value;
   }
 
+  function areHslArraysEqual(a: Hsl[], b: Hsl[]) {
+    if (a.length !== b.length) return false;
+    return a.every((color, i) => areHslEqual(color, b[i]));
+  }
+
+  function areValuesEqual(type: string, a: ParameterValue, b: ParameterValue): boolean {
+    if (type === ParameterType.HSL) {
+      return typeof a === 'object' && typeof b === 'object' && areHslEqual(a as Hsl, b as Hsl);
+    }
+    if (type === ParameterType.MULTI_HSL) {
+      return Array.isArray(a) && Array.isArray(b) && areHslArraysEqual(a as Hsl[], b as Hsl[]);
+    }
+    return a === b;
+  }
+
   function valuesMatch(param: EffectParameter, value: ParameterValue) {
-    if (param.type === ParameterType.RANGE && typeof value === 'number') {
-      return param.value === value;
-    }
-    if (param.type === ParameterType.BOOLEAN && typeof value === 'boolean') {
-      return param.value === value;
-    }
-    if (param.type === ParameterType.HSL && typeof value === 'object') {
-      return areHslEqual(param.value as Hsl, value as Hsl);
-    }
-    if (param.type === ParameterType.OPTION && typeof value === 'string') {
-      return param.value === value;
-    }
-    return false;
+    return areValuesEqual(param.type, param.value as ParameterValue, value);
   }
 
   function getEffectiveValue(param: EffectParameter): ParameterValue {
@@ -188,23 +194,8 @@
   function updateParameter(param: EffectParameter, value: ParameterValue) {
     const nextValue = cloneValue(value);
     const effectiveValue = getEffectiveValue(param);
-
-    if (param.type === ParameterType.HSL) {
-      if (typeof nextValue !== 'object' || areHslEqual(effectiveValue as Hsl, nextValue as Hsl)) {
-        return;
-      }
-    } else if (param.type === ParameterType.RANGE) {
-      if (typeof nextValue !== 'number' || effectiveValue === nextValue) {
-        return;
-      }
-    } else if (param.type === ParameterType.BOOLEAN) {
-      if (typeof nextValue !== 'boolean' || effectiveValue === nextValue) {
-        return;
-      }
-    } else if (param.type === ParameterType.OPTION) {
-      if (typeof nextValue !== 'string' || effectiveValue === nextValue) {
-        return;
-      }
+    if (areValuesEqual(param.type, effectiveValue, nextValue)) {
+      return;
     }
 
     setOptimisticValue(param.id, nextValue);
@@ -271,6 +262,62 @@
     parameterElements[index] = pickerButton;
     pickerButton.focus();
     pickerButton.click();
+  }
+
+  // --- MULTI_HSL helpers ---
+  let dragParamId: string | null = $state(null);
+  let dragFromIndex: number | null = $state(null);
+  let dragOverIndex: number | null = $state(null);
+
+  function getMultiHslColors(param: EffectParameter): Hsl[] {
+    return (getEffectiveValue(param) as Hsl[]).map((c) => ({ ...c }));
+  }
+
+  function multiHslUpdateColor(param: EffectParameter, colorIndex: number, newColor: Hsl) {
+    const colors = getMultiHslColors(param);
+    colors[colorIndex] = { ...newColor };
+    updateParameter(param, colors);
+  }
+
+  function multiHslAddColor(param: EffectParameter) {
+    const colors = getMultiHslColors(param);
+    colors.push({ ...colors[colors.length - 1] });
+    updateParameter(param, colors);
+  }
+
+  function multiHslRemoveColor(param: EffectParameter, colorIndex: number) {
+    const colors = getMultiHslColors(param);
+    if (colors.length <= 1) return;
+    colors.splice(colorIndex, 1);
+    updateParameter(param, colors);
+  }
+
+  function multiHslDragStart(paramId: string, colorIndex: number) {
+    dragParamId = paramId;
+    dragFromIndex = colorIndex;
+  }
+
+  function multiHslDragOver(event: DragEvent, colorIndex: number) {
+    event.preventDefault();
+    dragOverIndex = colorIndex;
+  }
+
+  function multiHslDrop(param: EffectParameter, toIndex: number) {
+    if (dragParamId !== param.id || dragFromIndex === null || dragFromIndex === toIndex) {
+      multiHslDragEnd();
+      return;
+    }
+    const colors = getMultiHslColors(param);
+    const [moved] = colors.splice(dragFromIndex, 1);
+    colors.splice(toIndex, 0, moved);
+    updateParameter(param, colors);
+    multiHslDragEnd();
+  }
+
+  function multiHslDragEnd() {
+    dragParamId = null;
+    dragFromIndex = null;
+    dragOverIndex = null;
   }
 </script>
 
@@ -368,6 +415,58 @@
               </button>
             {/each}
           </div>
+        </div>
+      {:else if param.type === ParameterType.MULTI_HSL}
+        {@const multiColors = getEffectiveValue(param) as Hsl[]}
+        <div class="control-group multi-color-group" title={param.description}>
+          <div class="multi-color-label"><strong>{param.name}</strong></div>
+          <div class="multi-color-list">
+            {#each multiColors as color, colorIndex}
+              {@const colorTriggerId = `${COLOR_PICKER_ID_PREFIX}${param.id}-${colorIndex}`}
+              <div
+                class="multi-color-row"
+                class:drag-over={dragParamId === param.id && dragOverIndex === colorIndex}
+                draggable="true"
+                ondragstart={() => multiHslDragStart(param.id, colorIndex)}
+                ondragover={(e) => multiHslDragOver(e, colorIndex)}
+                ondrop={() => multiHslDrop(param, colorIndex)}
+                ondragend={multiHslDragEnd}
+                role="listitem"
+              >
+                <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
+                <div class="color-picker-cell">
+                  <HslColorPicker
+                    triggerId={colorTriggerId}
+                    value={color}
+                    fullWidth={false}
+                    showValueLabel={false}
+                    on:change={(event) => multiHslUpdateColor(param, colorIndex, event.detail)}
+                  />
+                </div>
+                <span
+                  class="color-readout color-trigger"
+                  role="button"
+                  tabindex="0"
+                  aria-label={`Edit ${param.name} color ${colorIndex + 1}`}
+                  onclick={() => document.getElementById(colorTriggerId)?.click()}
+                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById(colorTriggerId)?.click(); } }}
+                >
+                  {formatHslDisplay(color)}
+                </span>
+                {#if multiColors.length > 1}
+                  <button
+                    class="multi-color-remove"
+                    title="Remove color"
+                    aria-label={`Remove color ${colorIndex + 1}`}
+                    onclick={() => multiHslRemoveColor(param, colorIndex)}
+                  >✕</button>
+                {:else}
+                  <span class="multi-color-remove-spacer"></span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          <button class="multi-color-add" onclick={() => multiHslAddColor(param)}>+ Add Color</button>
         </div>
       {/if}
     {/each}
@@ -535,5 +634,100 @@
       width: 100%;
       text-align: left;
     }
+  }
+
+  /* --- MULTI_HSL styles --- */
+  .multi-color-group {
+    display: block;
+    padding: 0.35rem 0;
+  }
+
+  .multi-color-label {
+    color: #666;
+    margin-bottom: 0.4rem;
+  }
+
+  .multi-color-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .multi-color-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.2rem 0.3rem;
+    border-radius: 0.4rem;
+    transition: background 0.15s ease;
+  }
+
+  .multi-color-row:hover {
+    background: #f8f8f8;
+  }
+
+  .multi-color-row.drag-over {
+    background: #fff4f0;
+    outline: 2px dashed #ff3e00;
+    outline-offset: -2px;
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: #bbb;
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+    padding: 0 0.1rem;
+  }
+
+  .drag-handle:hover {
+    color: #888;
+  }
+
+  .multi-color-remove {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+    color: #bbb;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.15rem 0.35rem;
+    transition: all 0.15s ease;
+    line-height: 1;
+  }
+
+  .multi-color-remove:hover {
+    color: #e03500;
+    border-color: #e03500;
+    background: #fff4f0;
+  }
+
+  .multi-color-remove-spacer {
+    width: 28px;
+  }
+
+  .multi-color-add {
+    margin-top: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px dashed #ccc;
+    border-radius: 999px;
+    background: #fafafa;
+    color: #888;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .multi-color-add:hover {
+    border-color: #ff3e00;
+    color: #ff3e00;
+    background: #fff4f0;
+  }
+
+  .multi-color-add:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline-offset: 2px;
   }
 </style>
