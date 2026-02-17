@@ -579,7 +579,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
     value: { hue: 0.1, saturation: 1.0, lightness: 0.5 },
   });
   getName(): string {
-    return `Sine Wave Effect (${this.frequency.value} cycles)`;
+    return `Sine Wave`;
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;

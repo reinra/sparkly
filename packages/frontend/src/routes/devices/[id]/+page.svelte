@@ -216,7 +216,7 @@
               onkeydown={handleKeyDown}
               tabindex={index === selectedEffectIndex ? 0 : -1}
             >
-              <span class="effect-name">{effect.id}</span>
+              <span class="effect-name">{effect.name}</span>
               <span class="active-badge" class:visible={device.effect?.id === effect.id}>Active</span>
             </button>
           {/each}
