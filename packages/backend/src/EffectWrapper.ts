@@ -14,6 +14,13 @@ export const enum MappingMode {
   UseDistanceAsPosition = 'UseDistanceAsPosition',
 }
 
+export const enum Rotation {
+  Deg0 = '0',
+  Deg90 = '90',
+  Deg180 = '180',
+  Deg270 = '270',
+}
+
 const WRAPPER_PREFIX = 'wrapper.';
 const CUSTOM_PREFIX = 'custom.';
 
@@ -71,6 +78,19 @@ export class EffectWrapper {
     max: 4.0,
     step: 0.1,
   });
+  private readonly rotation: OptionEffectParameter = this.parameters.register({
+    id: 'rotation',
+    name: 'Rotation',
+    description: 'Rotate the 2D effect by a fixed angle',
+    type: ParameterType.OPTION,
+    value: Rotation.Deg0,
+    options: [
+      { value: Rotation.Deg0, label: '0°', description: 'No rotation' },
+      { value: Rotation.Deg90, label: '90°', description: 'Rotate 90 degrees clockwise' },
+      { value: Rotation.Deg180, label: '180°', description: 'Rotate 180 degrees' },
+      { value: Rotation.Deg270, label: '270°', description: 'Rotate 270 degrees clockwise' },
+    ],
+  });
   private readonly mirror: BooleanEffectParameter = this.parameters.register({
     id: 'mirror',
     name: 'Mirror effect',
@@ -88,6 +108,7 @@ export class EffectWrapper {
     const saemColorEffect = effect instanceof BaseSameColorEffect;
     this.speed.hidden = effect.isStatic === true;
     this.mappingMode.hidden = effect.pointType === '2D' || saemColorEffect;
+    this.rotation.hidden = effect.pointType !== '2D';
     this.mirror.hidden = saemColorEffect;
   }
 
@@ -143,6 +164,28 @@ export class EffectWrapper {
   }
   public getMirror(): boolean {
     return this.mirror.value;
+  }
+  public getRotation(): Rotation {
+    return this.rotation.value as Rotation;
+  }
+
+  /**
+   * Rotate 2D points around the center (0.5, 0.5) of the normalized coordinate space.
+   */
+  public static rotatePoints2D(points: LedPoint2D[], rotation: Rotation): LedPoint2D[] {
+    if (rotation === Rotation.Deg0) return points;
+    return points.map((p) => {
+      switch (rotation) {
+        case Rotation.Deg90:
+          return { id: p.id, x: 1 - p.y, y: p.x };
+        case Rotation.Deg180:
+          return { id: p.id, x: 1 - p.x, y: 1 - p.y };
+        case Rotation.Deg270:
+          return { id: p.id, x: p.y, y: 1 - p.x };
+        default:
+          return p;
+      }
+    });
   }
 
   /**

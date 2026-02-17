@@ -3,7 +3,7 @@ import type { LedType, RgbValue } from '../color/Color8bit';
 import type { LedPoint1D, LedPoint2D, Effect } from '../effects/Effect';
 import type { LedMapper } from './LedMapper';
 import type { DeviceHelper } from '../DeviceHelper';
-import type { EffectWrapper } from '../EffectWrapper';
+import { EffectWrapper } from '../EffectWrapper';
 
 // ── Interface ─────────────────────────────────────────────────────────
 
@@ -66,7 +66,11 @@ export class RenderContextImpl implements RenderContext {
   }
 
   async getPoints(): Promise<LedPoint1D[] | LedPoint2D[]> {
-    return this.deviceHelper.getPoints(this.effectWrapper.effect);
+    const points = await this.deviceHelper.getPoints(this.effectWrapper.effect);
+    if (this.effectWrapper.effect.pointType === '2D') {
+      return EffectWrapper.rotatePoints2D(points as LedPoint2D[], this.effectWrapper.getRotation());
+    }
+    return points;
   }
 
   floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
