@@ -44,12 +44,12 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.color.id);
     return [
-      factory('red', 'Red', RED_HSL_COLOR),
-      factory('green', 'Green', GREEN_HSL_COLOR),
-      factory('blue', 'Blue', BLUE_HSL_COLOR),
-      factory('white', 'White', WHITE_HSL_COLOR),
-      factory('black', 'Black', BLACK_HSL_COLOR),
-      factory('choose_hsl', 'Choose HSL', DEFAULT_HSL_COLOR),
+      factory('red', 'Single Color: Red', RED_HSL_COLOR),
+      factory('green', 'Single Color: Green', GREEN_HSL_COLOR),
+      factory('blue', 'Single Color: Blue', BLUE_HSL_COLOR),
+      factory('white', 'Single Color: White', WHITE_HSL_COLOR),
+      factory('black', 'Single Color: Black', BLACK_HSL_COLOR),
+      factory('choose_hsl', 'Single Color: Custom', DEFAULT_HSL_COLOR),
     ];
   }
   getLoopDurationSeconds(ledCount: number): number {
@@ -90,22 +90,34 @@ export class FlipColorCustomEffect extends BaseSameColorEffect {
 }
 
 export class ChangeColorEffect extends BaseSameColorEffect {
-  constructor(private readonly colors: RgbFloat[]) {
-    super();
+  readonly parameters = new EffectParameterStorage();
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values',
+    type: ParameterType.MULTI_HSL,
+    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+  });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('change_color_rgb', 'Change Color: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('change_color_rgby', 'Change Color: RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
+    ];
   }
   getName(): string {
     return 'Change Color';
   }
   getLoopDurationSeconds(ledCount: number): number {
-    return this.colors.length * 2;
+    return this.colors.value.length * 2;
   }
   renderColor(ctx: EffectContext): RgbFloat {
-    const totalColors = this.colors.length;
+    const totalColors = this.colors.value.length;
     const colorPhase = (ctx.phase * totalColors) % totalColors;
     const fromIndex = Math.floor(colorPhase);
     const toIndex = (fromIndex + 1) % totalColors;
     const t = colorPhase - fromIndex; // Interpolation factor 0 to 1
-    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+    return lerp(hslToRgbFloat(this.colors.value[fromIndex]), hslToRgbFloat(this.colors.value[toIndex]), t);
   }
 }
 
@@ -161,24 +173,39 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1
 export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   readonly isStatic = true;
   pointType: '1D' = '1D';
-  private colors: RgbFloat[];
-  constructor(colors: RgbFloat[]) {
-    super();
-    this.colors = colors;
+  readonly parameters = new EffectParameterStorage();
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values for the gradient',
+    type: ParameterType.MULTI_HSL,
+    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+  });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('gradient_red_yellow', 'Gradient: Red-Yellow', [RED_HSL_COLOR, YELLOW_HSL_COLOR]),
+      factory('gradient_rgb', 'Gradient: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('gradient_rgbr', 'Gradient: RGBR', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR]),
+      factory('gradient_black_red', 'Gradient: Black-Red', [BLACK_HSL_COLOR, RED_HSL_COLOR]),
+      factory('gradient_black_green', 'Gradient: Black-Green', [BLACK_HSL_COLOR, GREEN_HSL_COLOR]),
+      factory('gradient_black_blue', 'Gradient: Black-Blue', [BLACK_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('gradient_black_white', 'Gradient: Black-White', [BLACK_HSL_COLOR, WHITE_HSL_COLOR]),
+    ];
   }
   getName(): string {
-    return `Static Color Gradient (${this.colors.length} colors)`;
+    return 'Static Color Gradient';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 0; // Static effect has no loop
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
-    const scaledPos = point.distance * (this.colors.length - 1);
+    const scaledPos = point.distance * (this.colors.value.length - 1);
     const fromIndex = Math.floor(scaledPos);
-    const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
+    const toIndex = Math.min(fromIndex + 1, this.colors.value.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
-    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+    return lerp(hslToRgbFloat(this.colors.value[fromIndex]), hslToRgbFloat(this.colors.value[toIndex]), t);
   }
 }
 
@@ -214,24 +241,34 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<LedPoint1D> 
 
 export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
-  private colors: RgbFloat[];
-  constructor(colors: RgbFloat[]) {
-    super();
-    this.colors = colors;
+  readonly parameters = new EffectParameterStorage();
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values for the gradient',
+    type: ParameterType.MULTI_HSL,
+    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR ],
+  });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('rotating_gradient_rgbr', 'Rotating Gradient: RGBR', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, RED_HSL_COLOR]),
+      factory('rotating_gradient_rgb', 'Rotating Gradient: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+    ];
   }
   getName(): string {
-    return `Rotating Color Gradient (${this.colors.length} colors)`;
+    return 'Rotating Color Gradient';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5; // Rotating effect has a loop duration
   }
   renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
-    const scaledPos = ((point.distance + ctx.phase) % 1.0) * (this.colors.length - 1);
+    const scaledPos = ((point.distance + ctx.phase) % 1.0) * (this.colors.value.length - 1);
     const fromIndex = Math.floor(scaledPos);
-    const toIndex = Math.min(fromIndex + 1, this.colors.length - 1);
+    const toIndex = Math.min(fromIndex + 1, this.colors.value.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
-    return lerp(this.colors[fromIndex], this.colors[toIndex], t);
+    return lerp(hslToRgbFloat(this.colors.value[fromIndex]), hslToRgbFloat(this.colors.value[toIndex]), t);
   }
 }
 
