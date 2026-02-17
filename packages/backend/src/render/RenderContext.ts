@@ -74,7 +74,11 @@ export class RenderContextImpl implements RenderContext {
   }
 
   floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
-    return this.deviceHelper.floatTo8bitColor(colors, this.effectWrapper.getGamma(), this.effectWrapper.getInvertColors());
+    return this.deviceHelper.floatTo8bitColor(
+      colors,
+      this.effectWrapper.getGamma(),
+      this.effectWrapper.getInvertColors()
+    );
   }
 
   getMinFrameTimeMs(): number {
