@@ -13,7 +13,7 @@ import {
   emptyParameterStorageView,
   MultiParameterStorageView,
 } from './effectParameters';
-import { adjustColorTemperatureNormalized, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
+import { adjustColorTemperatureNormalized, applyChannelGain, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
 import { Effect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
@@ -97,6 +97,39 @@ export class DeviceHelper {
     type: ParameterType.BOOLEAN,
     value: false,
   };
+  private readonly gainRed: RangeEffectParameter = {
+    id: 'gainRed',
+    name: 'Gain Red',
+    description: 'Red channel gain adjustment',
+    type: ParameterType.RANGE,
+    value: 0,
+    min: -100,
+    max: 100,
+    unit: '%',
+    step: 1,
+  };
+  private readonly gainGreen: RangeEffectParameter = {
+    id: 'gainGreen',
+    name: 'Gain Green',
+    description: 'Green channel gain adjustment',
+    type: ParameterType.RANGE,
+    value: 0,
+    min: -100,
+    max: 100,
+    unit: '%',
+    step: 1,
+  };
+  private readonly gainBlue: RangeEffectParameter = {
+    id: 'gainBlue',
+    name: 'Gain Blue',
+    description: 'Blue channel gain adjustment',
+    type: ParameterType.RANGE,
+    value: 0,
+    min: -100,
+    max: 100,
+    unit: '%',
+    step: 1,
+  };
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
 
@@ -157,6 +190,9 @@ export class DeviceHelper {
     this.deviceParams.register(this.mirror);
     this.deviceParams.register(this.gamma);
     this.deviceParams.register(this.temperature);
+    this.deviceParams.register(this.gainRed);
+    this.deviceParams.register(this.gainGreen);
+    this.deviceParams.register(this.gainBlue);
 
     this.deviceParamsInitialized = true;
   }
@@ -255,12 +291,16 @@ export class DeviceHelper {
   public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0, invertColors: boolean = false): RgbValue[] {
     const gamma = this.gamma.value * effectGamma;
     const temperature = this.temperature.value;
+    const redGain = this.gainRed.value;
+    const greenGain = this.gainGreen.value;
+    const blueGain = this.gainBlue.value;
     const result: RgbValue[] = new Array(colors.length);
     for (let i = 0; i < colors.length; i++) {
       let color = colors[i];
       if (invertColors) {
         color = { red_f: 1 - color.red_f, green_f: 1 - color.green_f, blue_f: 1 - color.blue_f };
       }
+      color = applyChannelGain(color, redGain, greenGain, blueGain);
       result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(color, gamma), temperature));
     }
     return result;

@@ -92,6 +92,22 @@ export function gammaCorrect(color: LedFloat, gamma: number): LedFloat {
 }
 
 /**
+ * Applies per-channel gain to a color.
+ * Gain is a percentage from -100 to 100, where 0 means no change,
+ * positive values boost the channel, and negative values reduce it.
+ */
+export function applyChannelGain(color: RgbFloat, redGain: number, greenGain: number, blueGain: number): RgbFloat {
+  if (redGain === 0 && greenGain === 0 && blueGain === 0) {
+    return color; // No adjustment needed
+  }
+  return {
+    red_f: Math.max(0, Math.min(1, color.red_f * (1 + redGain / 100))),
+    green_f: Math.max(0, Math.min(1, color.green_f * (1 + greenGain / 100))),
+    blue_f: Math.max(0, Math.min(1, color.blue_f * (1 + blueGain / 100))),
+  };
+}
+
+/**
  * Adjusts the color temperature of a color. Temperature is a value between -1 (cool/blue) and 1 (warm/orange).
  */
 export function adjustColorTemperatureNormalized(color: RgbFloat, temperature: number): RgbFloat {
