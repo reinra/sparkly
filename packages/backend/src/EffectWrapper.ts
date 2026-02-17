@@ -105,6 +105,23 @@ export class EffectWrapper {
     type: ParameterType.BOOLEAN,
     value: false,
   });
+  private readonly ledsPerPixel: RangeEffectParameter = this.parameters.register(
+    {
+      id: 'ledsPerPixel',
+      name: 'Leds per pixel',
+      description: 'Number of consecutive LEDs that share the same position (same color)',
+      type: ParameterType.RANGE,
+      value: 1,
+      min: 1,
+      max: 100,
+      step: 1,
+    },
+    () => {
+      for (const listener of this.mappingModeChangeListeners) {
+        listener();
+      }
+    }
+  );
   private readonly mappingModeChangeListeners = new Set<() => void>();
 
   constructor(
@@ -117,6 +134,7 @@ export class EffectWrapper {
     this.mappingMode.hidden = effect.pointType === '2D' || saemColorEffect;
     this.rotation.hidden = effect.pointType !== '2D';
     this.mirror.hidden = saemColorEffect;
+    this.ledsPerPixel.hidden = effect.pointType === '2D' || saemColorEffect;
   }
 
   public getName(): string {
@@ -134,20 +152,21 @@ export class EffectWrapper {
   public async computePoints1D(count: number, getPoints2D: () => Promise<LedPoint2D[]>): Promise<LedPoint1D[]> {
     const mode = this.mappingMode.value as MappingMode;
     if (mode === MappingMode.UseDistanceAsPosition) {
-      return EffectWrapper.getSimplePoints1D(count);
+      return EffectWrapper.getSimplePoints1D(count, this.ledsPerPixel.value);
     }
     const points = await getPoints2D();
+    const lpp = this.ledsPerPixel.value;
     return points.map((point) => ({
       id: point.id,
-      position: point.id,
+      position: Math.floor(point.id / lpp),
       distance: getDistance(mode, point, count),
     }));
   }
 
-  private static getSimplePoints1D(count: number): LedPoint1D[] {
+  private static getSimplePoints1D(count: number, ledsPerPixel: number): LedPoint1D[] {
     const points: LedPoint1D[] = [];
     for (let i = 0; i < count; i++) {
-      points.push({ id: i, position: i, distance: i / count });
+      points.push({ id: i, position: Math.floor(i / ledsPerPixel), distance: i / count });
     }
     return points;
   }
