@@ -13,7 +13,13 @@ import {
   emptyParameterStorageView,
   MultiParameterStorageView,
 } from './effectParameters';
-import { adjustColorTemperatureNormalized, applyChannelGain, floatTo8bit, gammaCorrect, RgbFloat } from './color/ColorFloat';
+import {
+  adjustColorTemperatureNormalized,
+  applyChannelGain,
+  floatTo8bit,
+  gammaCorrect,
+  RgbFloat,
+} from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
 import { Effect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
