@@ -26,6 +26,7 @@ const CUSTOM_PREFIX = 'custom.';
 
 export class EffectWrapper {
   private readonly parameters = new EffectParameterStorage();
+  // Geometry
   private readonly speed: RangeEffectParameter = this.parameters.register({
     id: 'speed',
     name: 'Speed',
@@ -68,16 +69,6 @@ export class EffectWrapper {
       }
     }
   );
-  private readonly gamma: RangeEffectParameter = this.parameters.register({
-    id: 'gamma',
-    name: 'Gamma correction',
-    description: 'Gamma correction value for this effect (multiplied with device gamma)',
-    type: ParameterType.RANGE,
-    value: 1.0,
-    min: 0.1,
-    max: 4.0,
-    step: 0.1,
-  });
   private readonly rotation: OptionEffectParameter = this.parameters.register({
     id: 'rotation',
     name: 'Rotation',
@@ -98,13 +89,6 @@ export class EffectWrapper {
     type: ParameterType.BOOLEAN,
     value: false,
   });
-  private readonly invertColors: BooleanEffectParameter = this.parameters.register({
-    id: 'invertColors',
-    name: 'Invert colors',
-    description: 'Invert the RGB color output of this effect',
-    type: ParameterType.BOOLEAN,
-    value: false,
-  });
   private readonly ledsPerPixel: RangeEffectParameter = this.parameters.register(
     {
       id: 'ledsPerPixel',
@@ -122,6 +106,24 @@ export class EffectWrapper {
       }
     }
   );
+  // Color correction
+  private readonly gamma: RangeEffectParameter = this.parameters.register({
+    id: 'gamma',
+    name: 'Gamma correction',
+    description: 'Gamma correction value for this effect (multiplied with device gamma)',
+    type: ParameterType.RANGE,
+    value: 1.0,
+    min: 0.1,
+    max: 4.0,
+    step: 0.1,
+  });
+  private readonly invertColors: BooleanEffectParameter = this.parameters.register({
+    id: 'invertColors',
+    name: 'Invert colors',
+    description: 'Invert the RGB color output of this effect',
+    type: ParameterType.BOOLEAN,
+    value: false,
+  });
   private readonly mappingModeChangeListeners = new Set<() => void>();
 
   constructor(
