@@ -1,5 +1,5 @@
 import { EffectParameterStorage, EffectParameterView, emptyParameterStorageView, MultiParameterStorageView, ParameterValue } from "./effectParameters";
-import { BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D } from "./effects/Effect";
+import { BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D, LedPoint } from "./effects/Effect";
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from "./ParameterTypes";
 
 export const enum MappingMode {
@@ -105,6 +105,20 @@ export class EffectWrapper {
     }
     public getMirror(): boolean {
         return this.mirror.value;
+    }
+
+    /**
+     * Create a clone of this EffectWrapper with a new ID and name.
+     * A fresh effect instance is created and all parameter values are copied.
+     */
+    public clone(newId: string, newName: string): EffectWrapper {
+        const newEffect = new (this.effect.constructor as new () => Effect<LedPoint>)();
+        const cloned = new EffectWrapper(newId, newEffect, newName);
+        // Copy all parameter values from source to clone
+        for (const param of this.getEffectParameters().list()) {
+            cloned.getEffectParameters().setValue(param.id, param.value);
+        }
+        return cloned;
     }
 }
 

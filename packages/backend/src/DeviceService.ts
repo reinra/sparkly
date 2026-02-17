@@ -1,4 +1,4 @@
-import { effects } from './effects/EffectLibrary';
+import { effects, cloneEffect } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
@@ -219,6 +219,10 @@ export class DeviceService {
     for (const param of parameters) {
       params.setValue(param.id, param.value);
     }
+  }
+
+  cloneEffect(effectId: string): { id: string; name: string } {
+    return cloneEffect(effectId);
   }
 }
 

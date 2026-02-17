@@ -62,4 +62,9 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     await deviceService.setParameters(req.body.device_id, req.body.parameters);
     res.json({ success: true });
   },
+
+  cloneEffect: async (req, res) => {
+    const result = deviceService.cloneEffect(req.body.effect_id);
+    res.json(result);
+  },
 };

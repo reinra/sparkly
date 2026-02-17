@@ -136,6 +136,15 @@ const ChooseEffectRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string().nullable(),
 });
 
+const CloneEffectRequestSchema = z.object({
+  effect_id: z.string(),
+});
+
+const CloneEffectResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
 const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
@@ -271,6 +280,15 @@ export const backendApiContract = c.router({
     body: ChooseEffectRequestSchema,
     responses: {
       200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  cloneEffect: {
+    method: 'POST',
+    path: '/api/effect/clone',
+    body: CloneEffectRequestSchema,
+    responses: {
+      200: CloneEffectResponseSchema,
       500: ErrorResponseSchema,
     },
   },

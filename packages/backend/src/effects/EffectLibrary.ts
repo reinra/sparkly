@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { EffectWrapper } from '../EffectWrapper';
 import { Effect, EffectPreset } from './Effect';
 import {
@@ -70,5 +71,30 @@ add('plasma', new PlasmaEffect());
 add('gravity_fountain', new GravityFountain());
 add('test_per_led', new TestPerLedEffect());
 add('test_all_leds_flash', new TestAllLedsFlash());
+
+export function cloneEffect(sourceId: string): { id: string; name: string } {
+  const source = effects[sourceId];
+  if (!source) {
+    throw new Error(`Effect '${sourceId}' not found`);
+  }
+
+  const newId = randomUUID();
+  const newName = `Copy of ${source.getName()}`;
+  const cloned = source.clone(newId, newName);
+
+  // Insert cloned effect right after the source in the ordered record
+  const entries = Object.entries(effects);
+  for (const key of Object.keys(effects)) {
+    delete effects[key];
+  }
+  for (const [id, wrapper] of entries) {
+    effects[id] = wrapper;
+    if (id === sourceId) {
+      effects[newId] = cloned;
+    }
+  }
+
+  return { id: newId, name: newName };
+}
 
 export { effects };

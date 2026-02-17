@@ -116,6 +116,31 @@
     updating = false;
   }
 
+  async function cloneEffect() {
+    if (!device || updating || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
+    const sourceEffect = effects[selectedEffectIndex];
+
+    updating = true;
+    try {
+      const response = await backendClient.cloneEffect({
+        body: { effect_id: sourceEffect.id },
+      });
+      if (response.status === 200) {
+        const newEffectId = response.body.id;
+        // Refresh effects list
+        await deviceStore.fetchAllDevices();
+        // Select and activate the cloned effect
+        const newIndex = effects.findIndex((e) => e.id === newEffectId);
+        if (newIndex >= 0) {
+          await selectEffect(newIndex);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to clone effect:', e);
+    }
+    updating = false;
+  }
+
   function handleKeyDown(event: KeyboardEvent) {
     if (!effects.length) return;
 
@@ -205,6 +230,9 @@
       <div class="effects-section">
         <h3>Effects</h3>
         <p class="hint">Focus effects: ↑↓ to navigate | Focus params: ↑↓ to switch, ←→ to adjust</p>
+        <button class="clone-button" onclick={cloneEffect} disabled={updating || effects.length === 0}>
+          Clone Selected Effect
+        </button>
         <div class="effects-list">
           {#each effects as effect, index}
             <button
@@ -326,6 +354,10 @@
     font-style: italic;
     margin: -0.5rem 0 1rem 0;
     min-width: 0;
+  }
+
+  .clone-button {
+    margin-bottom: 0.75rem;
   }
 
   .effects-list {
