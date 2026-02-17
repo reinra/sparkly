@@ -252,12 +252,16 @@ export class DeviceHelper {
     return this.ledMappingCache;
   }
 
-  public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0): RgbValue[] {
+  public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0, invertColors: boolean = false): RgbValue[] {
     const gamma = this.gamma.value * effectGamma;
     const temperature = this.temperature.value;
     const result: RgbValue[] = new Array(colors.length);
     for (let i = 0; i < colors.length; i++) {
-      result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(colors[i], gamma), temperature));
+      let color = colors[i];
+      if (invertColors) {
+        color = { red_f: 1 - color.red_f, green_f: 1 - color.green_f, blue_f: 1 - color.blue_f };
+      }
+      result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(color, gamma), temperature));
     }
     return result;
   }

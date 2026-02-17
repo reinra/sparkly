@@ -98,6 +98,13 @@ export class EffectWrapper {
     type: ParameterType.BOOLEAN,
     value: false,
   });
+  private readonly invertColors: BooleanEffectParameter = this.parameters.register({
+    id: 'invertColors',
+    name: 'Invert colors',
+    description: 'Invert the RGB color output of this effect',
+    type: ParameterType.BOOLEAN,
+    value: false,
+  });
   private readonly mappingModeChangeListeners = new Set<() => void>();
 
   constructor(
@@ -164,6 +171,9 @@ export class EffectWrapper {
   }
   public getMirror(): boolean {
     return this.mirror.value;
+  }
+  public getInvertColors(): boolean {
+    return this.invertColors.value;
   }
   public getRotation(): Rotation {
     return this.rotation.value as Rotation;
