@@ -15,8 +15,8 @@
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
 
-  let deviceParams = $derived((device?.parameters || []).filter(p => p.group === ParameterGroup.DEVICE));
-  let effectParams = $derived((device?.parameters || []).filter(p => p.group === ParameterGroup.EFFECT));
+  let deviceParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.DEVICE));
+  let effectParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.EFFECT));
 
   // Fetch devices on mount or when device ID changes
   $effect(() => {

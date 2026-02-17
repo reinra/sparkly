@@ -35,7 +35,13 @@ const EffectParameterBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  type: z.enum([ParameterType.RANGE, ParameterType.BOOLEAN, ParameterType.HSL, ParameterType.OPTION, ParameterType.MULTI_HSL]),
+  type: z.enum([
+    ParameterType.RANGE,
+    ParameterType.BOOLEAN,
+    ParameterType.HSL,
+    ParameterType.OPTION,
+    ParameterType.MULTI_HSL,
+  ]),
   group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
 
@@ -84,23 +90,23 @@ const EffectParameterSchema = z.discriminatedUnion('type', [
 ]);
 
 const EffectInfoSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    type: z.string(),
-    pointType: z.enum(['1D', '2D']),
-  });
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  pointType: z.enum(['1D', '2D']),
+});
 
 const DeviceInfoResponseSchema = z.object({
-    id: z.string(),
-    alias: z.string(),
-    ip: z.string().ip(),
-    name: z.string().optional(),
-    led_count: z.number().optional(),
-    brightness: z.number().min(0).max(100).optional(),
-    mode: z.string().optional(),
-    effect: EffectInfoSchema.nullable(),
-    parameters: z.array(EffectParameterSchema),
-  });
+  id: z.string(),
+  alias: z.string(),
+  ip: z.string().ip(),
+  name: z.string().optional(),
+  led_count: z.number().optional(),
+  brightness: z.number().min(0).max(100).optional(),
+  mode: z.string().optional(),
+  effect: EffectInfoSchema.nullable(),
+  parameters: z.array(EffectParameterSchema),
+});
 
 const GetInfoResponseSchema = z.object({
   devices: z.array(DeviceInfoResponseSchema),
@@ -117,7 +123,8 @@ const DeviceDebugResponseSchema = z.object({
     z.object({
       title: z.string(),
       content: z.string(),
-    }))
+    })
+  ),
 });
 
 const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
@@ -338,4 +345,3 @@ export const backendApiContract = c.router({
     },
   },
 });
-

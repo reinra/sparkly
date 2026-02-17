@@ -35,8 +35,6 @@ export interface DebugSection {
   content: string;
 }
 
-
-
 // ── Errors ────────────────────────────────────────────────────────────
 
 export class DeviceNotFoundError extends Error {
@@ -57,7 +55,6 @@ export class EffectNotFoundError extends Error {
 
 /** Business-logic layer. Agnostic of HTTP / TS-Rest. Trusts input types. */
 export class DeviceService {
-
   getDevice(deviceId: string): Device {
     const device = devices[deviceId];
     if (!device) {
@@ -76,9 +73,7 @@ export class DeviceService {
   }
 
   async getInfo(deviceId?: string): Promise<InfoResult> {
-    const devicesToQuery = deviceId
-      ? [this.getDevice(deviceId)]
-      : Object.values(devices);
+    const devicesToQuery = deviceId ? [this.getDevice(deviceId)] : Object.values(devices);
 
     const deviceList: DeviceInfo[] = [];
 
@@ -115,10 +110,13 @@ export class DeviceService {
               pointType: currentEffect.effect.pointType,
             }
           : null,
-        parameters: (await device.helper.getParameters()).list().filter((p) => !p.hidden).map((p) => ({
-          ...p,
-          group: getEffectGroup(p),
-        })),
+        parameters: (await device.helper.getParameters())
+          .list()
+          .filter((p) => !p.hidden)
+          .map((p) => ({
+            ...p,
+            group: getEffectGroup(p),
+          })),
       });
 
       logger
