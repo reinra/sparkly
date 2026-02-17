@@ -81,14 +81,49 @@
     dragFromIndex = null;
     dragOverIndex = null;
   }
+
+  function handleListKeyDown(event: KeyboardEvent) {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+    const target = event.target as HTMLElement;
+    const row = target.closest('.multi-color-row') as HTMLElement | null;
+    if (!row) return;
+
+    const rows = Array.from(containerEl?.querySelectorAll('.multi-color-row') ?? []);
+    const currentIndex = rows.indexOf(row);
+    if (currentIndex === -1) return;
+
+    const nextIndex = event.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+
+    // At boundary, let the event propagate to parent for inter-parameter navigation
+    if (nextIndex < 0 || nextIndex >= rows.length) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const targetRow = rows[nextIndex] as HTMLElement;
+    const focusables = Array.from(targetRow.querySelectorAll('button, [tabindex="0"]')) as HTMLElement[];
+    const currentFocusables = Array.from(row.querySelectorAll('button, [tabindex="0"]')) as HTMLElement[];
+    const focusIndex = currentFocusables.indexOf(target);
+
+    if (focusIndex >= 0 && focusIndex < focusables.length) {
+      focusables[focusIndex]?.focus();
+    } else {
+      (focusables[0] ?? targetRow)?.focus();
+    }
+  }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   use:setupContainer
   class="control-group multi-color-group"
   tabindex="-1"
   title={param.description}
+  role="list"
+  aria-label={param.name}
   onfocus={handleContainerFocus}
+  onkeydown={handleListKeyDown}
 >
   <div class="multi-color-label"><strong>{param.name}</strong></div>
   <div class="multi-color-list">
