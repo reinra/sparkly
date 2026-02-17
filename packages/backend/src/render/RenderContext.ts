@@ -50,7 +50,7 @@ export interface RenderContext {
 export class RenderContextImpl implements RenderContext {
   constructor(
     private readonly deviceHelper: DeviceHelper,
-    private readonly effectWrapper: EffectWrapper,
+    private readonly effectWrapper: EffectWrapper
   ) {}
 
   get effect(): Effect<any> {

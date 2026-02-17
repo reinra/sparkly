@@ -1,4 +1,10 @@
-import { BooleanEffectParameter, EffectParameter, ParameterGroup, ParameterType, RangeEffectParameter } from './ParameterTypes';
+import {
+  BooleanEffectParameter,
+  EffectParameter,
+  ParameterGroup,
+  ParameterType,
+  RangeEffectParameter,
+} from './ParameterTypes';
 import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
 import {
   DynamicParameterStorageView,
@@ -47,7 +53,10 @@ export class DeviceHelper {
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
       [DEVICE_PREFIX, this.deviceParams],
-      [EFFECT_PREFIX, new DynamicParameterStorageView(() => this.currentEffect?.getEffectParameters() ?? emptyParameterStorageView)],
+      [
+        EFFECT_PREFIX,
+        new DynamicParameterStorageView(() => this.currentEffect?.getEffectParameters() ?? emptyParameterStorageView),
+      ],
     ])
   );
 
@@ -108,7 +117,6 @@ export class DeviceHelper {
   }
 
   private async initParams(): Promise<void> {
-
     this.deviceParams.register(
       {
         id: 'brightness',
@@ -179,16 +187,14 @@ export class DeviceHelper {
     return this.gestaltCache;
   }
 
-  public async getPoints(
-    effect: Effect<any>
-  ): Promise<LedPoint1D[] | LedPoint2D[]> {
+  public async getPoints(effect: Effect<any>): Promise<LedPoint1D[] | LedPoint2D[]> {
     const ledCount = (await this.getGestalt()).number_of_led;
     if (effect.pointType === '1D') {
       if (!this.currentEffect) {
         throw new Error('No current effect set');
       }
       return this.getPoints1D(ledCount);
-    }    
+    }
     if (effect.pointType === '2D') {
       return this.getPoints2D(ledCount);
     }
@@ -208,7 +214,7 @@ export class DeviceHelper {
   }
 
   private async getPoints2D(count: number): Promise<LedPoint2D[]> {
-      return (await this.getLedMapping()).coordinates;
+    return (await this.getLedMapping()).coordinates;
   }
 
   public async getLedMapping(): Promise<LedMapping> {
@@ -311,9 +317,7 @@ export class DeviceHelper {
       {
         title: 'Effects',
         content: await this.apiClient.getLedEffects(),
-      }
+      },
     ];
   }
 }
-
-
