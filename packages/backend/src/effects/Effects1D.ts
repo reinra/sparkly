@@ -1,3 +1,4 @@
+import { createPresetFactoryForSingleParameter } from '../EffectWrapper';
 import { Hsl, ParameterType } from '../ParameterTypes';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../color/ColorFloat';
 import {
@@ -11,6 +12,7 @@ import {
   randomColorMaxSaturation,
   RED_HSL_COLOR,
   WHITE_HSL_COLOR,
+  YELLOW_HSL_COLOR,
 } from '../color/Hsl';
 import { EffectParameterStorage, EffectParameterView } from '../effectParameters';
 import {
@@ -22,25 +24,9 @@ import {
   EffectLogic,
   Effect,
   LedPointType,
-  EffectPreset,
+  EffectPreset
 } from './Effect';
 import { backAndForthPhaseWithPause, revertPhase } from './PhaseUtis';
-
-export class SingleColorEffect extends BaseSameColorEffect {
-  readonly isStatic = true;
-  constructor(private readonly color: RgbFloat) {
-    super();
-  }
-  getName(): string {
-    return 'Single Color';
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0;
-  }
-  renderColor(ctx: EffectContext): RgbFloat {
-    return this.color;
-  }
-}
 
 export class SingleHslColorEffect extends BaseSameColorEffect {
   readonly isStatic = true;
@@ -54,24 +40,18 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
   });
   getName(): string {
     return 'Single Color';
-  }  
-  private preset(id: string, name: string, hsl: Hsl): EffectPreset {
-      return {
-        id,
-        name,
-        config: new Map([['custom.color', hsl]]),
-      };
   }
   getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.color.id);
     return [
-      this.preset('red', 'Red', RED_HSL_COLOR),
-      this.preset('green', 'Green', GREEN_HSL_COLOR),
-      this.preset('blue', 'Blue', BLUE_HSL_COLOR),
-      this.preset('white', 'White', WHITE_HSL_COLOR),
-      this.preset('black', 'Black', BLACK_HSL_COLOR),
-      this.preset('choose_hsl', 'Choose HSL', DEFAULT_HSL_COLOR),
+      factory('red', 'Red', RED_HSL_COLOR),
+      factory('green', 'Green', GREEN_HSL_COLOR),
+      factory('blue', 'Blue', BLUE_HSL_COLOR),
+      factory('white', 'White', WHITE_HSL_COLOR),
+      factory('black', 'Black', BLACK_HSL_COLOR),
+      factory('choose_hsl', 'Choose HSL', DEFAULT_HSL_COLOR),
     ];
-  }  
+  }
   getLoopDurationSeconds(ledCount: number): number {
     return 0;
   }
@@ -80,20 +60,32 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
   }
 }
 
-export class FlipColorEffect extends BaseSameColorEffect {
-  constructor(private readonly colors: RgbFloat[]) {
-    super();
+export class FlipColorCustomEffect extends BaseSameColorEffect {
+  readonly parameters = new EffectParameterStorage();
+  private readonly colors = this.parameters.register({
+    id: 'colors',
+    name: 'Colors',
+    description: 'HSL color values',
+    type: ParameterType.MULTI_HSL,
+    value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
+  });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('flip_rgb', 'Flip RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('flip_rgby', 'Flip RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
+    ];
   }
   getName(): string {
     return 'Flip Color';
   }
   getLoopDurationSeconds(ledCount: number): number {
-    return this.colors.length * 2;
+    return this.colors.value.length * 2;
   }
   renderColor(ctx: EffectContext): RgbFloat {
-    const totalColors = this.colors.length;
+    const totalColors = this.colors.value.length;
     const index = Math.floor(ctx.phase * totalColors) % totalColors;
-    return this.colors[index];
+    return hslToRgbFloat(this.colors.value[index]);
   }
 }
 
@@ -146,6 +138,14 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1
     type: ParameterType.MULTI_HSL,
     value: [ RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR ],
   });
+  getPresets(): EffectPreset[] {
+    const factory = createPresetFactoryForSingleParameter(this.colors.id);
+    return [
+      factory('alternate_rgb', 'Alternate RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
+      factory('alternate_rgby', 'Alternate RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
+      factory('alternate_wb', 'Alternate WB', [WHITE_HSL_COLOR, BLACK_HSL_COLOR]),
+    ];
+  }
   getName(): string {
     return 'Static Alternating Colors';
   }

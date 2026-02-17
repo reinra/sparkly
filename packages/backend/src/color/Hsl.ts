@@ -1,6 +1,6 @@
 import type { Hsl } from '../ParameterTypes';
 import type { RgbValue } from './Color8bit';
-import type { RgbFloat } from './ColorFloat';
+import { type RgbFloat } from './ColorFloat';
 
 export const RED_HSL_COLOR: Hsl = {
   hue: 0, // Red
@@ -14,6 +14,11 @@ export const GREEN_HSL_COLOR: Hsl = {
 };
 export const BLUE_HSL_COLOR: Hsl = {
   hue: 2 / 3, // Blue
+  saturation: 1, // Full saturation
+  lightness: 0.5, // Medium lightness
+};
+export const YELLOW_HSL_COLOR: Hsl = {
+  hue: 1 / 6, // Yellow
   saturation: 1, // Full saturation
   lightness: 0.5, // Medium lightness
 };

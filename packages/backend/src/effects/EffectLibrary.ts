@@ -3,7 +3,6 @@ import { EffectWrapper } from '../EffectWrapper';
 import { Effect, EffectPreset } from './Effect';
 import {
   ChangeColorEffect,
-  FlipColorEffect,
   MeteorEffect,
   PingPongEffect,
   RainbowGradientEffect,
@@ -11,7 +10,6 @@ import {
   RotatingColorGradientEffect,
   SineEffect,
   SingleHslColorEffect,
-  StaticAlternatingColorEffect,
   StaticColorGradientEffect,
   TestPerLedEffect,
   TwinkleEffect,
@@ -21,6 +19,7 @@ import {
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
+  FlipColorCustomEffect,
 } from './Effects1D';
 import {
   CloudsEffect,
@@ -51,13 +50,11 @@ function addPresets<T extends Effect<any> & { getPresets(): EffectPreset[] }>(Ef
 function add(id: string, effect: Effect<any>): void {
   effects[id] = new EffectWrapper(id, effect, effect.getName());
 }
-
-add('flip_color', new FlipColorEffect(redGreenBlue));
+ 
+addPresets(FlipColorCustomEffect);
 add('change_color', new ChangeColorEffect(redGreenBlue));
 addPresets(SingleHslColorEffect);
-add('alternate_rgb', new StaticAlternatingColorEffect([RED, GREEN, BLUE]));
-add('alternate_rgby', new StaticAlternatingColorEffect([RED, GREEN, BLUE, YELLOW]));
-add('alternate_custom', new StaticAlternatingColorCustomEffect());
+addPresets(StaticAlternatingColorCustomEffect);
 add('gradient_red_yellow', new StaticColorGradientEffect([RED, YELLOW]));
 add('gradient_rgb', new StaticColorGradientEffect([RED, GREEN, BLUE]));
 add('gradient_rgbr', new StaticColorGradientEffect([RED, GREEN, BLUE, RED]));

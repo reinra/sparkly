@@ -1,4 +1,4 @@
-import { EffectParameterStorage, EffectParameterView, emptyParameterStorageView, MultiParameterStorageView } from "./effectParameters";
+import { EffectParameterStorage, EffectParameterView, emptyParameterStorageView, MultiParameterStorageView, ParameterValue } from "./effectParameters";
 import { BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D } from "./effects/Effect";
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from "./ParameterTypes";
 
@@ -7,6 +7,9 @@ export const enum MappingMode {
     UseYAsPosition = "UseYAsPosition",
     UseDistanceAsPosition = "UseDistanceAsPosition"
 }
+
+const WRAPPER_PREFIX = "wrapper.";
+const CUSTOM_PREFIX = "custom.";
 
 export class EffectWrapper {
     private readonly parameters = new EffectParameterStorage();
@@ -90,8 +93,8 @@ export class EffectWrapper {
         if (this.effect.parameters) {
             return new MultiParameterStorageView(
                 new Map<string, EffectParameterView>([
-                    ["wrapper.", this.parameters],
-                    ["custom.", this.effect.parameters],
+                    [WRAPPER_PREFIX, this.parameters],
+                    [CUSTOM_PREFIX, this.effect.parameters],
                 ])
             );
         }
@@ -115,4 +118,12 @@ function getDistance(mode: MappingMode, point: LedPoint2D, count: number): numbe
             return point.id / count;
     }
     throw new Error("Unreachable");
+}
+
+export function createPresetFactoryForSingleParameter(parameterId: string): (id: string, name: string, value: ParameterValue) => EffectPreset {
+  return (id: string, name: string, value: ParameterValue) => ({
+    id,
+    name,
+    config: new Map([[ CUSTOM_PREFIX + parameterId, value]]),
+  });
 }

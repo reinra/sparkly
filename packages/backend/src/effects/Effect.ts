@@ -123,3 +123,4 @@ export interface EffectPreset {
   readonly name: string;
   readonly config: Map<string, ParameterValue>;
 }
+ 
