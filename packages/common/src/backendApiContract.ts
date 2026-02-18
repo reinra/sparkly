@@ -114,6 +114,7 @@ const GetInfoResponseSchema = z.object({
     z.object({
       id: z.string(),
       name: z.string(),
+      canDelete: z.boolean(),
     })
   ),
 });
@@ -151,6 +152,10 @@ const CloneEffectRequestSchema = z.object({
 const CloneEffectResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
+});
+
+const DeleteEffectRequestSchema = z.object({
+  effect_id: z.string(),
 });
 
 const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
@@ -297,6 +302,15 @@ export const backendApiContract = c.router({
     body: CloneEffectRequestSchema,
     responses: {
       200: CloneEffectResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  deleteEffect: {
+    method: 'POST',
+    path: '/api/effect/delete',
+    body: DeleteEffectRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
       500: ErrorResponseSchema,
     },
   },

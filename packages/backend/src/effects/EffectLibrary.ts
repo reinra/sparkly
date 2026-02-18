@@ -65,6 +65,17 @@ add('gravity_fountain', new GravityFountain());
 add('test_per_led', new TestPerLedEffect());
 add('test_all_leds_flash', new TestAllLedsFlash());
 
+export function deleteEffect(effectId: string): void {
+  const effect = effects[effectId];
+  if (!effect) {
+    throw new Error(`Effect '${effectId}' not found`);
+  }
+  if (!effect.canDelete) {
+    throw new Error(`Effect '${effectId}' cannot be deleted`);
+  }
+  delete effects[effectId];
+}
+
 export function cloneEffect(sourceId: string): { id: string; name: string } {
   const source = effects[sourceId];
   if (!source) {

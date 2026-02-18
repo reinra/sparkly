@@ -141,6 +141,34 @@
     updating = false;
   }
 
+  async function deleteSelectedEffect() {
+    if (!device || updating || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
+    const targetEffect = effects[selectedEffectIndex];
+    if (!targetEffect.canDelete) return;
+
+    updating = true;
+    try {
+      const response = await backendClient.deleteEffect({
+        body: { effect_id: targetEffect.id },
+      });
+      if (response.status === 200) {
+        // Determine next effect index after deletion
+        const nextIndex = Math.min(selectedEffectIndex, effects.length - 2);
+        await deviceStore.fetchAllDevices();
+        if (effects.length > 0 && nextIndex >= 0) {
+          await selectEffect(nextIndex);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to delete effect:', e);
+    }
+    updating = false;
+  }
+
+  let selectedEffectCanDelete = $derived(
+    selectedEffectIndex >= 0 && selectedEffectIndex < effects.length && effects[selectedEffectIndex]?.canDelete
+  );
+
   function handleKeyDown(event: KeyboardEvent) {
     if (!effects.length) return;
 
@@ -207,6 +235,14 @@
 
       <div class="effect-info-section">
         <h3>Effect Info</h3>
+        <div class="effect-actions">
+          <button class="clone-button" onclick={cloneEffect} disabled={updating || effects.length === 0}>
+            Clone
+          </button>
+          <button class="delete-button" onclick={deleteSelectedEffect} disabled={updating || !selectedEffectCanDelete}>
+            Delete
+          </button>
+        </div>
         <div class="info-list">
           <div class="info-item">
             <strong>ID:</strong>
@@ -234,9 +270,6 @@
       <div class="effects-section">
         <h3>Effects</h3>
         <p class="hint">Focus effects: ↑↓ to navigate | Focus params: ↑↓ to switch, ←→ to adjust</p>
-        <button class="clone-button" onclick={cloneEffect} disabled={updating || effects.length === 0}>
-          Clone Selected Effect
-        </button>
         <div class="effects-list">
           {#each effects as effect, index}
             <button
@@ -360,8 +393,25 @@
     min-width: 0;
   }
 
-  .clone-button {
-    margin-bottom: 0.75rem;
+  .effect-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .clone-button,
+  .delete-button {
+    flex: 1;
+  }
+
+  .delete-button {
+    background: #d32f2f;
+  }
+
+  .delete-button:hover:not(:disabled) {
+    background: #b71c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
   }
 
   .effects-list {

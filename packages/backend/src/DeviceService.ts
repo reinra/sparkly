@@ -1,4 +1,4 @@
-import { effects, cloneEffect } from './effects/EffectLibrary';
+import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
@@ -23,6 +23,7 @@ export interface SystemInfo {
 export interface EffectSummary {
   id: string;
   name: string;
+  canDelete: boolean;
 }
 
 export interface InfoResult {
@@ -133,6 +134,7 @@ export class DeviceService {
       effects: Object.entries(effects).map(([id, effect]) => ({
         id,
         name: effect.getName(),
+        canDelete: effect.canDelete,
       })),
     };
   }
@@ -221,7 +223,22 @@ export class DeviceService {
   }
 
   cloneEffect(effectId: string): { id: string; name: string } {
-    return cloneEffect(effectId);
+    const result = cloneEffect(effectId);
+    logger.withMetadata({ sourceId: effectId, newId: result.id, newName: result.name }).info('Effect cloned');
+    return result;
+  }
+
+  deleteEffect(effectId: string): void {
+    // If any device is currently running this effect, stop it
+    for (const device of Object.values(devices)) {
+      const currentEffect = device.helper.getCurrentEffect();
+      if (currentEffect && currentEffect.id === effectId) {
+        device.helper.setCurrentEffect(null);
+        abortTask(device.id);
+      }
+    }
+    deleteEffect(effectId);
+    logger.withMetadata({ effectId }).info('Effect deleted');
   }
 }
 

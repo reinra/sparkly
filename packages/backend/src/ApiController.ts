@@ -67,4 +67,9 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     const result = deviceService.cloneEffect(req.body.effect_id);
     res.json(result);
   },
+
+  deleteEffect: async (req, res) => {
+    deviceService.deleteEffect(req.body.effect_id);
+    res.json({ success: true });
+  },
 };

@@ -129,7 +129,8 @@ export class EffectWrapper {
   constructor(
     public readonly id: string,
     public readonly effect: Effect<any>,
-    private readonly name: string
+    private readonly name: string,
+    public readonly canDelete: boolean = false
   ) {
     const saemColorEffect = effect instanceof BaseSameColorEffect;
     this.speed.hidden = effect.isStatic === true;
@@ -225,7 +226,7 @@ export class EffectWrapper {
    */
   public clone(newId: string, newName: string): EffectWrapper {
     const newEffect = new (this.effect.constructor as new () => Effect<LedPoint>)();
-    const cloned = new EffectWrapper(newId, newEffect, newName);
+    const cloned = new EffectWrapper(newId, newEffect, newName, true);
     // Copy all parameter values from source to clone
     for (const param of this.getEffectParameters().list()) {
       cloned.getEffectParameters().setValue(param.id, param.value);
