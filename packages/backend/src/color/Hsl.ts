@@ -94,6 +94,37 @@ export function hslToRgbFloat(hsl: Hsl): RgbFloat {
   return { red_f: r, green_f: g, blue_f: b };
 }
 
+export function rgbFloatToHsl(rgb: RgbFloat): Hsl {
+  const red = Math.max(0, Math.min(1, rgb.red_f));
+  const green = Math.max(0, Math.min(1, rgb.green_f));
+  const blue = Math.max(0, Math.min(1, rgb.blue_f));
+
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const lightness = (max + min) / 2;
+
+  if (max === min) {
+    return { hue: 0, saturation: 0, lightness };
+  }
+
+  const delta = max - min;
+  const saturation =
+    lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+
+  let hue: number;
+  if (max === red) {
+    hue = (green - blue) / delta + (green < blue ? 6 : 0);
+  } else if (max === green) {
+    hue = (blue - red) / delta + 2;
+  } else {
+    hue = (red - green) / delta + 4;
+  }
+
+  hue /= 6;
+
+  return { hue, saturation, lightness };
+}
+
 export function lerpHsl(color1: Hsl, color2: Hsl, t: number): Hsl {
   // Handle hue interpolation with wrap-around
   let hueDiff = color2.hue - color1.hue;

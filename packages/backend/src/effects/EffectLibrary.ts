@@ -19,6 +19,7 @@ import {
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
   FlipColorCustomEffect,
+  RandomDotsEffect,
 } from './Effects1D';
 import { CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './Effects2D';
 
@@ -48,6 +49,7 @@ addPresets(StaticAlternatingColorCustomEffect);
 addPresets(StaticColorGradientEffect);
 addPresets(RotatingColorGradientEffect);
 addPresets(AlternatingCustomColorFadingEffect);
+add('random_dots', new RandomDotsEffect());
 add('gradient_custom', new StaticCustomColorGradientEffect());
 add('rainbow', new RainbowGradientEffect());
 add('meteor', new MeteorEffect());
