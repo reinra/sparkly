@@ -46,7 +46,7 @@ export class PaletteParameters {
     public readonly parameters = new EffectParameterStorage();
     private readonly type: OptionEffectParameter = this.parameters.register({
         id: 'type',
-        name: 'Palette Type',
+        name: 'Palette',
         description: 'Type of color palette to use',
         type: ParameterType.OPTION,
         value: PaletteType.RandomSaturatedHsl,
