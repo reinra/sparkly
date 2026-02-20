@@ -1,6 +1,6 @@
-import { createPresetFactoryForSingleParameter } from '../EffectWrapper';
-import { BooleanEffectParameter, ParameterType } from '../ParameterTypes';
-import { BLACK, lerp, WHITE, type RgbFloat } from '../color/ColorFloat';
+import { createPresetFactoryForSingleParameter } from '../../EffectWrapper';
+import { BooleanEffectParameter, ParameterType } from '../../ParameterTypes';
+import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,
   BLUE_HSL_COLOR,
@@ -13,8 +13,8 @@ import {
   RED_HSL_COLOR,
   WHITE_HSL_COLOR,
   YELLOW_HSL_COLOR,
-} from '../color/Hsl';
-import { EffectParameterStorage, EffectParameterView } from '../effectParameters';
+} from '../../color/Hsl';
+import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
 import {
   BaseSameColorEffect,
   type StatelessEffect,
@@ -25,9 +25,9 @@ import {
   Effect,
   LedPointType,
   EffectPreset,
-} from './Effect';
-import { PaletteParameters } from './Palette';
-import { backAndForthPhaseWithPause } from './PhaseUtis';
+} from '../Effect';
+import { PaletteParameters } from '../util/Palette';
+import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 
 export class SingleHslColorEffect extends BaseSameColorEffect {
   readonly isStatic = true;

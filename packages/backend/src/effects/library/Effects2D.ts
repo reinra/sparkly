@@ -1,9 +1,9 @@
-import { ParameterType } from '../ParameterTypes';
-import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../color/ColorFloat';
-import { hslToRgbFloat, multiplyIntensity } from '../color/Hsl';
-import { EffectParameterStorage } from '../effectParameters';
-import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from './Effect';
-import { NoiseGenerator } from './NoiseUtils';
+import { ParameterType } from '../../ParameterTypes';
+import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
+import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
+import { EffectParameterStorage } from '../../effectParameters';
+import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from '../Effect';
+import { NoiseGenerator } from '../util/NoiseUtils';
 
 export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   pointType: '2D' = '2D';

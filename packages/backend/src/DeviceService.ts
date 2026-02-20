@@ -1,7 +1,7 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
-import { sendEffectAsMovie, startEffect } from './effects/EffectLauncher';
+import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';

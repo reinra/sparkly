@@ -20,8 +20,8 @@ import {
   StaticAlternatingColorCustomEffect,
   FlipColorCustomEffect,
   RandomDotsEffect,
-} from './Effects1D';
-import { CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './Effects2D';
+} from './library/Effects1D';
+import { CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './library/Effects2D';
 
 const effects: Record<string, EffectWrapper> = {};
 

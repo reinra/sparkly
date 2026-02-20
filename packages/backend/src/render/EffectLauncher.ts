@@ -6,11 +6,11 @@ import {
   ApiClientFrameOutputStream,
   MovieBufferOutputStream,
   type FrameFormat,
-} from '../render/FrameOutputStream';
-import { EffectRenderer } from '../render/Renderer';
+} from './FrameOutputStream';
+import { EffectRenderer } from './Renderer';
 import { logger } from '../logger';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
-import type { RenderContext } from '../render/RenderContext';
+import type { RenderContext } from './RenderContext';
 
 const renderer = new EffectRenderer();
 
