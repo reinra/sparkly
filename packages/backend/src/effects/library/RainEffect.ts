@@ -1,0 +1,88 @@
+import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
+import { BLUE_HSL_COLOR, hslToRgbFloat, randomColorMaxSaturation } from '../../color/Hsl';
+import { EffectParameterStorage } from '../../effectParameters';
+import { ParameterType } from '../../ParameterTypes';
+import { Effect, type LedPoint1D, EffectLogic, type EffectContext } from '../Effect';
+
+
+abstract class BaseRainEffect implements Effect<LedPoint1D> {
+  pointType: '1D' = '1D';
+  isStateful: boolean = true;
+  readonly parameters = new EffectParameterStorage();
+  readonly probability = this.parameters.register({
+    id: 'probability',
+    name: 'Chance of new particle',
+    description: 'Chance for a new raindrop particle to spawn on each frame (0.0 - 100.0)%',
+    type: ParameterType.RANGE,
+    value: 50,
+    min: 0,
+    max: 100,
+    unit: '%',
+  });
+  abstract getName(): string;
+  getLoopDurationSeconds(ledCount: number): number {
+    return 60;
+  }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new RainEffectLogic(this);
+  abstract nextColor(): RgbFloat;
+}
+
+export class SingleColorRainEffect extends BaseRainEffect {
+  readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'HSL color value',
+    type: ParameterType.HSL,
+    value: BLUE_HSL_COLOR,
+  });
+  getName(): string {
+    return 'Single-Color Rain';
+  }
+  nextColor(): RgbFloat {
+    return hslToRgbFloat(this.color.value);
+  }
+}
+
+export class MultiColorRainEffect extends BaseRainEffect {
+  getName(): string {
+    return 'Multi-Color Rain';
+  }
+  nextColor(): RgbFloat {
+    return hslToRgbFloat(randomColorMaxSaturation());
+  }
+}
+interface Particle {
+  position: number;
+  velocity: number;
+  color: RgbFloat;
+}
+class RainEffectLogic implements EffectLogic<LedPoint1D> {
+  private particles: Particle[] = [];
+  constructor(private readonly config: BaseRainEffect) { }
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+    // 1. Move existing particles based on velocity and time passed
+    this.particles.forEach((p) => {
+      p.position += (p.velocity * ctx.delta_time_ms) / 1000;
+    });
+
+    // 2. Remove off-screen particles
+    this.particles = this.particles.filter((p) => p.position < ctx.total_leds);
+
+    // 3. Add new particles "randomly" using a Seeded PRNG
+    if (Math.random() < this.config.probability.value / 100) {
+      this.particles.push({ position: 0, velocity: Math.random() * 10, color: this.config.nextColor() });
+    }
+
+    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+
+    // Draw particles
+    for (const p of this.particles) {
+      const idx = Math.floor(p.position);
+      if (idx >= 0 && idx < buffer.length) {
+        const previous = buffer[idx];
+        buffer[idx] = previous === BLACK ? p.color : lerp(previous, p.color, 0.5); // Blend with existing color for a nicer look
+      }
+    }
+    return buffer;
+  }
+}

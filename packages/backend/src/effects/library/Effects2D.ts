@@ -1,8 +1,8 @@
 import { ParameterType } from '../../ParameterTypes';
-import { BLACK, WHITE, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
+import { BLACK, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
-import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic, Effect } from '../Effect';
+import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic } from '../Effect';
 import { NoiseGenerator } from '../util/NoiseUtils';
 
 export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
@@ -177,69 +177,6 @@ export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
       // Map to rainbow colors with hue shift
       const hue = (this.noise.normalize(combined) + this.hueShift.value) % 1.0;
       buffer[pt.id] = hslToRgbFloat({ hue, saturation: 1.0, lightness: 0.5 });
-    }
-    return buffer;
-  }
-}
-
-export class GravityFountain implements Effect<LedPoint2D> {
-  pointType: '2D' = '2D';
-  readonly isStateful: true = true;
-  getName(): string {
-    return 'Gravity Fountain';
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 60; // Continuous effect, no loop
-  }
-  createLogic: () => EffectLogic<LedPoint2D> = () => new GravityFountainLogic();
-}
-
-class GravityFountainLogic implements EffectLogic<LedPoint2D> {
-  private particles: { x: number; y: number; vy: number }[] = [];
-  private lastTime = 0;
-
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
-    // Calculate delta time
-    const dt = this.lastTime === 0 ? 16 : ctx.time_ms - this.lastTime;
-    this.lastTime = ctx.time_ms;
-    const dtSec = dt / 1000;
-    const gravity = 1.5;
-
-    // 1. Move particles
-    this.particles.forEach((p) => {
-      p.vy += gravity * dtSec; // Apply gravity to velocity
-      p.y += p.vy * dtSec; // Apply velocity to position
-    });
-
-    // 2. Spawn new ones at the bottom
-    // Use ctx.millis for pseudo-random behavior
-    const spawnChance = (Math.sin(ctx.time_ms * 0.01) + 1) * 0.5;
-    if (spawnChance > 0.8) {
-      const x = (Math.sin(ctx.time_ms * 0.003) + 1) * 0.5;
-      this.particles.push({ x, y: 1.0, vy: -1.5 });
-    }
-
-    // 3. Cleanup
-    this.particles = this.particles.filter((p) => p.y <= 1.1);
-
-    // 4. Render
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
-    for (const p of this.particles) {
-      // Find the closest LED to the particle's X, Y
-      // Use a radius-based blend for better looks
-      for (const pt of points) {
-        const d = Math.sqrt((pt.x - p.x) ** 2 + (pt.y - p.y) ** 2);
-        if (d < 0.05) {
-          const intensity = 1 - d / 0.05;
-          const color = WHITE;
-          // Blend with existing color
-          buffer[pt.id] = {
-            red_f: Math.min(1, buffer[pt.id].red_f + color.red_f * intensity),
-            green_f: Math.min(1, buffer[pt.id].green_f + color.green_f * intensity),
-            blue_f: Math.min(1, buffer[pt.id].blue_f + color.blue_f * intensity),
-          };
-        }
-      }
     }
     return buffer;
   }

@@ -1,5 +1,5 @@
 import { createPresetFactoryForSingleParameter } from '../../EffectWrapper';
-import { BooleanEffectParameter, ParameterType } from '../../ParameterTypes';
+import { ParameterType } from '../../ParameterTypes';
 import { BLACK, lerp, WHITE, type RgbFloat } from '../../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,
@@ -9,7 +9,6 @@ import {
   hslToRgbFloat,
   lerpHsl,
   multiplyIntensity,
-  randomColorMaxSaturation,
   RED_HSL_COLOR,
   WHITE_HSL_COLOR,
   YELLOW_HSL_COLOR,
@@ -26,7 +25,6 @@ import {
   LedPointType,
   EffectPreset,
 } from '../Effect';
-import { PaletteParameters } from '../util/Palette';
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 
 export class SingleHslColorEffect extends BaseSameColorEffect {
@@ -430,89 +428,6 @@ class MeteorEffectLogic implements EffectLogic<LedPoint1D> {
   }
 }
 
-export abstract class BaseRainEffect implements Effect<LedPoint1D> {
-  pointType: '1D' = '1D';
-  isStateful: boolean = true;
-  readonly parameters = new EffectParameterStorage();
-  readonly probability = this.parameters.register({
-    id: 'probability',
-    name: 'Chance of new particle',
-    description: 'Chance for a new raindrop particle to spawn on each frame (0.0 - 100.0)%',
-    type: ParameterType.RANGE,
-    value: 50,
-    min: 0,
-    max: 100,
-    unit: '%',
-  });
-  abstract getName(): string;
-  getLoopDurationSeconds(ledCount: number): number {
-    return 60;
-  }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RainEffectLogic(this);
-  abstract nextColor(): RgbFloat;
-}
-
-export class SingleColorRainEffect extends BaseRainEffect {
-  readonly color = this.parameters.register({
-    id: 'color',
-    name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: BLUE_HSL_COLOR,
-  });
-  getName(): string {
-    return 'Single-Color Rain';
-  }
-  nextColor(): RgbFloat {
-    return hslToRgbFloat(this.color.value);
-  }
-}
-
-export class MultiColorRainEffect extends BaseRainEffect {
-  getName(): string {
-    return 'Multi-Color Rain';
-  }
-  nextColor(): RgbFloat {
-    return hslToRgbFloat(randomColorMaxSaturation());
-  }
-}
-
-interface Particle {
-  position: number;
-  velocity: number;
-  color: RgbFloat;
-}
-class RainEffectLogic implements EffectLogic<LedPoint1D> {
-  private particles: Particle[] = [];
-  constructor(private readonly config: BaseRainEffect) {}
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
-    // 1. Move existing particles based on velocity and time passed
-    this.particles.forEach((p) => {
-      p.position += (p.velocity * ctx.delta_time_ms) / 1000;
-    });
-
-    // 2. Remove off-screen particles
-    this.particles = this.particles.filter((p) => p.position < ctx.total_leds);
-
-    // 3. Add new particles "randomly" using a Seeded PRNG
-    if (Math.random() < this.config.probability.value / 100) {
-      this.particles.push({ position: 0, velocity: Math.random() * 10, color: this.config.nextColor() });
-    }
-
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
-
-    // Draw particles
-    for (const p of this.particles) {
-      const idx = Math.floor(p.position);
-      if (idx >= 0 && idx < buffer.length) {
-        const previous = buffer[idx];
-        buffer[idx] = previous === BLACK ? p.color : lerp(previous, p.color, 0.5); // Blend with existing color for a nicer look
-      }
-    }
-    return buffer;
-  }
-}
-
 export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
@@ -623,76 +538,5 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
     const color = ctx.phase < 0.5 ? this.color1.value : this.color2.value;
 
     return hslToRgbFloat(multiplyIntensity(color, intensity));
-  }
-}
-
-export class RandomDotsEffect implements Effect<LedPoint1D> {
-  pointType: '1D' = '1D';
-  isStateful: boolean = true;
-  readonly paletteParams: PaletteParameters = new PaletteParameters();
-  readonly parameters = this.paletteParams.parameters;
-  readonly clear: BooleanEffectParameter = this.parameters.register({
-    id: 'clear',
-    name: 'Clear after each cycle',
-    description: 'Clear the LED buffer on each cycle',
-    type: ParameterType.BOOLEAN,
-    value: false,
-  });
-  getName(): string {
-    return 'Random Dots';
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return ledCount / 2;
-  }
-  getStepCount(ledCount: number): number {
-    return ledCount + (this.clear.value ? 1 : 0); // We control timing manually in the logic
-  }
-  getMillisPerStep(ledCount: number): number {
-    return this.getLoopDurationSeconds(ledCount) * 1000 / this.getStepCount(ledCount);
-  } 
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotEffectLogic(this);
-}
-class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
-  private lastBuffer: RgbFloat[] | null = null;
-  private accumulatedMs: number = 0;
-  private shuffledIndices: number[] = [];
-  private shufflePos: number = 0;
-  constructor(private readonly config: RandomDotsEffect) {}
-
-  private buildShuffledIndices(count: number): void {
-    this.shuffledIndices = Array.from({ length: count }, (_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = count - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.shuffledIndices[i], this.shuffledIndices[j]] = [this.shuffledIndices[j], this.shuffledIndices[i]];
-    }
-    this.shufflePos = 0;
-  }
-
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
-    if (this.lastBuffer === null || this.lastBuffer.length !== ctx.total_leds) {
-      this.lastBuffer = new Array(ctx.total_leds).fill(BLACK);
-      this.accumulatedMs = 0;
-      this.buildShuffledIndices(ctx.total_leds);
-    }
-    this.accumulatedMs += ctx.delta_time_ms;
-    const millisPerStep = this.config.getMillisPerStep(ctx.total_leds);
-    let skipNextColor = false;
-    if (this.accumulatedMs >= millisPerStep) {
-      this.accumulatedMs -= millisPerStep;
-      // Re-shuffle once all LEDs have been covered
-      if (this.shufflePos >= this.shuffledIndices.length) {
-        this.buildShuffledIndices(ctx.total_leds);
-        if (this.config.clear.value) {
-          this.lastBuffer.fill(BLACK);
-          skipNextColor = true; // Skip lighting a new LED on the same frame we clear to avoid a flash of color
-        }
-      }
-      if (!skipNextColor) {
-        const index = this.shuffledIndices[this.shufflePos++];
-        this.lastBuffer[index] = this.config.paletteParams.palette.nextColor().asRgb();
-      }
-    }
-    return this.lastBuffer;
   }
 }

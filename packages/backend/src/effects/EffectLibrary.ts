@@ -6,7 +6,6 @@ import {
   MeteorEffect,
   PingPongEffect,
   RainbowGradientEffect,
-  SingleColorRainEffect,
   RotatingColorGradientEffect,
   SineEffect,
   SingleHslColorEffect,
@@ -14,14 +13,15 @@ import {
   TestPerLedEffect,
   TwinkleEffect,
   AlternatingCustomColorFadingEffect,
-  MultiColorRainEffect,
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
   FlipColorCustomEffect,
-  RandomDotsEffect,
 } from './library/Effects1D';
-import { CloudsEffect, GravityFountain, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './library/Effects2D';
+import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
+import { RandomDotsEffect } from './library/RandomDotsEffect';
+import { CloudsEffect, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './library/Effects2D';
+import { GravityFountainEffect } from './library/GravityFountainEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
@@ -63,7 +63,7 @@ add('pulse_scanner', new PulseScanner());
 add('slime', new Slime());
 add('clouds', new CloudsEffect());
 add('plasma', new PlasmaEffect());
-add('gravity_fountain', new GravityFountain());
+add('gravity_fountain', new GravityFountainEffect());
 add('test_per_led', new TestPerLedEffect());
 add('test_all_leds_flash', new TestAllLedsFlash());
 
