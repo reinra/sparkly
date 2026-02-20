@@ -57,6 +57,42 @@ export class RandomDotsEffect implements Effect<LedPoint1D> {
   }
   createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotEffectLogic(this);
 }
+/** Encapsulates the flashing animation state that plays after a complete cycle in "clear" mode. */
+class FlashAnimation {
+  private step: number = 0;
+  private accumulatedMs: number = 0;
+  private readonly savedBuffer: RgbFloat[];
+  private _finished: boolean = false;
+
+  constructor(savedBuffer: RgbFloat[]) {
+    this.savedBuffer = savedBuffer;
+  }
+
+  get finished(): boolean {
+    return this._finished;
+  }
+
+  /** Advances the flash animation by deltaMs and returns the frame to display. */
+  advance(total: number, deltaMs: number, millisPerStep: number): RgbFloat[] {
+    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+    this.accumulatedMs += deltaMs;
+    if (this.accumulatedMs >= millisPerStep) {
+      this.accumulatedMs -= millisPerStep;
+      this.step++;
+    }
+    if (this.step >= 10) {
+      this._finished = true;
+      return buffer;
+    }
+    if (this.step % 2 === 1) {
+      for (let i = 0; i < this.savedBuffer.length; i++) {
+        buffer[i] = this.savedBuffer[i];
+      }
+    }
+    return buffer;
+  }
+}
+
 class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
   private dots: Dot[] = [];
   private totalTimeMs: number = 0;
@@ -65,11 +101,7 @@ class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
   private nextSpawnMs: number = 0;
   private initialized: boolean = false;
   private lastLedCount: number = 0;
-  // Flashing state (for clear mode)
-  private flashing: boolean = false;
-  private flashStep: number = 0;
-  private flashBuffer: RgbFloat[] | null = null;
-  private accumulatedFlashMs: number = 0;
+  private flash: FlashAnimation | null = null;
   // Cached per-frame values (set at the start of renderGlobal)
   private fadeDuration: number = 0;
   private easingIn!: EasingIn;
@@ -92,8 +124,7 @@ class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
     this.nextSpawnMs = 0;
     this.initialized = true;
     this.lastLedCount = total;
-    this.flashing = false;
-    this.flashBuffer = null;
+    this.flash = null;
     this.buildShuffledIndices(total);
   }
 
@@ -110,8 +141,10 @@ class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
 
     this.totalTimeMs += ctx.delta_time_ms;
 
-    if (this.flashing) {
-      return this.advanceFlashing(total, ctx.delta_time_ms, millisPerStep);
+    if (this.flash) {
+      const result = this.flash.advance(total, ctx.delta_time_ms, millisPerStep);
+      if (this.flash.finished) this.reset(total);
+      return result;
     }
 
     const flashResult = this.spawnPendingDots(total);
@@ -121,26 +154,6 @@ class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
     this.removeExpiredDots();
 
     return this.renderDots(total);
-  }
-
-  /** Advances the flashing animation that plays after a complete cycle in "clear" mode. */
-  private advanceFlashing(total: number, deltaMs: number, millisPerStep: number): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
-    this.accumulatedFlashMs += deltaMs;
-    if (this.accumulatedFlashMs >= millisPerStep) {
-      this.accumulatedFlashMs -= millisPerStep;
-      this.flashStep++;
-    }
-    if (this.flashStep >= 10) {
-      this.reset(total);
-      return buffer;
-    }
-    if (this.flashStep % 2 === 1 && this.flashBuffer) {
-      for (let i = 0; i < this.flashBuffer.length; i++) {
-        buffer[i] = this.flashBuffer[i];
-      }
-    }
-    return buffer;
   }
 
   /** Spawns new dots at each step interval. Returns a buffer if entering flash mode, otherwise null. */
@@ -167,10 +180,7 @@ class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
 
   /** Captures current state and enters flash mode (used in "clear after cycle"). */
   private enterFlashMode(total: number): RgbFloat[] {
-    this.flashBuffer = this.renderDots(total);
-    this.flashing = true;
-    this.flashStep = 0;
-    this.accumulatedFlashMs = 0;
+    this.flash = new FlashAnimation(this.renderDots(total));
     return new Array(total).fill(BLACK);
   }
 
