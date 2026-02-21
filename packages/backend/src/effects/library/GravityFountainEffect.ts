@@ -1,23 +1,22 @@
 import { type RgbFloat, BLACK, WHITE } from '../../color/ColorFloat';
-import { Effect, LedPoint2D, EffectLogic, EffectContext } from '../Effect';
+import { AnimationMode, type EffectSequence, LedPoint2D, EffectLogic, type EffectContextSequence } from '../Effect';
 
 
-export class GravityFountainEffect implements Effect<LedPoint2D> {
+export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
+  readonly animationMode = AnimationMode.Sequence;
+  readonly supportsSeamlessLooping = false;
   pointType: '2D' = '2D';
   readonly isStateful: true = true;
   getName(): string {
     return 'Gravity Fountain';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 60; // Continuous effect, no loop
-  }
-  createLogic: () => EffectLogic<LedPoint2D> = () => new GravityFountainLogic();
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => new GravityFountainLogic();
 }
-class GravityFountainLogic implements EffectLogic<LedPoint2D> {
+class GravityFountainLogic implements EffectLogic<AnimationMode.Sequence, LedPoint2D> {
   private particles: { x: number; y: number; vy: number; }[] = [];
   private lastTime = 0;
 
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+  renderGlobal(ctx: EffectContextSequence, points: LedPoint2D[]): RgbFloat[] {
     // Calculate delta time
     const dt = this.lastTime === 0 ? 16 : ctx.time_ms - this.lastTime;
     this.lastTime = ctx.time_ms;

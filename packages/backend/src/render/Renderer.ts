@@ -1,9 +1,17 @@
 import type { FrameOutputStream } from './FrameOutputStream';
-import type { EffectContext } from '../effects/Effect';
-import { Effect } from '../effects/Effect';
+import {
+  AnimationMode,
+  type EffectContextStatic,
+  type EffectContextLoop,
+  type EffectContextSequence,
+  type EffectLoop,
+} from '../effects/Effect';
 import type { RenderContext } from './RenderContext';
 
 const YIELD_FRAME_COUNT = 50;
+
+/** Default recording duration for Sequence effects in renderAsap. */
+const DEFAULT_SEQUENCE_DURATION_MS = 30_000;
 
 export interface Renderer {
   renderLive(ctx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
@@ -19,44 +27,88 @@ export class EffectRenderer implements Renderer {
     const effect = renderCtx.effect;
     const numberOfLeds = await renderCtx.getNumberOfLeds();
     const ledProfile = await renderCtx.getLedProfile();
-    const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
     const logic = effect.createLogic();
 
-    const firstStartTime = performance.now();
-    let lastTime = firstStartTime;
-    let frameIndex = 0;
-    while (true) {
-      signal.throwIfAborted();
-
-      const frameStartTime = performance.now();
-      const speed = renderCtx.getCurrentSpeedMultiplier();
-      const deltaTimeMs = (frameStartTime - lastTime) * speed;
-      const elapsedTime = (frameStartTime - firstStartTime) * speed;
-
-      const ctx: EffectContext = {
-        total_leds: numberOfLeds,
-        led_type: ledProfile,
-        time_ms: elapsedTime,
-        delta_time_ms: deltaTimeMs,
-        frame_index: frameIndex,
-        phase: (elapsedTime % loopDurationMs) / loopDurationMs,
-      };
-      const points = await renderCtx.getPoints();
-      const ledValues = logic.renderGlobal(ctx, points);
-      await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
-
-      const processingTime = performance.now() - frameStartTime;
-      const timeToWait = renderCtx.getMinFrameTimeMs() - processingTime;
-      if (timeToWait > 0) {
-        await sleep(timeToWait);
-      } else {
-        await yieldNow();
+    switch (effect.animationMode) {
+      case AnimationMode.Static: {
+        // Static effects have no phase/time — re-render each frame so parameter changes take effect
+        while (true) {
+          signal.throwIfAborted();
+          const ctx: EffectContextStatic = { total_leds: numberOfLeds, led_type: ledProfile };
+          const points = await renderCtx.getPoints();
+          const ledValues = logic.renderGlobal(ctx as any, points);
+          await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          await sleep(renderCtx.getMinFrameTimeMs());
+        }
+        break;
       }
 
-      frameIndex++;
-      lastTime = frameStartTime;
+      case AnimationMode.Loop: {
+        const loopEffect = effect as EffectLoop<any>;
+        const loopDurationMs = loopEffect.getLoopDurationSeconds(numberOfLeds) * 1000;
+        if (loopDurationMs <= 0) {
+          throw new Error(`Loop effect ${effect.getName()} has invalid loop duration`);
+        }
+        const firstStartTime = performance.now();
+        let lastTime = firstStartTime;
+        while (true) {
+          signal.throwIfAborted();
+          const frameStartTime = performance.now();
+          const speed = renderCtx.getCurrentSpeedMultiplier();
+          const elapsedTime = (frameStartTime - firstStartTime) * speed;
+          const ctx: EffectContextLoop = {
+            total_leds: numberOfLeds,
+            led_type: ledProfile,
+            phase: (elapsedTime % loopDurationMs) / loopDurationMs,
+          };
+          const points = await renderCtx.getPoints();
+          const ledValues = logic.renderGlobal(ctx as any, points);
+          await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          const processingTime = performance.now() - frameStartTime;
+          const timeToWait = renderCtx.getMinFrameTimeMs() - processingTime;
+          if (timeToWait > 0) {
+            await sleep(timeToWait);
+          } else {
+            await yieldNow();
+          }
+          lastTime = frameStartTime;
+        }
+        break;
+      }
+
+      case AnimationMode.Sequence: {
+        const firstStartTime = performance.now();
+        let lastTime = firstStartTime;
+        while (true) {
+          signal.throwIfAborted();
+          const frameStartTime = performance.now();
+          const speed = renderCtx.getCurrentSpeedMultiplier();
+          const deltaTimeMs = (frameStartTime - lastTime) * speed;
+          const elapsedTime = (frameStartTime - firstStartTime) * speed;
+          const ctx: EffectContextSequence = {
+            total_leds: numberOfLeds,
+            led_type: ledProfile,
+            total_time_ms: null, // Live rendering runs indefinitely
+            time_ms: elapsedTime,
+            delta_time_ms: deltaTimeMs,
+          };
+          const points = await renderCtx.getPoints();
+          const ledValues = logic.renderGlobal(ctx as any, points);
+          await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          const processingTime = performance.now() - frameStartTime;
+          const timeToWait = renderCtx.getMinFrameTimeMs() - processingTime;
+          if (timeToWait > 0) {
+            await sleep(timeToWait);
+          } else {
+            await yieldNow();
+          }
+          lastTime = frameStartTime;
+        }
+        break;
+      }
     }
   }
+
   async renderAsap(
     renderCtx: RenderContext,
     output: FrameOutputStream,
@@ -66,53 +118,72 @@ export class EffectRenderer implements Renderer {
     const numberOfLeds = await renderCtx.getNumberOfLeds();
     const ledProfile = await renderCtx.getLedProfile();
     const points = await renderCtx.getPoints();
-    const loopDurationMs = getValidLoopDurationInMs(effect, numberOfLeds);
-    const [startRecordingMs, endRecordingMs] = effect.isStateful
-      ? [loopDurationMs, loopDurationMs * 2]
-      : [0, loopDurationMs];
-    const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
     const logic = effect.createLogic();
+    const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
 
-    let virtualTime = 0;
-    let frameIndex = 0;
-
-    // For static effects, just render one frame
-    while (virtualTime < endRecordingMs || virtualTime === 0) {
-      signal.throwIfAborted();
-
-      const ctx: EffectContext = {
-        total_leds: numberOfLeds,
-        led_type: ledProfile,
-        time_ms: virtualTime,
-        delta_time_ms: frameTimeMs,
-        frame_index: frameIndex,
-        phase: (virtualTime % loopDurationMs) / loopDurationMs,
-      };
-      const ledValues = logic.renderGlobal(ctx, points);
-      if (virtualTime >= startRecordingMs) {
+    switch (effect.animationMode) {
+      case AnimationMode.Static: {
+        // Single frame — no animation
+        signal.throwIfAborted();
+        const ctx: EffectContextStatic = { total_leds: numberOfLeds, led_type: ledProfile };
+        const ledValues = logic.renderGlobal(ctx as any, points);
         await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
-      }
-      if (frameIndex % YIELD_FRAME_COUNT === 0) {
-        await yieldNow();
+        break;
       }
 
-      virtualTime += frameTimeMs;
-      frameIndex++;
+      case AnimationMode.Loop: {
+        // Render exactly one loop — no warmup needed
+        const loopEffect = effect as EffectLoop<any>;
+        const loopDurationMs = loopEffect.getLoopDurationSeconds(numberOfLeds) * 1000;
+        if (loopDurationMs <= 0) {
+          throw new Error(`Loop effect ${effect.getName()} has invalid loop duration`);
+        }
+        let virtualTime = 0;
+        let frameIndex = 0;
+        while (virtualTime < loopDurationMs) {
+          signal.throwIfAborted();
+          const ctx: EffectContextLoop = {
+            total_leds: numberOfLeds,
+            led_type: ledProfile,
+            phase: virtualTime / loopDurationMs,
+          };
+          const ledValues = logic.renderGlobal(ctx as any, points);
+          await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          if (frameIndex % YIELD_FRAME_COUNT === 0) {
+            await yieldNow();
+          }
+          virtualTime += frameTimeMs;
+          frameIndex++;
+        }
+        break;
+      }
+
+      case AnimationMode.Sequence: {
+        // Render a fixed duration (30s by default)
+        const totalDurationMs = DEFAULT_SEQUENCE_DURATION_MS;
+        let virtualTime = 0;
+        let frameIndex = 0;
+        while (virtualTime < totalDurationMs) {
+          signal.throwIfAborted();
+          const ctx: EffectContextSequence = {
+            total_leds: numberOfLeds,
+            led_type: ledProfile,
+            total_time_ms: totalDurationMs,
+            time_ms: virtualTime,
+            delta_time_ms: frameTimeMs,
+          };
+          const ledValues = logic.renderGlobal(ctx as any, points);
+          await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          if (frameIndex % YIELD_FRAME_COUNT === 0) {
+            await yieldNow();
+          }
+          virtualTime += frameTimeMs;
+          frameIndex++;
+        }
+        break;
+      }
     }
   }
-}
-
-function getValidLoopDurationInMs(effect: Effect<any>, numberOfLeds: number) {
-  const loopDurationMs = effect.getLoopDurationSeconds(numberOfLeds) * 1000;
-  if (loopDurationMs < 0) {
-    throw new Error(`Effect ${effect.getName()} does not support renderAsap() because it has no defined loop duration`);
-  }
-  if (loopDurationMs === 0 && effect.isStateful) {
-    throw new Error(
-      `Effect ${effect.getName()} does not support renderAsap() because it is stateful but has zero loop duration`
-    );
-  }
-  return loopDurationMs;
 }
 
 async function sleep(milliseconds: number) {

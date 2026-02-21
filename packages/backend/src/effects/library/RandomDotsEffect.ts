@@ -1,14 +1,16 @@
 import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import { ParameterType } from '../../ParameterTypes';
-import { Effect, type LedPoint1D, EffectLogic, type EffectContext } from '../Effect';
+import { AnimationMode, type EffectSequence, type LedPoint1D, EffectLogic, type EffectContextSequence } from '../Effect';
 import type { EasingIn, EasingOut } from '../util/Easing';
 import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
 
 
 /** Base class for random-dot effects with shared parameters and logic. */
-abstract class RandomDotsEffectBase implements Effect<LedPoint1D> {
+abstract class RandomDotsEffectBase implements EffectSequence<LedPoint1D> {
+  readonly animationMode = AnimationMode.Sequence;
+  readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly customParams = new EffectParameterStorage();
@@ -33,7 +35,7 @@ abstract class RandomDotsEffectBase implements Effect<LedPoint1D> {
   );
   abstract getName(): string;
   abstract getStepCount(ledCount: number): number;
-  abstract createLogic: () => EffectLogic<LedPoint1D>;
+  abstract createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D>;
 
   getCoverageMultiplier(): number {
     return this.coverage.value / 100;
@@ -57,7 +59,7 @@ export class RandomDotsEffect extends RandomDotsEffectBase {
   getStepCount(ledCount: number): number {
     return ledCount * this.getCoverageMultiplier();
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotsLoopLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RandomDotsLoopLogic(this);
 }
 
 /** Random dots with flash-and-clear after each full cycle. */
@@ -68,7 +70,7 @@ export class RandomDotsClearEffect extends RandomDotsEffectBase {
   getStepCount(ledCount: number): number {
     return this.getMaxLitCount(ledCount) + 10; // one step per coverage-limited LED + 5 flashes (on/off pairs)
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotsClearLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RandomDotsClearLogic(this);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,7 +92,7 @@ interface Dot {
 }
 
 /** Base logic shared between loop and clear variants. */
-abstract class RandomDotsLogicBase implements EffectLogic<LedPoint1D> {
+abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
   protected dots: Dot[] = [];
   protected totalTimeMs: number = 0;
   protected shuffledIndices: number[] = [];
@@ -123,7 +125,7 @@ abstract class RandomDotsLogicBase implements EffectLogic<LedPoint1D> {
     this.buildShuffledIndices(total);
   }
 
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+  renderGlobal(ctx: EffectContextSequence, points: LedPoint1D[]): RgbFloat[] {
     const total = ctx.total_leds;
     const millisPerStep = this.config.getMillisPerStep(total);
     this.fadeDuration = millisPerStep;
@@ -147,7 +149,7 @@ abstract class RandomDotsLogicBase implements EffectLogic<LedPoint1D> {
   }
 
   /** Hook called before spawning — subclasses can intercept (e.g. flash animation). */
-  protected handlePreSpawn(_ctx: EffectContext, _total: number, _millisPerStep: number): RgbFloat[] | null {
+  protected handlePreSpawn(_ctx: EffectContextSequence, _total: number, _millisPerStep: number): RgbFloat[] | null {
     return null;
   }
 
@@ -300,7 +302,7 @@ class RandomDotsClearLogic extends RandomDotsLogicBase {
     this.spawnedCount = 0;
   }
 
-  protected override handlePreSpawn(ctx: EffectContext, total: number, millisPerStep: number): RgbFloat[] | null {
+  protected override handlePreSpawn(ctx: EffectContextSequence, total: number, millisPerStep: number): RgbFloat[] | null {
     if (this.flash) {
       const result = this.flash.advance(total, ctx.delta_time_ms, millisPerStep);
       if (this.flash.finished) this.reset(total);

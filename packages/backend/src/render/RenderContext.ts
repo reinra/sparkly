@@ -1,6 +1,6 @@
 import type { RgbFloat } from '../color/ColorFloat';
 import type { LedType, RgbValue } from '../color/Color8bit';
-import type { LedPoint1D, LedPoint2D, Effect } from '../effects/Effect';
+import type { LedPoint1D, LedPoint2D, AnyEffect } from '../effects/Effect';
 import type { LedMapper } from './LedMapper';
 import type { DeviceHelper } from '../DeviceHelper';
 import { EffectWrapper } from '../EffectWrapper';
@@ -14,7 +14,7 @@ import { EffectWrapper } from '../EffectWrapper';
  */
 export interface RenderContext {
   /** The effect to render. */
-  readonly effect: Effect<any>;
+  readonly effect: AnyEffect;
 
   /** Number of LEDs on the device. */
   getNumberOfLeds(): Promise<number>;
@@ -53,7 +53,7 @@ export class RenderContextImpl implements RenderContext {
     private readonly effectWrapper: EffectWrapper
   ) {}
 
-  get effect(): Effect<any> {
+  get effect(): AnyEffect {
     return this.effectWrapper.effect;
   }
 

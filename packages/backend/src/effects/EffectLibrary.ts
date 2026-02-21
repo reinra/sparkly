@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { EffectWrapper } from '../EffectWrapper';
-import { Effect, EffectPreset } from './Effect';
+import { type AnyEffect, EffectPreset } from './Effect';
 import {
   ChangeColorEffect,
   MeteorEffect,
@@ -25,7 +25,7 @@ import { GravityFountainEffect } from './library/GravityFountainEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
-function addPresets<T extends Effect<any> & { getPresets(): EffectPreset[] }>(EffectClass: new () => T): void {
+function addPresets<T extends AnyEffect & { getPresets(): EffectPreset[] }>(EffectClass: new () => T): void {
   const template = new EffectClass();
   const presets = template.getPresets();
   for (const preset of presets) {
@@ -38,7 +38,7 @@ function addPresets<T extends Effect<any> & { getPresets(): EffectPreset[] }>(Ef
   }
 }
 
-function add(id: string, effect: Effect<any>): void {
+function add(id: string, effect: AnyEffect): void {
   effects[id] = new EffectWrapper(id, effect, effect.getName());
 }
 

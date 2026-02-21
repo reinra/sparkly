@@ -2,10 +2,11 @@ import { ParameterType } from '../../ParameterTypes';
 import { BLACK, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
-import { PerPixelEffect, LedPoint2D, EffectContext, LedPoint1D, StatelessEffect, EffectLogic } from '../Effect';
+import { PerPixelEffect, LedPoint2D, type EffectContextLoop, type EffectContextSequence, type StatelessEffect, EffectLogic, AnimationMode } from '../Effect';
 import { NoiseGenerator } from '../util/NoiseUtils';
 
-export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
+export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, LedPoint2D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   getName(): string {
     return 'Rainbow Gradient 2D';
@@ -13,14 +14,15 @@ export class RainbowGradientEffect2D extends PerPixelEffect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint2D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint2D): RgbFloat {
     // We use the normalized 'distance' for a smooth gradient
     const hue = (ctx.phase + point.x) % 1.0;
     return hslToRgbFloat({ hue, saturation: point.y, lightness: 0.5 });
   }
 }
 
-export class PulseScanner implements StatelessEffect<LedPoint2D> {
+export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly parameters = new EffectParameterStorage();
@@ -37,8 +39,8 @@ export class PulseScanner implements StatelessEffect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  createLogic: () => EffectLogic<LedPoint2D> = () => this;
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint2D> = () => this;
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint2D[]): RgbFloat[] {
     const centerX = 0.5,
       centerY = 0.5;
     const maxRadius = 0.7; // Reach the corners
@@ -63,7 +65,8 @@ export class PulseScanner implements StatelessEffect<LedPoint2D> {
   }
 }
 
-export class Slime implements StatelessEffect<LedPoint2D> {
+export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly parameters = new EffectParameterStorage();
@@ -85,8 +88,8 @@ export class Slime implements StatelessEffect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  createLogic: () => EffectLogic<LedPoint2D> = () => this;
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint2D> = () => this;
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint2D[]): RgbFloat[] {
     // Get seamless loop coordinates
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 
@@ -103,7 +106,9 @@ export class Slime implements StatelessEffect<LedPoint2D> {
   }
 }
 
-export class CloudsEffect implements StatelessEffect<LedPoint2D> {
+export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, LedPoint2D> {
+  readonly animationMode = AnimationMode.Sequence;
+  readonly supportsSeamlessLooping = false;
   pointType: '2D' = '2D';
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
@@ -119,11 +124,8 @@ export class CloudsEffect implements StatelessEffect<LedPoint2D> {
   getName(): string {
     return 'Clouds';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 60;
-  }
-  createLogic: () => EffectLogic<LedPoint2D> = () => this;
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => this;
+  renderGlobal(ctx: EffectContextSequence, points: LedPoint2D[]): RgbFloat[] {
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
 
     for (const pt of points) {
@@ -139,7 +141,8 @@ export class CloudsEffect implements StatelessEffect<LedPoint2D> {
   }
 }
 
-export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
+export class PlasmaEffect implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly parameters = new EffectParameterStorage();
@@ -160,8 +163,8 @@ export class PlasmaEffect implements StatelessEffect<LedPoint2D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 8;
   }
-  createLogic: () => EffectLogic<LedPoint2D> = () => this;
-  renderGlobal(ctx: EffectContext, points: LedPoint2D[]): RgbFloat[] {
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint2D> = () => this;
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint2D[]): RgbFloat[] {
     const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 

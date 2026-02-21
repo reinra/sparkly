@@ -21,7 +21,7 @@ import {
   RgbFloat,
 } from './color/ColorFloat';
 import { RgbValue } from './color/Color8bit';
-import { Effect, LedPoint1D, LedPoint2D } from './effects/Effect';
+import { type AnyEffect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { EnabledDisabledSchema } from './deviceClient/apiContract';
 import { EffectWrapper } from './EffectWrapper';
@@ -229,7 +229,7 @@ export class DeviceHelper {
     return this.gestaltCache;
   }
 
-  public async getPoints(effect: Effect<any>): Promise<LedPoint1D[] | LedPoint2D[]> {
+  public async getPoints(effect: AnyEffect): Promise<LedPoint1D[] | LedPoint2D[]> {
     const ledCount = (await this.getGestalt()).number_of_led;
     if (effect.pointType === '1D') {
       if (!this.currentEffect) {

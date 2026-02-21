@@ -15,20 +15,23 @@ import {
 } from '../../color/Hsl';
 import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
 import {
+  AnimationMode,
   BaseSameColorEffect,
   type StatelessEffect,
-  type EffectContext,
+  type EffectContextStatic,
+  type EffectContextLoop,
+  type EffectContextSequence,
+  type EffectLoop,
   type LedPoint1D,
   PerPixelEffect,
   EffectLogic,
-  Effect,
   LedPointType,
   EffectPreset,
 } from '../Effect';
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 
-export class SingleHslColorEffect extends BaseSameColorEffect {
-  readonly isStatic = true;
+export class SingleHslColorEffect extends BaseSameColorEffect<AnimationMode.Static> {
+  readonly animationMode = AnimationMode.Static;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -51,15 +54,13 @@ export class SingleHslColorEffect extends BaseSameColorEffect {
       factory('choose_hsl', 'Single Color: Custom', DEFAULT_HSL_COLOR),
     ];
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0;
-  }
-  renderColor(ctx: EffectContext): RgbFloat {
+  renderColor(ctx: EffectContextStatic): RgbFloat {
     return hslToRgbFloat(this.color.value);
   }
 }
 
-export class FlipColorCustomEffect extends BaseSameColorEffect {
+export class FlipColorCustomEffect extends BaseSameColorEffect<AnimationMode.Loop> {
+  readonly animationMode = AnimationMode.Loop;
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
     id: 'colors',
@@ -81,14 +82,15 @@ export class FlipColorCustomEffect extends BaseSameColorEffect {
   getLoopDurationSeconds(ledCount: number): number {
     return this.colors.value.length * 2;
   }
-  renderColor(ctx: EffectContext): RgbFloat {
+  renderColor(ctx: EffectContextLoop): RgbFloat {
     const totalColors = this.colors.value.length;
     const index = Math.floor(ctx.phase * totalColors) % totalColors;
     return hslToRgbFloat(this.colors.value[index]);
   }
 }
 
-export class ChangeColorEffect extends BaseSameColorEffect {
+export class ChangeColorEffect extends BaseSameColorEffect<AnimationMode.Loop> {
+  readonly animationMode = AnimationMode.Loop;
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
     id: 'colors',
@@ -115,7 +117,7 @@ export class ChangeColorEffect extends BaseSameColorEffect {
   getLoopDurationSeconds(ledCount: number): number {
     return this.colors.value.length * 2;
   }
-  renderColor(ctx: EffectContext): RgbFloat {
+  renderColor(ctx: EffectContextLoop): RgbFloat {
     const totalColors = this.colors.value.length;
     const colorPhase = (ctx.phase * totalColors) % totalColors;
     const fromIndex = Math.floor(colorPhase);
@@ -125,8 +127,8 @@ export class ChangeColorEffect extends BaseSameColorEffect {
   }
 }
 
-export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
-  readonly isStatic = true;
+export class StaticAlternatingColorEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
+  readonly animationMode = AnimationMode.Static;
   pointType: LedPointType = '1D';
   constructor(private readonly colors: RgbFloat[]) {
     super();
@@ -134,17 +136,14 @@ export class StaticAlternatingColorEffect extends PerPixelEffect<LedPoint1D> {
   getName(): string {
     return 'Static Alternating Color';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0;
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     const index = point.position % this.colors.length;
     return this.colors[index];
   }
 }
 
-export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1D> {
-  readonly isStatic = true;
+export class StaticAlternatingColorCustomEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
+  readonly animationMode = AnimationMode.Static;
   pointType: LedPointType = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -165,17 +164,14 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<LedPoint1
   getName(): string {
     return 'Static Alternating Colors';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0;
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     const index = point.position % this.colors.value.length;
     return hslToRgbFloat(this.colors.value[index]);
   }
 }
 
-export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
-  readonly isStatic = true;
+export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
+  readonly animationMode = AnimationMode.Static;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -200,10 +196,7 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   getName(): string {
     return 'Static Color Gradient';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0; // Static effect has no loop
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     const scaledPos = point.distance * (this.colors.value.length - 1);
     const fromIndex = Math.floor(scaledPos);
@@ -213,8 +206,8 @@ export class StaticColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
-export class StaticCustomColorGradientEffect extends PerPixelEffect<LedPoint1D> {
-  readonly isStatic = true;
+export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
+  readonly animationMode = AnimationMode.Static;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
@@ -234,16 +227,14 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<LedPoint1D> 
   getName(): string {
     return `Static Custom Color Gradient`;
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 0; // Static effect has no loop
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     return hslToRgbFloat(lerpHsl(this.color1.value, this.color2.value, point.distance));
   }
 }
 
-export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
+export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -271,7 +262,7 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5; // Rotating effect has a loop duration
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     const scaledPos = ((point.distance + ctx.phase) % 1.0) * (this.colors.value.length - 1);
     const fromIndex = Math.floor(scaledPos);
@@ -281,7 +272,8 @@ export class RotatingColorGradientEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
-export class AlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1D> {
+export class AlternatingCustomColorFadingEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -311,7 +303,7 @@ export class AlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     const totalColors = this.colors.value.length;
     const index = point.position % totalColors;
     // Divide phase into N segments, one per color — only the active color's LEDs light up
@@ -327,7 +319,8 @@ export class AlternatingCustomColorFadingEffect extends PerPixelEffect<LedPoint1
 }
 
 // Also called "Marquee" if it runs a bit faster
-export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
+export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: false = false;
   getName(): string {
@@ -336,8 +329,8 @@ export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => this;
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => this;
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     const result: RgbFloat[] = new Array(points.length).fill(BLACK);
     const index = Math.floor(ctx.phase * points.length);
     result[index] = WHITE;
@@ -346,7 +339,8 @@ export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
 }
 
 // Also called "Marquee" if it runs a bit faster
-export class TestAllLedsFlash implements Effect<LedPoint1D> {
+export class TestAllLedsFlash implements EffectLoop<LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   getName(): string {
@@ -355,20 +349,21 @@ export class TestAllLedsFlash implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 1;
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new TestAllLedsFlashLogic();
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new TestAllLedsFlashLogic();
 }
 
-class TestAllLedsFlashLogic implements EffectLogic<LedPoint1D> {
+class TestAllLedsFlashLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private isOn: boolean = true;
 
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     const color = this.isOn ? WHITE : BLACK;
     this.isOn = !this.isOn;
     return new Array(points.length).fill(color);
   }
 }
 
-export class RainbowGradientEffect extends PerPixelEffect<LedPoint1D> {
+export class RainbowGradientEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   getName(): string {
     return 'Rainbow Gradient 1D';
@@ -376,14 +371,15 @@ export class RainbowGradientEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     // We use the normalized 'distance' for a smooth gradient
     const hue = (ctx.phase + point.distance) % 1.0;
     return hslToRgbFloat({ hue, saturation: 1, lightness: 0.5 });
   }
 }
 
-export class MeteorEffect implements Effect<LedPoint1D> {
+export class MeteorEffect implements EffectLoop<LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   parameters?: EffectParameterView | undefined;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
@@ -393,24 +389,27 @@ export class MeteorEffect implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new MeteorEffectLogic();
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new MeteorEffectLogic();
 }
 
-class MeteorEffectLogic implements EffectLogic<LedPoint1D> {
+class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private lastBuffer: RgbFloat[] | null = null;
+  private previousPhase: number = -1;
   private previousHeadIndex: number = -1;
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
-    // 1. Fade the whole buffer slightly (creates the trail)
-    // The fade amount is scaled by deltaTime to keep it FPS-independent
-    const fadeFactor = 1.0 - ctx.delta_time_ms / 500; // Lose full brightness every 500ms
-
+  renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     if (this.lastBuffer === null || this.lastBuffer.length !== ctx.total_leds) {
       this.lastBuffer = new Array(ctx.total_leds).fill(BLACK);
+      this.previousPhase = ctx.phase;
       this.previousHeadIndex = -1;
-    } else {
-      for (let i = 0; i < this.lastBuffer.length; i++) {
-        this.lastBuffer[i] = lerp(BLACK, this.lastBuffer[i], fadeFactor);
-      }
+    }
+
+    // 1. Fade proportional to phase progress (~1/10th of a loop for full fade)
+    let deltaPhase = ctx.phase - this.previousPhase;
+    if (deltaPhase < 0) deltaPhase += 1; // handle wrap-around
+    const fadeFactor = Math.max(0, 1.0 - deltaPhase * 10);
+
+    for (let i = 0; i < this.lastBuffer.length; i++) {
+      this.lastBuffer[i] = lerp(BLACK, this.lastBuffer[i], fadeFactor);
     }
 
     // 2. Draw the "Head" of the meteor, filling gaps if running fast
@@ -429,12 +428,15 @@ class MeteorEffectLogic implements EffectLogic<LedPoint1D> {
     }
 
     this.previousHeadIndex = headIndex;
+    this.previousPhase = ctx.phase;
 
     return this.lastBuffer;
   }
 }
 
-export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
+export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoint1D> {
+  readonly animationMode = AnimationMode.Sequence;
+  readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly probability = this.parameters.register({
@@ -457,10 +459,7 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   getName(): string {
     return 'Twinkle';
   }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 1;
-  }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextSequence, point: LedPoint1D): RgbFloat {
     if (Math.random() < this.probability.value / 100) {
       return hslToRgbFloat(this.color.value);
     }
@@ -468,7 +467,8 @@ export class TwinkleEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
-export class SineEffect extends PerPixelEffect<LedPoint1D> {
+export class SineEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly frequency = this.parameters.register({
@@ -493,7 +493,7 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     // We combine spatial position (pt.distance) with temporal progress (ctx.phase)
     const wave = Math.sin((point.distance * this.frequency.value + ctx.phase) * Math.PI * 2);
 
@@ -505,7 +505,8 @@ export class SineEffect extends PerPixelEffect<LedPoint1D> {
   }
 }
 
-export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
+export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+  readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
@@ -528,7 +529,7 @@ export class PingPongEffect extends PerPixelEffect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  renderPixel(ctx: EffectContext, point: LedPoint1D): RgbFloat {
+  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     // Convert 0...1 phase into 0...1...0 bounce
     const bounce = 1.0 - Math.abs(ctx.phase * 2 - 1);
 

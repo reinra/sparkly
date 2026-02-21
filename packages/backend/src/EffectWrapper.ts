@@ -5,7 +5,7 @@ import {
   MultiParameterStorageView,
   ParameterValue,
 } from './effectParameters';
-import { BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D, LedPoint } from './effects/Effect';
+import { AnimationMode, BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D, LedPoint, type AnyEffect } from './effects/Effect';
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';
 
 export const enum MappingMode {
@@ -128,16 +128,16 @@ export class EffectWrapper {
 
   constructor(
     public readonly id: string,
-    public readonly effect: Effect<any>,
+    public readonly effect: AnyEffect,
     private readonly name: string,
     public readonly canDelete: boolean = false
   ) {
-    const saemColorEffect = effect instanceof BaseSameColorEffect;
-    this.speed.hidden = effect.isStatic === true;
-    this.mappingMode.hidden = effect.pointType === '2D' || saemColorEffect;
+    const sameColorEffect = effect instanceof BaseSameColorEffect;
+    this.speed.hidden = effect.animationMode === AnimationMode.Static;
+    this.mappingMode.hidden = effect.pointType === '2D' || sameColorEffect;
     this.rotation.hidden = effect.pointType !== '2D';
-    this.mirror.hidden = saemColorEffect;
-    this.ledsPerPixel.hidden = effect.pointType === '2D' || saemColorEffect;
+    this.mirror.hidden = sameColorEffect;
+    this.ledsPerPixel.hidden = effect.pointType === '2D' || sameColorEffect;
   }
 
   public getName(): string {
@@ -225,7 +225,7 @@ export class EffectWrapper {
    * A fresh effect instance is created and all parameter values are copied.
    */
   public clone(newId: string, newName: string): EffectWrapper {
-    const newEffect = new (this.effect.constructor as new () => Effect<LedPoint>)();
+    const newEffect = new (this.effect.constructor as new () => AnyEffect)();
     const cloned = new EffectWrapper(newId, newEffect, newName, true);
     // Copy all parameter values from source to clone
     for (const param of this.getEffectParameters().list()) {
