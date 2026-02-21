@@ -346,18 +346,24 @@ export class TestPerLedEffect implements StatelessEffect<LedPoint1D> {
 }
 
 // Also called "Marquee" if it runs a bit faster
-export class TestAllLedsFlash implements StatelessEffect<LedPoint1D> {
+export class TestAllLedsFlash implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
-  isStateful: false = false;
+  isStateful: boolean = true;
   getName(): string {
     return 'Test All LEDs Flash';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 1;
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => this;
+  createLogic: () => EffectLogic<LedPoint1D> = () => new TestAllLedsFlashLogic();
+}
+
+class TestAllLedsFlashLogic implements EffectLogic<LedPoint1D> {
+  private isOn: boolean = true;
+
   renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
-    const color = ctx.frame_index % 2 === 0 ? WHITE : BLACK;
+    const color = this.isOn ? WHITE : BLACK;
+    this.isOn = !this.isOn;
     return new Array(points.length).fill(color);
   }
 }
