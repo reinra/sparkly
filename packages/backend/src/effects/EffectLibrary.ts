@@ -19,7 +19,7 @@ import {
   FlipColorCustomEffect,
 } from './library/Effects1D';
 import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
-import { RandomDotsEffect } from './library/RandomDotsEffect';
+import { RandomDotsEffect, RandomDotsClearEffect } from './library/RandomDotsEffect';
 import { CloudsEffect, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './library/Effects2D';
 import { GravityFountainEffect } from './library/GravityFountainEffect';
 
@@ -50,6 +50,7 @@ addPresets(StaticColorGradientEffect);
 addPresets(RotatingColorGradientEffect);
 addPresets(AlternatingCustomColorFadingEffect);
 add('random_dots', new RandomDotsEffect());
+add('random_dots_clear', new RandomDotsClearEffect());
 add('gradient_custom', new StaticCustomColorGradientEffect());
 add('rainbow', new RainbowGradientEffect());
 add('meteor', new MeteorEffect());

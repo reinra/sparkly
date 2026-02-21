@@ -1,13 +1,14 @@
 import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
-import { BooleanEffectParameter, ParameterType } from '../../ParameterTypes';
+import { ParameterType } from '../../ParameterTypes';
 import { Effect, type LedPoint1D, EffectLogic, type EffectContext } from '../Effect';
 import type { EasingIn, EasingOut } from '../util/Easing';
 import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
 
 
-export class RandomDotsEffect implements Effect<LedPoint1D> {
+/** Base class for random-dot effects with shared parameters and logic. */
+abstract class RandomDotsEffectBase implements Effect<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly customParams = new EffectParameterStorage();
@@ -21,13 +22,6 @@ export class RandomDotsEffect implements Effect<LedPoint1D> {
     max: 100,
     unit: '%',
   });
-  readonly clear: BooleanEffectParameter = this.customParams.register({
-    id: 'clear',
-    name: 'Clear after each cycle',
-    description: 'Clear the LED buffer on each cycle',
-    type: ParameterType.BOOLEAN,
-    value: false,
-  });
   readonly palette = new PaletteParameters();
   readonly easing = new EasingParameters();
   public readonly parameters = new MultiParameterStorageView(
@@ -37,9 +31,10 @@ export class RandomDotsEffect implements Effect<LedPoint1D> {
       ["easing.", this.easing.parameters],
     ])
   );
-  getName(): string {
-    return 'Random Dots';
-  }
+  abstract getName(): string;
+  abstract getStepCount(ledCount: number): number;
+  abstract createLogic: () => EffectLogic<LedPoint1D>;
+
   getCoverageMultiplier(): number {
     return this.coverage.value / 100;
   }
@@ -49,15 +44,217 @@ export class RandomDotsEffect implements Effect<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount * this.getCoverageMultiplier();
   }
-  getStepCount(ledCount: number): number {
-    return ledCount * this.getCoverageMultiplier() + (this.clear.value ? 10 : 0); // 10 extra steps = 5 flashes (on/off pairs)
-  }
   getMillisPerStep(ledCount: number): number {
     return this.getLoopDurationSeconds(ledCount) * 1000 / this.getStepCount(ledCount);
   }
-  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotEffectLogic(this);
 }
-/** Encapsulates the flashing animation state that plays after a complete cycle in "clear" mode. */
+
+/** Continuous random dots — cycles endlessly without clearing. */
+export class RandomDotsEffect extends RandomDotsEffectBase {
+  getName(): string {
+    return 'Random Dots';
+  }
+  getStepCount(ledCount: number): number {
+    return ledCount * this.getCoverageMultiplier();
+  }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotsLoopLogic(this);
+}
+
+/** Random dots with flash-and-clear after each full cycle. */
+export class RandomDotsClearEffect extends RandomDotsEffectBase {
+  getName(): string {
+    return 'Random Dots (Clear)';
+  }
+  getStepCount(ledCount: number): number {
+    return this.getMaxLitCount(ledCount) + 10; // one step per coverage-limited LED + 5 flashes (on/off pairs)
+  }
+  createLogic: () => EffectLogic<LedPoint1D> = () => new RandomDotsClearLogic(this);
+}
+
+// ---------------------------------------------------------------------------
+// Shared logic helpers
+// ---------------------------------------------------------------------------
+
+/** Tracks a single dot's lifecycle for smooth transitions. */
+interface Dot {
+  /** LED index in the buffer */
+  readonly index: number;
+  /** Target color at full brightness */
+  readonly color: RgbFloat;
+  /** Starting color to transition from (previous dot's color, or BLACK) */
+  readonly fromColor: RgbFloat;
+  /** Time (totalTimeMs) when this dot was spawned */
+  readonly birthTimeMs: number;
+  /** Time (totalTimeMs) when fade-out started, null if still active */
+  fadeOutStartMs: number | null;
+}
+
+/** Base logic shared between loop and clear variants. */
+abstract class RandomDotsLogicBase implements EffectLogic<LedPoint1D> {
+  protected dots: Dot[] = [];
+  protected totalTimeMs: number = 0;
+  protected shuffledIndices: number[] = [];
+  protected shufflePos: number = 0;
+  protected nextSpawnMs: number = 0;
+  protected initialized: boolean = false;
+  protected lastLedCount: number = 0;
+  // Cached per-frame values (set at the start of renderGlobal)
+  protected fadeDuration: number = 0;
+  protected easingIn!: EasingIn;
+  protected easingOut!: EasingOut;
+
+  constructor(protected readonly config: RandomDotsEffectBase) { }
+
+  protected buildShuffledIndices(count: number): void {
+    this.shuffledIndices = Array.from({ length: count }, (_, i) => i);
+    for (let i = count - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.shuffledIndices[i], this.shuffledIndices[j]] = [this.shuffledIndices[j], this.shuffledIndices[i]];
+    }
+    this.shufflePos = 0;
+  }
+
+  protected reset(total: number): void {
+    this.dots = [];
+    this.totalTimeMs = 0;
+    this.nextSpawnMs = 0;
+    this.initialized = true;
+    this.lastLedCount = total;
+    this.buildShuffledIndices(total);
+  }
+
+  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
+    const total = ctx.total_leds;
+    const millisPerStep = this.config.getMillisPerStep(total);
+    this.fadeDuration = millisPerStep;
+    this.easingIn = this.config.easing.getInEasingFunction();
+    this.easingOut = this.config.easing.getOutEasingFunction();
+
+    if (!this.initialized || this.lastLedCount !== total) {
+      this.reset(total);
+    }
+
+    this.totalTimeMs += ctx.delta_time_ms;
+
+    const earlyResult = this.handlePreSpawn(ctx, total, millisPerStep);
+    if (earlyResult) return earlyResult;
+
+    this.spawnPendingDots(total);
+    this.enforceCoverageLimit(total);
+    this.removeExpiredDots();
+
+    return this.renderDots(total);
+  }
+
+  /** Hook called before spawning — subclasses can intercept (e.g. flash animation). */
+  protected handlePreSpawn(_ctx: EffectContext, _total: number, _millisPerStep: number): RgbFloat[] | null {
+    return null;
+  }
+
+  /** Spawns new dots at each step interval. Calls onCycleComplete when all indices used. */
+  protected spawnPendingDots(total: number): void {
+    const millisPerStep = this.config.getMillisPerStep(total);
+
+    while (this.totalTimeMs >= this.nextSpawnMs) {
+      if (this.shufflePos >= this.shuffledIndices.length) {
+        if (this.onCycleComplete(total)) return;
+      }
+
+      if (this.shufflePos < this.shuffledIndices.length) {
+        this.spawnDotAtNextIndex();
+      }
+      this.nextSpawnMs += millisPerStep;
+    }
+  }
+
+  /** Called when all shuffled indices have been used. Return true to break spawning loop. */
+  protected abstract onCycleComplete(total: number): boolean;
+
+  /** Spawns a single dot at the next shuffled index, crossfading from any existing dot's color. */
+  protected spawnDotAtNextIndex(): void {
+    const index = this.shuffledIndices[this.shufflePos++];
+    let fromColor: RgbFloat = BLACK;
+    const existingIdx = this.dots.findIndex(d => d.index === index);
+    if (existingIdx !== -1) {
+      fromColor = this.computeDotColor(this.dots[existingIdx]);
+      this.dots.splice(existingIdx, 1);
+    }
+    this.dots.push({
+      index,
+      color: this.config.palette.palette.nextColor().asRgb(),
+      fromColor,
+      birthTimeMs: this.nextSpawnMs,
+      fadeOutStartMs: null,
+    });
+  }
+
+  /** Marks the oldest active dots for fade-out when exceeding the coverage limit. */
+  protected enforceCoverageLimit(total: number): void {
+    const maxLit = this.config.getMaxLitCount(total);
+    const activeDots = this.dots.filter(d => d.fadeOutStartMs === null);
+    const excess = activeDots.length - maxLit;
+    for (let i = 0; i < excess; i++) {
+      activeDots[i].fadeOutStartMs = this.totalTimeMs;
+    }
+  }
+
+  /** Removes dots that have fully faded out. */
+  protected removeExpiredDots(): void {
+    this.dots = this.dots.filter(d => {
+      if (d.fadeOutStartMs !== null) {
+        return (this.totalTimeMs - d.fadeOutStartMs) < this.fadeDuration;
+      }
+      return true;
+    });
+  }
+
+  /** Computes the current rendered color of a dot based on its lifecycle phase. */
+  protected computeDotColor(dot: Dot): RgbFloat {
+    const age = this.totalTimeMs - dot.birthTimeMs;
+
+    if (dot.fadeOutStartMs !== null) {
+      const fadeOutProgress = Math.min(1, (this.totalTimeMs - dot.fadeOutStartMs) / this.fadeDuration);
+      const brightness = this.easingOut.easingFunction(1 - fadeOutProgress);
+      return brightness > 0 ? lerp(BLACK, dot.color, brightness) : BLACK;
+    } else if (age < this.fadeDuration) {
+      const t = this.easingIn.easingFunction(age / this.fadeDuration);
+      return lerp(dot.fromColor, dot.color, t);
+    } else {
+      return dot.color;
+    }
+  }
+
+  /** Renders all active dots into a fresh buffer. */
+  protected renderDots(total: number): RgbFloat[] {
+    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+
+    for (const dot of this.dots) {
+      const color = this.computeDotColor(dot);
+      if (color !== BLACK) {
+        buffer[dot.index] = color;
+      }
+    }
+
+    return buffer;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Continuous loop variant (no clearing)
+// ---------------------------------------------------------------------------
+
+class RandomDotsLoopLogic extends RandomDotsLogicBase {
+  protected onCycleComplete(_total: number): boolean {
+    this.buildShuffledIndices(this.lastLedCount);
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Clear-after-cycle variant (with flash animation)
+// ---------------------------------------------------------------------------
+
+/** Encapsulates the flashing animation state that plays after a complete cycle. */
 class FlashAnimation {
   private step: number = 0;
   private accumulatedMs: number = 0;
@@ -93,176 +290,63 @@ class FlashAnimation {
   }
 }
 
-class RandomDotEffectLogic implements EffectLogic<LedPoint1D> {
-  private dots: Dot[] = [];
-  private totalTimeMs: number = 0;
-  private shuffledIndices: number[] = [];
-  private shufflePos: number = 0;
-  private nextSpawnMs: number = 0;
-  private initialized: boolean = false;
-  private lastLedCount: number = 0;
+class RandomDotsClearLogic extends RandomDotsLogicBase {
   private flash: FlashAnimation | null = null;
-  // Cached per-frame values (set at the start of renderGlobal)
-  private fadeDuration: number = 0;
-  private easingIn!: EasingIn;
-  private easingOut!: EasingOut;
+  private spawnedCount: number = 0;
 
-  constructor(private readonly config: RandomDotsEffect) { }
-
-  private buildShuffledIndices(count: number): void {
-    this.shuffledIndices = Array.from({ length: count }, (_, i) => i);
-    for (let i = count - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.shuffledIndices[i], this.shuffledIndices[j]] = [this.shuffledIndices[j], this.shuffledIndices[i]];
-    }
-    this.shufflePos = 0;
-  }
-
-  private reset(total: number): void {
-    this.dots = [];
-    this.totalTimeMs = 0;
-    this.nextSpawnMs = 0;
-    this.initialized = true;
-    this.lastLedCount = total;
+  protected override reset(total: number): void {
+    super.reset(total);
     this.flash = null;
-    this.buildShuffledIndices(total);
+    this.spawnedCount = 0;
   }
 
-  renderGlobal(ctx: EffectContext, points: LedPoint1D[]): RgbFloat[] {
-    const total = ctx.total_leds;
-    const millisPerStep = this.config.getMillisPerStep(total);
-    this.fadeDuration = millisPerStep;
-    this.easingIn = this.config.easing.getInEasingFunction();
-    this.easingOut = this.config.easing.getOutEasingFunction();
-
-    if (!this.initialized || this.lastLedCount !== total) {
-      this.reset(total);
-    }
-
-    this.totalTimeMs += ctx.delta_time_ms;
-
+  protected override handlePreSpawn(ctx: EffectContext, total: number, millisPerStep: number): RgbFloat[] | null {
     if (this.flash) {
       const result = this.flash.advance(total, ctx.delta_time_ms, millisPerStep);
       if (this.flash.finished) this.reset(total);
       return result;
     }
-
-    const flashResult = this.spawnPendingDots(total);
-    if (flashResult) return flashResult;
-
-    this.enforceCoverageLimit(total);
-    this.removeExpiredDots();
-
-    return this.renderDots(total);
+    return null;
   }
 
-  /** Spawns new dots at each step interval. Returns a buffer if entering flash mode, otherwise null. */
-  private spawnPendingDots(total: number): RgbFloat[] | null {
+  /** Spawn dots up to the coverage limit, then flash. */
+  protected override spawnPendingDots(total: number): void {
     const millisPerStep = this.config.getMillisPerStep(total);
+    const maxLit = this.config.getMaxLitCount(total);
 
     while (this.totalTimeMs >= this.nextSpawnMs) {
-      if (this.shufflePos >= this.shuffledIndices.length) {
-        if (this.config.clear.value) {
-          return this.enterFlashMode(total);
-        } else {
-          this.buildShuffledIndices(total);
-        }
+      if (this.spawnedCount >= maxLit) {
+        this.flash = new FlashAnimation(this.renderDots(total));
+        return;
       }
 
       if (this.shufflePos < this.shuffledIndices.length) {
         this.spawnDotAtNextIndex();
+        this.spawnedCount++;
       }
       this.nextSpawnMs += millisPerStep;
     }
-
-    return null;
   }
 
-  /** Captures current state and enters flash mode (used in "clear after cycle"). */
-  private enterFlashMode(total: number): RgbFloat[] {
-    this.flash = new FlashAnimation(this.renderDots(total));
-    return new Array(total).fill(BLACK);
-  }
-
-  /** Spawns a single dot at the next shuffled index, crossfading from any existing dot's color. */
-  private spawnDotAtNextIndex(): void {
+  /** No replacement — each dot is unique in clear mode. */
+  protected override spawnDotAtNextIndex(): void {
     const index = this.shuffledIndices[this.shufflePos++];
-    let fromColor: RgbFloat = BLACK;
-    const existingIdx = this.dots.findIndex(d => d.index === index);
-    if (existingIdx !== -1) {
-      fromColor = this.computeDotColor(this.dots[existingIdx]);
-      this.dots.splice(existingIdx, 1);
-    }
     this.dots.push({
       index,
       color: this.config.palette.palette.nextColor().asRgb(),
-      fromColor,
+      fromColor: BLACK,
       birthTimeMs: this.nextSpawnMs,
       fadeOutStartMs: null,
     });
   }
 
-  /** Marks the oldest active dots for fade-out when exceeding the coverage limit. */
-  private enforceCoverageLimit(total: number): void {
-    const maxLit = this.config.getMaxLitCount(total);
-    const activeDots = this.dots.filter(d => d.fadeOutStartMs === null);
-    const excess = activeDots.length - maxLit;
-    for (let i = 0; i < excess; i++) {
-      activeDots[i].fadeOutStartMs = this.totalTimeMs;
-    }
+  /** Dots stay lit until the flash — no coverage-based fade-out. */
+  protected override enforceCoverageLimit(_total: number): void { }
+
+  /** Dots stay lit until the flash — no expiration. */
+  protected override removeExpiredDots(): void { }
+
+  protected onCycleComplete(_total: number): boolean {
+    return true;
   }
-
-  /** Removes dots that have fully faded out. */
-  private removeExpiredDots(): void {
-    this.dots = this.dots.filter(d => {
-      if (d.fadeOutStartMs !== null) {
-        return (this.totalTimeMs - d.fadeOutStartMs) < this.fadeDuration;
-      }
-      return true;
-    });
-  }
-
-  /** Computes the current rendered color of a dot based on its lifecycle phase. */
-  private computeDotColor(dot: Dot): RgbFloat {
-    const age = this.totalTimeMs - dot.birthTimeMs;
-
-    if (dot.fadeOutStartMs !== null) {
-      const fadeOutProgress = Math.min(1, (this.totalTimeMs - dot.fadeOutStartMs) / this.fadeDuration);
-      const brightness = this.easingOut.easingFunction(1 - fadeOutProgress);
-      return brightness > 0 ? lerp(BLACK, dot.color, brightness) : BLACK;
-    } else if (age < this.fadeDuration) {
-      const t = this.easingIn.easingFunction(age / this.fadeDuration);
-      return lerp(dot.fromColor, dot.color, t);
-    } else {
-      return dot.color;
-    }
-  }
-
-  /** Renders all active dots into a fresh buffer. */
-  private renderDots(total: number): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
-
-    for (const dot of this.dots) {
-      const color = this.computeDotColor(dot);
-      if (color !== BLACK) {
-        buffer[dot.index] = color;
-      }
-    }
-
-    return buffer;
-  }
-}
-
-/** Tracks a single dot's lifecycle for smooth transitions. */
-interface Dot {
-  /** LED index in the buffer */
-  readonly index: number;
-  /** Target color at full brightness */
-  readonly color: RgbFloat;
-  /** Starting color to transition from (previous dot's color, or BLACK) */
-  readonly fromColor: RgbFloat;
-  /** Time (totalTimeMs) when this dot was spawned */
-  readonly birthTimeMs: number;
-  /** Time (totalTimeMs) when fade-out started, null if still active */
-  fadeOutStartMs: number | null;
 }
