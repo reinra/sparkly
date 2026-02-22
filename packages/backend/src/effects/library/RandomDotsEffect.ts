@@ -246,6 +246,25 @@ abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence
 // ---------------------------------------------------------------------------
 
 class RandomDotsLoopLogic extends RandomDotsLogicBase {
+  protected override reset(total: number): void {
+    super.reset(total);
+    // Immediately light up coverage-limited number of LEDs to skip warmup
+    const maxLit = this.config.getMaxLitCount(total);
+    const millisPerStep = this.config.getMillisPerStep(total);
+    for (let i = 0; i < maxLit && this.shufflePos < this.shuffledIndices.length; i++) {
+      const index = this.shuffledIndices[this.shufflePos++];
+      this.dots.push({
+        index,
+        color: this.config.palette.palette.nextColor().asRgb(),
+        fromColor: BLACK,
+        birthTimeMs: -this.fadeDuration, // appear fully lit immediately
+        fadeOutStartMs: null,
+      });
+    }
+    // Next spawn one step from now so cycling begins immediately
+    this.nextSpawnMs = millisPerStep;
+  }
+
   protected onCycleComplete(_total: number): boolean {
     this.buildShuffledIndices(this.lastLedCount);
     return false;
