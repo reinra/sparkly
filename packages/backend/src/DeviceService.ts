@@ -109,6 +109,7 @@ export class DeviceService {
               name: currentEffect.getName(),
               type: currentEffect.effect.constructor.name,
               pointType: currentEffect.effect.pointType,
+              animationMode: currentEffect.effect.animationMode as string,
             }
           : null,
         parameters: (await device.helper.getParameters())

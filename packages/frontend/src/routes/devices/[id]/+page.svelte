@@ -260,6 +260,10 @@
             <strong>Point Type:</strong>
             <span>{device.effect?.pointType ?? '—'}</span>
           </div>
+          <div class="info-item">
+            <strong>Animation Type:</strong>
+            <span>{device.effect?.animationMode ?? '—'}</span>
+          </div>
         </div>
 
         {#if effectParams.length}
