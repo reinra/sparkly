@@ -1,11 +1,16 @@
 import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import { ParameterType } from '../../ParameterTypes';
-import { AnimationMode, type EffectSequence, type LedPoint1D, EffectLogic, type EffectContextSequence } from '../Effect';
+import {
+  AnimationMode,
+  type EffectSequence,
+  type LedPoint1D,
+  EffectLogic,
+  type EffectContextSequence,
+} from '../Effect';
 import type { EasingIn, EasingOut } from '../util/Easing';
 import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
-
 
 /** Base class for random-dot effects with shared parameters and logic. */
 abstract class RandomDotsEffectBase implements EffectSequence<LedPoint1D> {
@@ -28,9 +33,9 @@ abstract class RandomDotsEffectBase implements EffectSequence<LedPoint1D> {
   readonly easing = new EasingParameters();
   public readonly parameters = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
-      ["custom.", this.customParams],
-      ["palette.", this.palette.parameters],
-      ["easing.", this.easing.parameters],
+      ['custom.', this.customParams],
+      ['palette.', this.palette.parameters],
+      ['easing.', this.easing.parameters],
     ])
   );
   abstract getName(): string;
@@ -47,7 +52,7 @@ abstract class RandomDotsEffectBase implements EffectSequence<LedPoint1D> {
     return ledCount * this.getCoverageMultiplier();
   }
   getMillisPerStep(ledCount: number): number {
-    return this.getLoopDurationSeconds(ledCount) * 1000 / this.getStepCount(ledCount);
+    return (this.getLoopDurationSeconds(ledCount) * 1000) / this.getStepCount(ledCount);
   }
 }
 
@@ -105,7 +110,7 @@ abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence
   protected easingIn!: EasingIn;
   protected easingOut!: EasingOut;
 
-  constructor(protected readonly config: RandomDotsEffectBase) { }
+  constructor(protected readonly config: RandomDotsEffectBase) {}
 
   protected buildShuffledIndices(count: number): void {
     this.shuffledIndices = Array.from({ length: count }, (_, i) => i);
@@ -176,7 +181,7 @@ abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence
   protected spawnDotAtNextIndex(): void {
     const index = this.shuffledIndices[this.shufflePos++];
     let fromColor: RgbFloat = BLACK;
-    const existingIdx = this.dots.findIndex(d => d.index === index);
+    const existingIdx = this.dots.findIndex((d) => d.index === index);
     if (existingIdx !== -1) {
       fromColor = this.computeDotColor(this.dots[existingIdx]);
       this.dots.splice(existingIdx, 1);
@@ -193,7 +198,7 @@ abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence
   /** Marks the oldest active dots for fade-out when exceeding the coverage limit. */
   protected enforceCoverageLimit(total: number): void {
     const maxLit = this.config.getMaxLitCount(total);
-    const activeDots = this.dots.filter(d => d.fadeOutStartMs === null);
+    const activeDots = this.dots.filter((d) => d.fadeOutStartMs === null);
     const excess = activeDots.length - maxLit;
     for (let i = 0; i < excess; i++) {
       activeDots[i].fadeOutStartMs = this.totalTimeMs;
@@ -202,9 +207,9 @@ abstract class RandomDotsLogicBase implements EffectLogic<AnimationMode.Sequence
 
   /** Removes dots that have fully faded out. */
   protected removeExpiredDots(): void {
-    this.dots = this.dots.filter(d => {
+    this.dots = this.dots.filter((d) => {
       if (d.fadeOutStartMs !== null) {
-        return (this.totalTimeMs - d.fadeOutStartMs) < this.fadeDuration;
+        return this.totalTimeMs - d.fadeOutStartMs < this.fadeDuration;
       }
       return true;
     });
@@ -321,7 +326,11 @@ class RandomDotsClearLogic extends RandomDotsLogicBase {
     this.spawnedCount = 0;
   }
 
-  protected override handlePreSpawn(ctx: EffectContextSequence, total: number, millisPerStep: number): RgbFloat[] | null {
+  protected override handlePreSpawn(
+    ctx: EffectContextSequence,
+    total: number,
+    millisPerStep: number
+  ): RgbFloat[] | null {
     if (this.flash) {
       const result = this.flash.advance(total, ctx.delta_time_ms, millisPerStep);
       if (this.flash.finished) this.reset(total);
@@ -362,10 +371,10 @@ class RandomDotsClearLogic extends RandomDotsLogicBase {
   }
 
   /** Dots stay lit until the flash — no coverage-based fade-out. */
-  protected override enforceCoverageLimit(_total: number): void { }
+  protected override enforceCoverageLimit(_total: number): void {}
 
   /** Dots stay lit until the flash — no expiration. */
-  protected override removeExpiredDots(): void { }
+  protected override removeExpiredDots(): void {}
 
   protected onCycleComplete(_total: number): boolean {
     return true;
