@@ -264,6 +264,12 @@
             <strong>Animation Type:</strong>
             <span>{device.effect?.animationMode ?? '—'}</span>
           </div>
+          {#if device.effect?.loop_duration_seconds != null}
+            <div class="info-item">
+              <strong>Loop Duration:</strong>
+              <span>{device.effect.loop_duration_seconds.toFixed(2)}s</span>
+            </div>
+          {/if}
         </div>
 
         {#if effectParams.length}

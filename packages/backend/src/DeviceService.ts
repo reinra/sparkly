@@ -6,6 +6,7 @@ import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
 import { getEffectGroup } from './DeviceHelper';
+import { AnimationMode, type EffectLoop, type LedPoint } from './effects/Effect';
 import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
 import type { LedMapping } from './DeviceHelper';
@@ -94,13 +95,20 @@ export class DeviceService {
       }
 
       const currentEffect = device.helper.getCurrentEffect();
+      const ledCount = gestalt?.number_of_led;
+
+      // Compute loop duration for loop effects when LED count is known
+      let loopDurationSeconds: number | undefined;
+      if (currentEffect && ledCount && currentEffect.effect.animationMode === AnimationMode.Loop) {
+        loopDurationSeconds = (currentEffect.effect as EffectLoop<LedPoint>).getLoopDurationSeconds(ledCount);
+      }
 
       deviceList.push({
         id: device.id,
         alias: device.alias,
         ip: device.api_client.getIp(),
         name: gestalt?.device_name,
-        led_count: gestalt?.number_of_led,
+        led_count: ledCount,
         brightness: summary?.filters?.find((f) => f.filter === 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,
         effect: currentEffect
@@ -110,6 +118,7 @@ export class DeviceService {
               type: currentEffect.effect.constructor.name,
               pointType: currentEffect.effect.pointType,
               animationMode: currentEffect.effect.animationMode as string,
+              ...(loopDurationSeconds !== undefined && { loop_duration_seconds: loopDurationSeconds }),
             }
           : null,
         parameters: (await device.helper.getParameters())

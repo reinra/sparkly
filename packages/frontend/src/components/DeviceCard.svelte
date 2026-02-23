@@ -145,6 +145,9 @@
         <p><strong>Name:</strong> {effect.name}</p>
         <p><strong>Type:</strong> {effect.type}</p>
         <p><strong>Point Type:</strong> {effect.pointType}</p>
+        {#if effect.loop_duration_seconds != null}
+          <p><strong>Loop Duration:</strong> {effect.loop_duration_seconds.toFixed(2)}s</p>
+        {/if}
       </div>
     {/if}
     <button onclick={sendMovie} disabled={updating || !effect}>Send movie</button>

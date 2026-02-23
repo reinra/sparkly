@@ -95,6 +95,7 @@ const EffectInfoSchema = z.object({
   type: z.string(),
   pointType: z.enum(['1D', '2D']),
   animationMode: z.string(),
+  loop_duration_seconds: z.number().optional(),
 });
 
 const DeviceInfoResponseSchema = z.object({
