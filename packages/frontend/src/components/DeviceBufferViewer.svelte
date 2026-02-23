@@ -201,7 +201,8 @@
     }
   }
 
-  // Auto-disable live mode when disableLive prop becomes true
+  // Auto-disable live mode when disableLive becomes true, re-enable when it becomes false
+  let prevDisableLive = false;
   $effect(() => {
     if (disableLive && isLiveEnabled) {
       isLiveEnabled = false;
@@ -209,7 +210,12 @@
         clearTimeout(liveIntervalId);
         liveIntervalId = null;
       }
+    } else if (!disableLive && prevDisableLive) {
+      // Re-enable live mode when disableLive is lifted (e.g. dialog closed)
+      isLiveEnabled = true;
+      fetchBuffer();
     }
+    prevDisableLive = disableLive;
   });
 
   // Re-render canvas when colors update in 2D mode
