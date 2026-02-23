@@ -164,6 +164,33 @@ const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
 
+const MovieTaskStatusSchema = z.enum(['rendering', 'uploading', 'configuring', 'completed', 'error']);
+
+const MovieTaskProgressSchema = z.object({
+  status: MovieTaskStatusSchema,
+  /** Rendering progress 0–1 */
+  progress: z.number().min(0).max(1),
+  /** Frames rendered so far */
+  framesRendered: z.number(),
+  /** Estimated total frames (null if unknown) */
+  totalFrames: z.number().nullable(),
+  /** Final frame count on completion */
+  frameCount: z.number().nullable(),
+  /** Error message if status is 'error' */
+  error: z.string().nullable(),
+  /** Name of the effect being sent */
+  effectName: z.string(),
+  /** Device ID */
+  deviceId: z.string(),
+});
+
+const GetMovieStatusResponseSchema = z.object({
+  /** Whether a movie task exists for this device */
+  active: z.boolean(),
+  /** Task progress, null if no task */
+  task: MovieTaskProgressSchema.nullable(),
+});
+
 const ParameterValueSchema = z.union([z.number(), z.boolean(), z.string(), HslValueSchema, z.array(HslValueSchema)]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
@@ -211,6 +238,8 @@ export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
 export type SetParametersRequest = z.infer<typeof SetParametersRequestSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export type EffectInfo = z.infer<typeof EffectInfoSchema>;
+export type MovieTaskProgressResponse = z.infer<typeof MovieTaskProgressSchema>;
+export type GetMovieStatusResponse = z.infer<typeof GetMovieStatusResponseSchema>;
 
 // Export parameter-related types inferred from Zod schemas
 export type Hsl = z.infer<typeof HslValueSchema>;
@@ -341,6 +370,16 @@ export const backendApiContract = c.router({
     body: SendMovieRequestSchema,
     responses: {
       200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  /** Poll for movie-send progress on a device. */
+  getMovieStatus: {
+    method: 'GET',
+    path: '/api/sendMovie/status',
+    query: DeviceRequestBaseSchema,
+    responses: {
+      200: GetMovieStatusResponseSchema,
       500: ErrorResponseSchema,
     },
   },

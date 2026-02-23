@@ -2,6 +2,7 @@
   import { backendClient, type GetInfoResponse } from '../frontendApiClient';
   import { handleApiUpdate } from '../utils/apiHelper';
   import DeviceBufferViewer from './DeviceBufferViewer.svelte';
+  import SendMovieDialog from './SendMovieDialog.svelte';
   import { deviceStore } from '../stores/deviceStore.svelte';
 
   interface Props {
@@ -15,6 +16,7 @@
   let effect = $derived(device.effect);
   let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
+  let showMovieDialog = $state(false);
 
   async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
     const value = Number(event.currentTarget.value);
@@ -98,12 +100,16 @@
           },
         }),
       async () => {
-        // Refresh device state
-        await deviceStore.fetchDevice(device.id);
+        showMovieDialog = true;
       },
       () => {}
     );
     updating = false;
+  }
+
+  function closeMovieDialog() {
+    showMovieDialog = false;
+    deviceStore.fetchDevice(device.id);
   }
 </script>
 
@@ -151,9 +157,13 @@
       </div>
     {/if}
     <button onclick={sendMovie} disabled={updating || !effect}>Send movie</button>
-    <DeviceBufferViewer deviceId={device.id} />
+    <DeviceBufferViewer deviceId={device.id} disableLive={showMovieDialog} />
   </div>
 </div>
+
+{#if showMovieDialog}
+  <SendMovieDialog deviceId={device.id} onclose={closeMovieDialog} />
+{/if}
 
 <style>
   .device-card {

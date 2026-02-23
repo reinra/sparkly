@@ -3,6 +3,7 @@
   import { handleApiUpdate } from '../../../utils/apiHelper';
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
   import EffectParameters from '../../../components/EffectParameters.svelte';
+  import SendMovieDialog from '../../../components/SendMovieDialog.svelte';
   import { deviceStore } from '../../../stores/deviceStore.svelte';
   import { page } from '$app/state';
   import { ParameterGroup } from '@twinkly-ts/common';
@@ -14,9 +15,28 @@
   let updating = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
+  let showMovieDialog = $state(false);
 
   let deviceParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.DEVICE));
   let effectParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.EFFECT));
+
+  // Check for active movie task on mount / device change
+  $effect(() => {
+    checkActiveMovieTask(deviceId);
+  });
+
+  async function checkActiveMovieTask(devId: string) {
+    try {
+      const result = await backendClient.getMovieStatus({
+        query: { device_id: devId },
+      });
+      if (result.status === 200 && result.body.active) {
+        showMovieDialog = true;
+      }
+    } catch {
+      // Ignore — device may not exist yet
+    }
+  }
 
   // Fetch devices on mount or when device ID changes
   $effect(() => {
@@ -108,12 +128,17 @@
           },
         }),
       async () => {
-        // Refresh device state
-        await deviceStore.fetchDevice(deviceId);
+        showMovieDialog = true;
       },
       () => {}
     );
     updating = false;
+  }
+
+  function closeMovieDialog() {
+    showMovieDialog = false;
+    // Refresh device state after movie task finishes
+    deviceStore.fetchDevice(deviceId);
   }
 
   async function cloneEffect() {
@@ -299,9 +324,13 @@
       </div>
 
       <div class="buffer-section">
-        <DeviceBufferViewer deviceId={device.id} />
+        <DeviceBufferViewer deviceId={device.id} disableLive={showMovieDialog} />
       </div>
     </div>
+
+    {#if showMovieDialog}
+      <SendMovieDialog deviceId={deviceId} onclose={closeMovieDialog} />
+    {/if}
   {:else}
     <p class="error">Device not found</p>
     <a href="/devices" class="back-button">← Back to Devices</a>

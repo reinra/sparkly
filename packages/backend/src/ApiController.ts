@@ -1,6 +1,7 @@
 import type { TypedHandlers } from './typedHandler';
 import { backendApiContract } from '@twinkly-ts/common';
 import { deviceService } from './DeviceService';
+import { isMovieTaskActive } from './movieTaskTracker';
 
 /**
  * Controller layer. Receives HTTP requests, validates required params,
@@ -54,8 +55,15 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
   },
 
   sendMovie: async (req, res) => {
+    // Fire-and-forget: starts the task in the background and returns immediately
     await deviceService.sendMovie(req.body.device_id, req.body.effect_id);
     res.json({ success: true });
+  },
+
+  getMovieStatus: async (req, res) => {
+    const task = deviceService.getMovieStatus(req.query.device_id);
+    const active = task ? isMovieTaskActive(req.query.device_id) : false;
+    res.json({ active, task });
   },
 
   setParameters: async (req, res) => {

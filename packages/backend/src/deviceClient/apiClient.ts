@@ -397,7 +397,7 @@ export class TwinklyApiClient {
 
     // Use direct fetch to avoid ts-rest serializing the binary data
     const result = await this.fetchBinary('/xled/v1/led/movie/full', binaryData, {
-      timeout: 20000,
+      timeout: 2 * 60 * 1000, // 2 minutes
     });
 
     expect1000(result);

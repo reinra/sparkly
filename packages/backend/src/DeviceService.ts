@@ -2,6 +2,7 @@ import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { abortTask, startAndAbortPreviousTask } from './backendLoops';
 import { devices, type Device } from './deviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
+import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
@@ -12,6 +13,14 @@ import type { FrameBuffer } from './render/FrameOutputStream';
 import type { LedMapping } from './DeviceHelper';
 import type { DeviceInfo } from '@twinkly-ts/common';
 import type { ParameterValue } from './effectParameters';
+import {
+  startMovieTask,
+  getMovieTaskProgress,
+  updateMovieTask,
+  completeMovieTask,
+  failMovieTask,
+  type MovieTaskProgress,
+} from './movieTaskTracker';
 
 // ── Result types ──────────────────────────────────────────────────────
 
@@ -206,6 +215,11 @@ export class DeviceService {
     return device.helper.getLedMapping();
   }
 
+  /**
+   * Start sending an effect as a movie to the device.
+   * Returns immediately — the actual rendering + upload runs in the background.
+   * Progress can be polled via getMovieStatus().
+   */
   async sendMovie(deviceId: string, effectId: string): Promise<void> {
     const device = this.getDevice(deviceId);
 
@@ -216,10 +230,56 @@ export class DeviceService {
 
     abortTask(deviceId);
 
+    const taskProgress = startMovieTask(deviceId, effect.getName());
+
     const renderCtx = new RenderContextImpl(device.helper, effect);
-    await sendEffectAsMovie(device, renderCtx, new AbortController().signal).catch((error: unknown) => {
-      logError(error).error(`Error sending effect as movie to device ${device.id}`);
+    const progressCb: MovieProgressCallback = {
+      onRenderStart(totalFrames) {
+        updateMovieTask(deviceId, { totalFrames });
+      },
+      onFrameRendered(frameIndex, totalFrames) {
+        const progress = totalFrames ? frameIndex / totalFrames : 0;
+        updateMovieTask(deviceId, { framesRendered: frameIndex, progress });
+      },
+      onUploadStart(frameCount) {
+        updateMovieTask(deviceId, { status: 'uploading', frameCount, framesRendered: frameCount });
+      },
+      onConfiguring() {
+        updateMovieTask(deviceId, { status: 'configuring' });
+      },
+      onComplete(frameCount) {
+        completeMovieTask(deviceId, frameCount);
+      },
+      onError(error) {
+        failMovieTask(deviceId, error);
+      },
+    };
+
+    // Fire-and-forget — run in the background
+    startAndAbortPreviousTask(deviceId, {
+      run: async (signal) => {
+        try {
+          await sendEffectAsMovie(device, renderCtx, signal, progressCb);
+        } catch (error: unknown) {
+          // Abort errors happen when user starts a new task — don't mark as failed
+          // since a new task will overwrite the tracker entry
+          const isAbort =
+            error instanceof Error &&
+            (error.name === 'AbortError' || error.message?.includes('The operation was aborted'));
+          if (!isAbort) {
+            failMovieTask(deviceId, error instanceof Error ? error.message : 'Unknown error');
+          }
+          throw error; // Re-throw for backendLoops logging
+        }
+      },
     });
+  }
+
+  /** Get current movie-send progress for a device, or null if none. */
+  getMovieStatus(deviceId: string): MovieTaskProgress | null {
+    // Validate device exists
+    this.getDevice(deviceId);
+    return getMovieTaskProgress(deviceId);
   }
 
   async setParameters(deviceId: string, parameters: { id: string; value: ParameterValue }[]): Promise<void> {

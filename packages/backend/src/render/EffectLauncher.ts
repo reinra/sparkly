@@ -5,14 +5,35 @@ import {
   MappedFrameOutputStream,
   ApiClientFrameOutputStream,
   MovieBufferOutputStream,
+  ProgressTrackingFrameOutputStream,
   type FrameFormat,
 } from './FrameOutputStream';
 import { EffectRenderer } from './Renderer';
 import { logger } from '../logger';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
+import { AnimationMode, type EffectLoop } from '../effects/Effect';
 import type { RenderContext } from './RenderContext';
 
 const renderer = new EffectRenderer();
+
+/** Default recording duration for Sequence effects — must match Renderer constant. */
+const DEFAULT_SEQUENCE_DURATION_MS = 30_000;
+
+/** Callback interface for reporting movie-send progress. */
+export interface MovieProgressCallback {
+  /** Called once, before rendering starts. totalFrames may be null if unknown. */
+  onRenderStart(totalFrames: number | null): void;
+  /** Called after each frame is rendered. */
+  onFrameRendered(frameIndex: number, totalFrames: number | null): void;
+  /** Called when rendering is done, about to upload. */
+  onUploadStart(frameCount: number): void;
+  /** Called when upload is done, configuring device. */
+  onConfiguring(): void;
+  /** Called when everything is done. */
+  onComplete(frameCount: number): void;
+  /** Called on error. */
+  onError(error: string): void;
+}
 
 async function buildFrameFormat(renderCtx: RenderContext): Promise<FrameFormat> {
   return {
@@ -68,11 +89,25 @@ async function prepareForSendingLedValues(device: Device) {
   await device.api_client.setMode(DeviceModeSchema.Values.rt);
 }
 
-export async function sendEffectAsMovie(device: Device, renderCtx: RenderContext, signal: AbortSignal) {
+export async function sendEffectAsMovie(
+  device: Device,
+  renderCtx: RenderContext,
+  signal: AbortSignal,
+  progressCb?: MovieProgressCallback
+) {
   const ledMapper = await renderCtx.getLedMapper(true);
   const frameFormat = await buildFrameFormat(renderCtx);
   const movieBuffer = new MovieBufferOutputStream(frameFormat);
-  const output = new MappedFrameOutputStream(movieBuffer, ledMapper);
+
+  // Estimate total frame count before rendering
+  const totalFrames = estimateTotalFrames(renderCtx, frameFormat.led_count);
+  progressCb?.onRenderStart(totalFrames);
+
+  // Wrap output to track frame-by-frame progress
+  const progressOutput = new ProgressTrackingFrameOutputStream(movieBuffer, (frameIndex) => {
+    progressCb?.onFrameRendered(frameIndex, totalFrames);
+  });
+  const output = new MappedFrameOutputStream(progressOutput, ledMapper);
 
   await prepareForSendingLedValues(device);
 
@@ -81,10 +116,14 @@ export async function sendEffectAsMovie(device: Device, renderCtx: RenderContext
   const renderDuration = Date.now() - renderStart;
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
 
+  progressCb?.onUploadStart(movieBuffer.getFrameCount());
+
   const postStart = Date.now();
   const movieResult = await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
   const postDuration = Date.now() - postStart;
   logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
+
+  progressCb?.onConfiguring();
 
   const frameMs = renderCtx.getMinFrameTimeMs();
   await device.api_client.setLedMovieConfig({
@@ -94,4 +133,29 @@ export async function sendEffectAsMovie(device: Device, renderCtx: RenderContext
   });
 
   await device.api_client.setMode(DeviceModeSchema.Values.movie);
+  progressCb?.onComplete(movieBuffer.getFrameCount());
+}
+
+/**
+ * Estimate the total number of frames that renderAsap will produce,
+ * based on the effect's animation mode and timing parameters.
+ */
+function estimateTotalFrames(renderCtx: RenderContext, ledCount: number): number | null {
+  const effect = renderCtx.effect;
+  const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
+
+  switch (effect.animationMode) {
+    case AnimationMode.Static:
+      return 1;
+    case AnimationMode.Loop: {
+      const loopEffect = effect as EffectLoop<any>;
+      const loopDurationMs = loopEffect.getLoopDurationSeconds(ledCount) * 1000;
+      if (loopDurationMs <= 0) return null;
+      return Math.ceil(loopDurationMs / frameTimeMs);
+    }
+    case AnimationMode.Sequence:
+      return Math.ceil(DEFAULT_SEQUENCE_DURATION_MS / frameTimeMs);
+    default:
+      return null;
+  }
 }

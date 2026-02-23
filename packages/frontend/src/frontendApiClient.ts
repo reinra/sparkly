@@ -24,4 +24,6 @@ export type {
   SetModeRequest,
   SetModeResponse,
   SystemInfoResponse,
+  MovieTaskProgressResponse,
+  GetMovieStatusResponse,
 } from '@twinkly-ts/common';

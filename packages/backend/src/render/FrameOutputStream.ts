@@ -114,6 +114,29 @@ export class MappedFrameOutputStream implements FrameOutputStream {
   }
 }
 
+/**
+ * Wraps another FrameOutputStream, calling a callback after each frame is written.
+ * Used to track rendering progress for the movie-send pipeline.
+ */
+export class ProgressTrackingFrameOutputStream implements FrameOutputStream {
+  private frameCount = 0;
+  constructor(
+    private readonly target: FrameOutputStream,
+    private readonly onFrame: (frameIndex: number) => void
+  ) {}
+  async writeFrame(frame: LedValue[]): Promise<void> {
+    await this.target.writeFrame(frame);
+    this.frameCount++;
+    this.onFrame(this.frameCount);
+  }
+  setPhase(phase: number | null): void {
+    this.target.setPhase?.(phase);
+  }
+  public getFrameCount(): number {
+    return this.frameCount;
+  }
+}
+
 async function copyValues(color: LedValue, targetType: LedType, output: number[]) {
   if (targetType === LedType.RGB) {
     // Ignore white even if provided

@@ -3,9 +3,11 @@
 
   interface Props {
     deviceId: string;
+    /** When true, live mode is forcibly disabled (e.g. during movie sending). */
+    disableLive?: boolean;
   }
 
-  let { deviceId }: Props = $props();
+  let { deviceId, disableLive = false }: Props = $props();
 
   type DisplayMode = 'sequence' | '2d-mapping';
 
@@ -199,6 +201,17 @@
     }
   }
 
+  // Auto-disable live mode when disableLive prop becomes true
+  $effect(() => {
+    if (disableLive && isLiveEnabled) {
+      isLiveEnabled = false;
+      if (liveIntervalId !== null) {
+        clearTimeout(liveIntervalId);
+        liveIntervalId = null;
+      }
+    }
+  });
+
   // Re-render canvas when colors update in 2D mode
   $effect(() => {
     if (displayMode === '2d-mapping' && colors.length > 0 && ledMapping !== null) {
@@ -212,7 +225,7 @@
     <button onclick={fetchBuffer} disabled={fetchingBuffer || isLiveEnabled} class="fetch-buffer-btn">
       Fetch Device Buffer
     </button>
-    <button onclick={toggleLiveMode} class="live-toggle-btn" class:active={isLiveEnabled}>
+    <button onclick={toggleLiveMode} class="live-toggle-btn" class:active={isLiveEnabled} disabled={disableLive}>
       {isLiveEnabled ? 'Disable Live' : 'Enable Live'}
     </button>
   </div>
