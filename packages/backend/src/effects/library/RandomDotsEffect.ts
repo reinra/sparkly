@@ -10,6 +10,7 @@ import {
 } from '../Effect';
 import type { EasingIn, EasingOut } from '../util/Easing';
 import { EasingParameters } from '../util/EasingMode';
+import { FlashAnimation } from '../util/FlashAnimation';
 import { PaletteParameters } from '../util/Palette';
 
 /** Base class for random-dot effects with shared parameters and logic. */
@@ -279,42 +280,6 @@ class RandomDotsLoopLogic extends RandomDotsLogicBase {
 // ---------------------------------------------------------------------------
 // Clear-after-cycle variant (with flash animation)
 // ---------------------------------------------------------------------------
-
-/** Encapsulates the flashing animation state that plays after a complete cycle. */
-class FlashAnimation {
-  private step: number = 0;
-  private accumulatedMs: number = 0;
-  private readonly savedBuffer: RgbFloat[];
-  private _finished: boolean = false;
-
-  constructor(savedBuffer: RgbFloat[]) {
-    this.savedBuffer = savedBuffer;
-  }
-
-  get finished(): boolean {
-    return this._finished;
-  }
-
-  /** Advances the flash animation by deltaMs and returns the frame to display. */
-  advance(total: number, deltaMs: number, millisPerStep: number): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
-    this.accumulatedMs += deltaMs;
-    if (this.accumulatedMs >= millisPerStep) {
-      this.accumulatedMs -= millisPerStep;
-      this.step++;
-    }
-    if (this.step >= 10) {
-      this._finished = true;
-      return buffer;
-    }
-    if (this.step % 2 === 1) {
-      for (let i = 0; i < this.savedBuffer.length; i++) {
-        buffer[i] = this.savedBuffer[i];
-      }
-    }
-    return buffer;
-  }
-}
 
 class RandomDotsClearLogic extends RandomDotsLogicBase {
   private flash: FlashAnimation | null = null;

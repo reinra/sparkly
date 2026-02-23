@@ -19,6 +19,7 @@ import {
   FlipColorCustomEffect,
 } from './library/Effects1D';
 import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
+import { BlocksEffect } from './library/BlocksEffect';
 import { RandomDotsEffect, RandomDotsClearEffect } from './library/RandomDotsEffect';
 import { RandomDotsNewLoopEffect } from './library/RandomDotsNewLoopEffect';
 import { RandomDotsStaticEffect } from './library/RandomDotsStaticEffect';
@@ -69,6 +70,7 @@ add('slime', new Slime());
 add('clouds', new CloudsEffect());
 add('plasma', new PlasmaEffect());
 add('gravity_fountain', new GravityFountainEffect());
+add('blocks', new BlocksEffect());
 add('test_per_led', new TestPerLedEffect());
 add('test_all_leds_flash', new TestAllLedsFlash());
 
