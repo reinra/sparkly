@@ -329,7 +329,7 @@
     </div>
 
     {#if showMovieDialog}
-      <SendMovieDialog deviceId={deviceId} onclose={closeMovieDialog} />
+      <SendMovieDialog {deviceId} onclose={closeMovieDialog} />
     {/if}
   {:else}
     <p class="error">Device not found</p>

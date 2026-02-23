@@ -48,10 +48,7 @@ export async function startEffect(device: Device, renderCtx: RenderContext, sign
   const frameFormat = await buildFrameFormat(renderCtx);
   const output = new MultipleFrameOutputStream([
     new MappedFrameOutputStream(new BufferReplacingFrameOutputStream(device.buffer), basicLedMapper),
-    new MappedFrameOutputStream(
-      new ApiClientFrameOutputStream(device.api_client, frameFormat),
-      fixedLedMapper
-    ),
+    new MappedFrameOutputStream(new ApiClientFrameOutputStream(device.api_client, frameFormat), fixedLedMapper),
   ]);
   await prepareForSendingLedValues(device);
 
@@ -67,7 +64,7 @@ export async function startEffect(device: Device, renderCtx: RenderContext, sign
 
   // Clear interval on abort signal - using unique handler per invocation
   const abortHandler = () => {
-    if (keepAliveInterval !== null) { 
+    if (keepAliveInterval !== null) {
       clearInterval(keepAliveInterval);
       keepAliveInterval = null;
     }

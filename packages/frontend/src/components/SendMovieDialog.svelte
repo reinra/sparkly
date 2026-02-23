@@ -116,7 +116,12 @@
       <div class="effect-name">{task.effectName}</div>
 
       <div class="status-row">
-        <span class="status-icon" class:spinning={isInProgress} class:success={task.status === 'completed'} class:error={task.status === 'error'}>
+        <span
+          class="status-icon"
+          class:spinning={isInProgress}
+          class:success={task.status === 'completed'}
+          class:error={task.status === 'error'}
+        >
           {#if task.status === 'completed'}
             &#10003;
           {:else if task.status === 'error'}
@@ -173,8 +178,12 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .dialog {
@@ -188,8 +197,14 @@
   }
 
   @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   h3 {
@@ -240,8 +255,12 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .status-label {
