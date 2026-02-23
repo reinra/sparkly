@@ -19,11 +19,7 @@ export interface Renderer {
 }
 
 export class EffectRenderer implements Renderer {
-  async renderLive(
-    renderCtx: RenderContext,
-    output: FrameOutputStream,
-    signal: AbortSignal
-  ): Promise<void> {
+  async renderLive(renderCtx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
     const effect = renderCtx.effect;
     const numberOfLeds = await renderCtx.getNumberOfLeds();
     const ledProfile = await renderCtx.getLedProfile();
@@ -114,11 +110,7 @@ export class EffectRenderer implements Renderer {
     }
   }
 
-  async renderAsap(
-    renderCtx: RenderContext,
-    output: FrameOutputStream,
-    signal: AbortSignal
-  ): Promise<void> {
+  async renderAsap(renderCtx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void> {
     const effect = renderCtx.effect;
     const numberOfLeds = await renderCtx.getNumberOfLeds();
     const ledProfile = await renderCtx.getLedProfile();
