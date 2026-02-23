@@ -6,7 +6,7 @@ import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
 
 /** Number of snapshots (and transition segments) per loop. */
-const SEGMENT_COUNT = 3;
+const SEGMENT_COUNT = 2;
 
 /**
  * Phase-based random dots that loops seamlessly.
@@ -46,7 +46,7 @@ export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
   }
 
   getLoopDurationSeconds(ledCount: number): number {
-    return ledCount;
+    return ledCount / 2;
   }
 
   getMaxLitCount(ledCount: number): number {
