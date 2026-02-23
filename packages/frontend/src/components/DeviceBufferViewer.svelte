@@ -11,6 +11,7 @@
 
   let displayMode = $state<DisplayMode>('sequence');
   let bufferData = $state<string | null>(null);
+  let phase = $state<number | null>(null);
   let colors = $state<Array<{ r: number; g: number; b: number }>>([]);
   let ledMapping = $state<Array<{ id: number; x: number; y: number }> | null>(null);
   let fetchingBuffer = $state(false);
@@ -123,6 +124,7 @@
       });
 
       if (result.status === 200) {
+        phase = result.body.phase ?? null;
         bufferData = result.body.base64_encoded;
         if (bufferData) {
           isRendering = true;
@@ -143,11 +145,13 @@
       } else {
         console.error('Failed to fetch buffer:', result);
         bufferData = null;
+        phase = null;
         colors = [];
       }
     } catch (error) {
       console.error('Error fetching buffer:', error);
       bufferData = null;
+      phase = null;
       colors = [];
     } finally {
       fetchingBuffer = false;
@@ -226,6 +230,16 @@
       {fetchingMapping ? 'Loading...' : '2D Mapping'}
     </button>
   </div>
+
+  {#if phase != null}
+    <div class="phase-bar">
+      <strong>Phase:</strong>
+      <div class="phase-track">
+        <div class="phase-fill" style="width: {(phase * 100).toFixed(1)}%"></div>
+      </div>
+      <span class="phase-label">{(phase * 100).toFixed(1)}%</span>
+    </div>
+  {/if}
 
   {#if colors.length > 0}
     <div class="buffer-data">
@@ -394,5 +408,34 @@
   canvas {
     border: 1px solid #ddd;
     background-color: #000;
+  }
+
+  .phase-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .phase-track {
+    flex: 1;
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .phase-fill {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 6px;
+    transition: width 0.1s linear;
+  }
+
+  .phase-label {
+    min-width: 4rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 </style>

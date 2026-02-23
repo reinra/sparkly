@@ -29,6 +29,9 @@ export class EffectRenderer implements Renderer {
     const ledProfile = await renderCtx.getLedProfile();
     const logic = effect.createLogic();
 
+    // Reset phase for non-loop effects
+    output.setPhase?.(null);
+
     switch (effect.animationMode) {
       case AnimationMode.Static: {
         // Static effects have no phase/time — re-render each frame so parameter changes take effect
@@ -56,13 +59,15 @@ export class EffectRenderer implements Renderer {
           const frameStartTime = performance.now();
           const speed = renderCtx.getCurrentSpeedMultiplier();
           const elapsedTime = (frameStartTime - firstStartTime) * speed;
+          const phase = (elapsedTime % loopDurationMs) / loopDurationMs;
           const ctx: EffectContextLoop = {
             total_leds: numberOfLeds,
             led_type: ledProfile,
-            phase: (elapsedTime % loopDurationMs) / loopDurationMs,
+            phase,
           };
           const points = await renderCtx.getPoints();
           const ledValues = logic.renderGlobal(ctx as any, points);
+          output.setPhase?.(phase);
           await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
           const processingTime = performance.now() - frameStartTime;
           const timeToWait = renderCtx.getMinFrameTimeMs() - processingTime;

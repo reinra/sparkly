@@ -9,10 +9,12 @@ export interface FrameFormat {
 }
 export interface FrameOutputStream {
   writeFrame(frame: LedValue[]): Promise<void>;
+  setPhase?(phase: number | null): void;
 }
 
 export interface FrameBuffer {
   base64_encoded: string | null; // Base64 encoded frame data
+  phase: number | null; // Current phase [0, 1) for loop effects, null otherwise
 }
 
 export class MultipleFrameOutputStream implements FrameOutputStream {
@@ -20,6 +22,11 @@ export class MultipleFrameOutputStream implements FrameOutputStream {
   async writeFrame(frame: LedValue[]): Promise<void> {
     for (const output of this.outputs) {
       await output.writeFrame(frame);
+    }
+  }
+  setPhase(phase: number | null): void {
+    for (const output of this.outputs) {
+      output.setPhase?.(phase);
     }
   }
 }
@@ -48,6 +55,9 @@ export class BufferReplacingFrameOutputStream implements FrameOutputStream {
   constructor(private readonly buffer: FrameBuffer) {}
   async writeFrame(frame: LedValue[]): Promise<void> {
     this.buffer.base64_encoded = this.encodeFrameToBase64(frame);
+  }
+  setPhase(phase: number | null): void {
+    this.buffer.phase = phase;
   }
   private encodeFrameToBase64(frame: LedValue[]): string {
     const bytes: number[] = [];
@@ -88,6 +98,9 @@ export class MappedFrameOutputStream implements FrameOutputStream {
     private readonly target: FrameOutputStream,
     private readonly mapper: LedMapper
   ) {}
+  setPhase(phase: number | null): void {
+    this.target.setPhase?.(phase);
+  }
   async writeFrame(frame: LedValue[]): Promise<void> {
     const result: LedValue[] = new Array(frame.length);
     for (let i = 0; i < frame.length; i++) {

@@ -25,7 +25,7 @@ export const devices: Record<string, Device> = Object.fromEntries(
         alias: `Twinkly Device ${index + 1}`,
         api_client: apiClient,
         helper: new DeviceHelper(apiClient),
-        buffer: { base64_encoded: null },
+        buffer: { base64_encoded: null, phase: null },
       },
     ];
   })

@@ -180,6 +180,7 @@ const GetBufferResponseSchema = z.object({
     .string()
     .regex(/^[A-Za-z0-9+/]*={0,2}$/, 'Must be valid base64')
     .nullable(),
+  phase: z.number().min(0).max(1).nullable().optional(),
 });
 
 const GetLedMappingResponseSchema = z.object({
