@@ -81,7 +81,15 @@
     }
   });
 
-  let progressPercent = $derived(task ? Math.round(task.progress * 100) : 0);
+  let progressPercent = $derived.by(() => {
+    if (!task) return 0;
+    if (task.status === 'uploading' && task.uploadBytesTotal && task.uploadBytesTotal > 0) {
+      return Math.round((task.uploadBytesSent / task.uploadBytesTotal) * 100);
+    }
+    return Math.round(task.progress * 100);
+  });
+
+  let showProgressBar = $derived(task?.status === 'rendering' || task?.status === 'uploading');
 
   let isInProgress = $derived(
     task?.status === 'rendering' || task?.status === 'uploading' || task?.status === 'configuring'
@@ -101,6 +109,20 @@
       return `${task.frameCount} frames`;
     }
     return '';
+  });
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  let uploadInfo = $derived.by(() => {
+    if (!task || !task.uploadBytesTotal) return '';
+    if (task.status === 'uploading') {
+      return `${formatBytes(task.uploadBytesSent)} / ${formatBytes(task.uploadBytesTotal)}`;
+    }
+    return formatBytes(task.uploadBytesTotal);
   });
 </script>
 
@@ -133,7 +155,7 @@
         <span class="status-label">{statusLabel}</span>
       </div>
 
-      {#if task.status === 'rendering'}
+      {#if showProgressBar}
         <div class="progress-section">
           <div class="progress-track">
             <div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -144,6 +166,10 @@
 
       {#if frameInfo}
         <div class="frame-info">{frameInfo}</div>
+      {/if}
+
+      {#if uploadInfo}
+        <div class="frame-info">{uploadInfo}</div>
       {/if}
 
       {#if task.status === 'error' && task.error}

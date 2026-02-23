@@ -149,6 +149,8 @@ export class TwinklyApiClient {
       method?: string;
       timeout?: number;
       extraHeaders?: Record<string, string>;
+      /** Called as chunks of data are consumed by the request pipeline. */
+      onProgress?: (bytesSent: number, bytesTotal: number) => void;
     }
   ): Promise<any> {
     const method = options?.method || 'POST';
@@ -163,15 +165,42 @@ export class TwinklyApiClient {
       })
       .debug('Making direct binary fetch request');
 
+    // Build body: if onProgress is provided, wrap data in a ReadableStream
+    // that reports progress as chunks are consumed by the request pipeline.
+    let body: BodyInit;
+    if (options?.onProgress) {
+      const CHUNK_SIZE = 64 * 1024; // 64 KB chunks
+      const total = binaryData.byteLength;
+      const onProgress = options.onProgress;
+      let offset = 0;
+      body = new ReadableStream({
+        pull(controller) {
+          if (offset >= total) {
+            controller.close();
+            return;
+          }
+          const end = Math.min(offset + CHUNK_SIZE, total);
+          controller.enqueue(binaryData.subarray(offset, end));
+          offset = end;
+          onProgress(offset, total);
+        },
+      });
+    } else {
+      body = binaryData as BodyInit;
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
         headers: {
           'x-auth-token': this.authenticationToken!,
           'Content-Type': 'application/octet-stream',
+          'Content-Length': String(binaryData.byteLength),
           ...options?.extraHeaders,
         },
-        body: binaryData as BodyInit,
+        body,
+        // @ts-ignore — needed for streaming request bodies in Node.js
+        duplex: 'half',
         signal: AbortSignal.timeout(timeout),
       });
 
@@ -387,7 +416,10 @@ export class TwinklyApiClient {
     );
   }
 
-  async postMovieFull(movieData: Buffer): Promise<MovieFullResponseType> {
+  async postMovieFull(
+    movieData: Buffer,
+    onProgress?: (bytesSent: number, bytesTotal: number) => void
+  ): Promise<MovieFullResponseType> {
     await this.ensureAuthenticated();
 
     // Convert Buffer to Uint8Array for fetch API
@@ -398,6 +430,7 @@ export class TwinklyApiClient {
     // Use direct fetch to avoid ts-rest serializing the binary data
     const result = await this.fetchBinary('/xled/v1/led/movie/full', binaryData, {
       timeout: 2 * 60 * 1000, // 2 minutes
+      onProgress,
     });
 
     expect1000(result);

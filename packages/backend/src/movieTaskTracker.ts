@@ -14,6 +14,10 @@ export interface MovieTaskProgress {
   totalFrames: number | null;
   /** Final frame count once rendering is complete. */
   frameCount: number | null;
+  /** Total bytes to upload (set when upload starts). */
+  uploadBytesTotal: number | null;
+  /** Bytes uploaded so far. */
+  uploadBytesSent: number;
   /** Error message if status is 'error'. */
   error: string | null;
   /** Name of the effect being sent. */
@@ -33,6 +37,8 @@ export function startMovieTask(deviceId: string, effectName: string): MovieTaskP
     framesRendered: 0,
     totalFrames: null,
     frameCount: null,
+    uploadBytesTotal: null,
+    uploadBytesSent: 0,
     error: null,
     effectName,
     deviceId,

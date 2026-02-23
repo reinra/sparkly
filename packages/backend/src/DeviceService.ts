@@ -241,8 +241,11 @@ export class DeviceService {
         const progress = totalFrames ? frameIndex / totalFrames : 0;
         updateMovieTask(deviceId, { framesRendered: frameIndex, progress });
       },
-      onUploadStart(frameCount) {
-        updateMovieTask(deviceId, { status: 'uploading', frameCount, framesRendered: frameCount });
+      onUploadStart(frameCount, uploadBytesTotal) {
+        updateMovieTask(deviceId, { status: 'uploading', frameCount, framesRendered: frameCount, uploadBytesTotal, uploadBytesSent: 0 });
+      },
+      onUploadProgress(bytesSent, _bytesTotal) {
+        updateMovieTask(deviceId, { uploadBytesSent: bytesSent });
       },
       onConfiguring() {
         updateMovieTask(deviceId, { status: 'configuring' });

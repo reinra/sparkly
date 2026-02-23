@@ -176,6 +176,10 @@ const MovieTaskProgressSchema = z.object({
   totalFrames: z.number().nullable(),
   /** Final frame count on completion */
   frameCount: z.number().nullable(),
+  /** Total bytes to upload (set when upload starts) */
+  uploadBytesTotal: z.number().nullable(),
+  /** Bytes uploaded so far */
+  uploadBytesSent: z.number(),
   /** Error message if status is 'error' */
   error: z.string().nullable(),
   /** Name of the effect being sent */

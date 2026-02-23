@@ -26,7 +26,9 @@ export interface MovieProgressCallback {
   /** Called after each frame is rendered. */
   onFrameRendered(frameIndex: number, totalFrames: number | null): void;
   /** Called when rendering is done, about to upload. */
-  onUploadStart(frameCount: number): void;
+  onUploadStart(frameCount: number, uploadBytesTotal: number): void;
+  /** Called periodically during upload with bytes sent so far. */
+  onUploadProgress(bytesSent: number, bytesTotal: number): void;
   /** Called when upload is done, configuring device. */
   onConfiguring(): void;
   /** Called when everything is done. */
@@ -113,10 +115,13 @@ export async function sendEffectAsMovie(
   const renderDuration = Date.now() - renderStart;
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
 
-  progressCb?.onUploadStart(movieBuffer.getFrameCount());
+  const movieData = movieBuffer.getMovieBuffer();
+  progressCb?.onUploadStart(movieBuffer.getFrameCount(), movieData.byteLength);
 
   const postStart = Date.now();
-  const movieResult = await device.api_client.postMovieFull(movieBuffer.getMovieBuffer());
+  const movieResult = await device.api_client.postMovieFull(movieData, (bytesSent, bytesTotal) => {
+    progressCb?.onUploadProgress(bytesSent, bytesTotal);
+  });
   const postDuration = Date.now() - postStart;
   logger.debug(`postMovieFull completed in ${postDuration}ms with frames_number=${movieResult.frames_number}`);
 
