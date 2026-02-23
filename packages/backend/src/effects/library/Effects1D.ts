@@ -13,7 +13,7 @@ import {
   WHITE_HSL_COLOR,
   YELLOW_HSL_COLOR,
 } from '../../color/Hsl';
-import { EffectParameterStorage, EffectParameterView } from '../../effectParameters';
+import { EffectParameterStorage, type EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import {
   AnimationMode,
   BaseSameColorEffect,
@@ -29,6 +29,7 @@ import {
   EffectPreset,
 } from '../Effect';
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
+import { PaletteParameters } from '../util/Palette';
 
 export class SingleHslColorEffect extends BaseSameColorEffect<AnimationMode.Static> {
   readonly animationMode = AnimationMode.Static;
@@ -380,7 +381,23 @@ export class RainbowGradientEffect extends PerPixelEffect<AnimationMode.Loop, Le
 
 export class MeteorEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
-  parameters?: EffectParameterView | undefined;
+  readonly customParams = new EffectParameterStorage();
+  readonly fadeFactor = this.customParams.register({
+    id: 'fade_factor',
+    name: 'Fade Speed',
+    description: 'How quickly the meteor trail fades (higher = faster fade)',
+    type: ParameterType.RANGE,
+    value: 10,
+    min: 1,
+    max: 50,
+  });
+  readonly palette = new PaletteParameters();
+  public readonly parameters: EffectParameterView = new MultiParameterStorageView(
+    new Map<string, EffectParameterView>([
+      ['custom.', this.customParams],
+      ['palette.', this.palette.parameters],
+    ])
+  );
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   getName(): string {
@@ -389,13 +406,19 @@ export class MeteorEffect implements EffectLoop<LedPoint1D> {
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
-  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new MeteorEffectLogic();
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new MeteorEffectLogic(this);
 }
 
 class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private lastBuffer: RgbFloat[] | null = null;
   private previousPhase: number = -1;
   private previousHeadIndex: number = -1;
+  private currentColor: RgbFloat;
+
+  constructor(private readonly config: MeteorEffect) {
+    this.currentColor = config.palette.palette.nextColor().asRgb();
+  }
+
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     if (this.lastBuffer === null || this.lastBuffer.length !== ctx.total_leds) {
       this.lastBuffer = new Array(ctx.total_leds).fill(BLACK);
@@ -403,10 +426,10 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
       this.previousHeadIndex = -1;
     }
 
-    // 1. Fade proportional to phase progress (~1/10th of a loop for full fade)
+    // 1. Fade proportional to phase progress
     let deltaPhase = ctx.phase - this.previousPhase;
     if (deltaPhase < 0) deltaPhase += 1; // handle wrap-around
-    const fadeFactor = Math.max(0, 1.0 - deltaPhase * 10);
+    const fadeFactor = Math.max(0, 1.0 - deltaPhase * this.config.fadeFactor.value);
 
     for (let i = 0; i < this.lastBuffer.length; i++) {
       this.lastBuffer[i] = lerp(BLACK, this.lastBuffer[i], fadeFactor);
@@ -414,17 +437,21 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 
     // 2. Draw the "Head" of the meteor, filling gaps if running fast
     const headIndex = Math.floor(ctx.phase * ctx.total_leds);
+    const color = this.currentColor;
 
     // Fill all LEDs from previous position to current position to avoid gaps
     // But detect wrapping (when headIndex jumps back to start)
     if (this.previousHeadIndex >= 0 && headIndex >= this.previousHeadIndex) {
       // Normal forward movement - fill the gap
       for (let i = this.previousHeadIndex; i <= headIndex && i < this.lastBuffer.length; i++) {
-        this.lastBuffer[i] = WHITE;
+        this.lastBuffer[i] = color;
       }
     } else if (headIndex < this.lastBuffer.length) {
-      // Wrapped around or first frame - just set current position
-      this.lastBuffer[headIndex] = WHITE;
+      // Wrapped around — advance to next color from palette
+      if (this.previousHeadIndex >= 0) {
+        this.currentColor = this.config.palette.palette.nextColor().asRgb();
+      }
+      this.lastBuffer[headIndex] = this.currentColor;
     }
 
     this.previousHeadIndex = headIndex;
