@@ -1,9 +1,21 @@
 import { ParameterType } from '../../ParameterTypes';
 import { type RgbFloat } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR } from '../../color/Hsl';
-import { EffectParameterStorage, type EffectParameterView, type ParameterValue, MultiParameterStorageView } from '../../effectParameters';
+import {
+  EffectParameterStorage,
+  type EffectParameterView,
+  type ParameterValue,
+  MultiParameterStorageView,
+} from '../../effectParameters';
 import { FullEasingParameters, EasingMode } from '../util/EasingMode';
-import { AnimationMode, type EffectContextLoop, type EffectLoop, type EffectLogic, type EffectPreset, type LedPoint1D } from '../Effect';
+import {
+  AnimationMode,
+  type EffectContextLoop,
+  type EffectLoop,
+  type EffectLogic,
+  type EffectPreset,
+  type LedPoint1D,
+} from '../Effect';
 import { PaletteParameters, PaletteType, MultipleMode } from '../util/Palette';
 import type { Hsl } from '../../ParameterTypes';
 
