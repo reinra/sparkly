@@ -1,7 +1,7 @@
 import { Hsl } from '@twinkly-ts/common';
 import { Color, HslColor, RgbColor } from '../../color/Color';
 import { EffectParameterStorage } from '../../effectParameters';
-import { MultiHslEffectParameter, OptionEffectParameter, ParameterType } from '../../ParameterTypes';
+import { MultiHslEffectParameter, OptionEffectParameter, RangeEffectParameter, ParameterType } from '../../ParameterTypes';
 import { BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR } from '../../color/Hsl';
 
 export interface Palette {
@@ -53,6 +53,11 @@ export class RoundRobinPalette implements Palette {
   }
 }
 
+export enum RainbowMode {
+  Rotate = 'rotate',
+  Random = 'random',
+}
+
 export class RandomSaturatedHslPalette implements Palette {
   nextColor(): Color {
     const hsl: Hsl = {
@@ -60,6 +65,20 @@ export class RandomSaturatedHslPalette implements Palette {
       saturation: 1,
       lightness: 0.5,
     };
+    return new HslColor(hsl);
+  }
+}
+
+export class RotatingRainbowPalette implements Palette {
+  private hue = Math.random();
+  constructor(private rateOfChange: number) {}
+  nextColor(): Color {
+    const hsl: Hsl = {
+      hue: this.hue,
+      saturation: 1,
+      lightness: 0.5,
+    };
+    this.hue = (this.hue + this.rateOfChange) % 1;
     return new HslColor(hsl);
   }
 }
@@ -86,13 +105,58 @@ export class PaletteParameters {
       options: [
         { value: PaletteType.Static, label: 'Static', description: 'Use a single static color' },
         { value: PaletteType.Multiple, label: 'Multiple', description: 'Random color from a custom list' },
-        { value: PaletteType.RandomSaturatedHsl, label: 'Saturated', description: 'Generate random saturated colors' },
+        { value: PaletteType.RandomSaturatedHsl, label: 'Rainbow', description: 'Fully saturated rainbow colors' },
         {
           value: PaletteType.RandomColorRgb,
           label: 'Any color',
           description: 'Generate random colors in entire RGB space',
         },
       ],
+    },
+    () => this.onUpdate()
+  );
+  private readonly rainbowMode: OptionEffectParameter = this.parameters.register(
+    {
+      id: 'rainbowMode',
+      name: 'Mode',
+      description: 'How to generate rainbow colors',
+      type: ParameterType.OPTION,
+      value: RainbowMode.Rotate,
+      options: [
+        { value: RainbowMode.Rotate, label: 'Rotate', description: 'Smoothly rotate through the color wheel' },
+        { value: RainbowMode.Random, label: 'Random', description: 'Pick random saturated colors' },
+      ],
+      hidden: this.shouldHideRainbowParameters(),
+    },
+    () => this.onUpdate()
+  );
+  private readonly colorRateOfChange: RangeEffectParameter = this.parameters.register(
+    {
+      id: 'colorRateOfChange',
+      name: 'Color rate of change',
+      description: 'How fast the hue rotates per step',
+      type: ParameterType.RANGE,
+      value: 1,
+      min: 0.1,
+      max: 50,
+      step: 0.1,
+      unit: '%',
+      hidden: this.shouldHideColorRateOfChange(),
+    },
+    () => this.onUpdate()
+  );
+  private readonly multipleOrder: OptionEffectParameter = this.parameters.register(
+    {
+      id: 'multipleOrder',
+      name: 'Order',
+      description: 'How to pick the next color from the list',
+      type: ParameterType.OPTION,
+      value: MultipleMode.RoundRobin,
+      options: [
+        { value: MultipleMode.RoundRobin, label: 'Round-robin', description: 'Cycle through colors in order' },
+        { value: MultipleMode.Random, label: 'Random', description: 'Pick a random color from the list' },
+      ],
+      hidden: this.shouldHideColorsParameter(),
     },
     () => this.onUpdate()
   );
@@ -118,26 +182,13 @@ export class PaletteParameters {
     },
     () => this.onUpdate()
   );
-  private readonly multipleOrder: OptionEffectParameter = this.parameters.register(
-    {
-      id: 'multipleOrder',
-      name: 'Order',
-      description: 'How to pick the next color from the list',
-      type: ParameterType.OPTION,
-      value: MultipleMode.RoundRobin,
-      options: [
-        { value: MultipleMode.RoundRobin, label: 'Round-robin', description: 'Cycle through colors in order' },
-        { value: MultipleMode.Random, label: 'Random', description: 'Pick a random color from the list' },
-      ],
-      hidden: this.shouldHideColorsParameter(),
-    },
-    () => this.onUpdate()
-  );
   public palette: Palette = this.newPalette();
   onUpdate(): void {
     this.color.hidden = this.shouldHideColorParameter();
     this.colors.hidden = this.shouldHideColorsParameter();
     this.multipleOrder.hidden = this.shouldHideColorsParameter();
+    this.rainbowMode.hidden = this.shouldHideRainbowParameters();
+    this.colorRateOfChange.hidden = this.shouldHideColorRateOfChange();
     this.palette = this.newPalette();
   }
   private shouldHideColorParameter(): boolean {
@@ -145,6 +196,12 @@ export class PaletteParameters {
   }
   private shouldHideColorsParameter(): boolean {
     return this.type.value !== PaletteType.Multiple;
+  }
+  private shouldHideRainbowParameters(): boolean {
+    return this.type.value !== PaletteType.RandomSaturatedHsl;
+  }
+  private shouldHideColorRateOfChange(): boolean {
+    return this.type.value !== PaletteType.RandomSaturatedHsl || this.rainbowMode.value !== RainbowMode.Rotate;
   }
   private newPalette(): Palette {
     switch (this.type.value) {
@@ -155,7 +212,9 @@ export class PaletteParameters {
           ? new RoundRobinPalette(this.colors.value)
           : new RandomMultiplePalette(this.colors.value);
       case PaletteType.RandomSaturatedHsl:
-        return new RandomSaturatedHslPalette();
+        return this.rainbowMode.value === RainbowMode.Rotate
+          ? new RotatingRainbowPalette(this.colorRateOfChange.value / 100)
+          : new RandomSaturatedHslPalette();
       case PaletteType.RandomColorRgb:
         return new RandomColorPalette();
       default:
