@@ -1,3 +1,8 @@
+<script module lang="ts">
+  // Shared across all ColorColorPicker instances – ensures only one picker is open at a time
+  let closeCurrentPicker: (() => void) | null = null;
+</script>
+
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { ColorMode, type ColorValue, type Hsl, type RgbFloat } from '@twinkly-ts/common';
@@ -126,11 +131,23 @@
 
   function toggleOpen() {
     if (disabled) return;
-    isOpen = !isOpen;
+    if (isOpen) {
+      closePicker();
+    } else {
+      // Close any other open picker first
+      if (closeCurrentPicker && closeCurrentPicker !== closePicker) {
+        closeCurrentPicker();
+      }
+      isOpen = true;
+      closeCurrentPicker = closePicker;
+    }
   }
 
   function closePicker() {
     isOpen = false;
+    if (closeCurrentPicker === closePicker) {
+      closeCurrentPicker = null;
+    }
   }
 
   function handleDocumentClick(event: MouseEvent) {

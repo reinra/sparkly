@@ -70,7 +70,12 @@
     onchange(colors);
   }
 
-  function handleDragStart(colorIndex: number) {
+  function handleDragStart(event: DragEvent, colorIndex: number) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.drag-handle')) {
+      event.preventDefault();
+      return;
+    }
     dragFromIndex = colorIndex;
   }
 
@@ -150,14 +155,26 @@
   <div class="multi-color-list">
     {#each value as color, colorIndex}
       {@const colorTriggerId = `color-picker-${param.id}-${colorIndex}`}
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
         class="multi-color-row"
         class:drag-over={dragOverIndex === colorIndex}
         draggable="true"
-        ondragstart={() => handleDragStart(colorIndex)}
+        ondragstart={(e) => handleDragStart(e, colorIndex)}
         ondragover={(e) => handleDragOver(e, colorIndex)}
         ondrop={() => handleDrop(colorIndex)}
         ondragend={resetDrag}
+        onclick={(e) => {
+          const target = e.target as HTMLElement;
+          if (
+            target.closest('.drag-handle') ||
+            target.closest('.multi-color-remove') ||
+            target.closest('.color-picker-cell')
+          )
+            return;
+          e.stopPropagation();
+          document.getElementById(colorTriggerId)?.click();
+        }}
         role="listitem"
       >
         <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
@@ -171,19 +188,7 @@
           />
         </div>
         <span class="mode-badge">{color.mode === ColorMode.HSL ? 'HSL' : 'RGB'}</span>
-        <span
-          class="color-readout color-trigger"
-          role="button"
-          tabindex="0"
-          aria-label={`Edit ${param.name} color ${colorIndex + 1}`}
-          onclick={() => document.getElementById(colorTriggerId)?.click()}
-          onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              document.getElementById(colorTriggerId)?.click();
-            }
-          }}
-        >
+        <span class="color-readout">
           {formatColorDisplay(color)}
         </span>
         {#if value.length > 1}
@@ -231,6 +236,7 @@
     align-items: center;
     padding: 0.2rem 0.3rem;
     border-radius: 0.4rem;
+    cursor: pointer;
     transition: background 0.15s ease;
   }
 
@@ -277,17 +283,6 @@
     padding: 0.1rem 0.35rem;
     line-height: 1.2;
     user-select: none;
-  }
-
-  .color-trigger {
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .color-trigger:focus-visible {
-    outline: 2px solid rgba(255, 62, 0, 0.4);
-    border-radius: 4px;
-    padding: 0 0.15rem;
   }
 
   .color-readout {
