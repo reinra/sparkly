@@ -6,6 +6,7 @@ export enum ParameterType {
   MULTI_HSL = 'multi_hsl',
   RGB = 'rgb',
   COLOR = 'color',
+  MULTI_COLOR = 'multi_color',
 }
 
 export enum ColorMode {
@@ -91,6 +92,13 @@ export interface ColorEffectParameter extends BaseEffectParameter {
   color: Color;
 }
 
+export interface MultiColorEffectParameter extends BaseEffectParameter {
+  type: ParameterType.MULTI_COLOR;
+  value: ColorValue[];
+  /** Backend-only: the current values as Color objects, kept in sync with `value` */
+  colors: Color[];
+}
+
 export type EffectParameter =
   | RangeEffectParameter
   | BooleanEffectParameter
@@ -98,4 +106,5 @@ export type EffectParameter =
   | OptionEffectParameter
   | MultiHslEffectParameter
   | RgbEffectParameter
-  | ColorEffectParameter;
+  | ColorEffectParameter
+  | MultiColorEffectParameter;

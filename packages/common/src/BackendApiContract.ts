@@ -10,6 +10,7 @@ export const ParameterType = {
   MULTI_HSL: 'multi_hsl',
   RGB: 'rgb',
   COLOR: 'color',
+  MULTI_COLOR: 'multi_color',
 } as const;
 
 export const ParameterGroup = {
@@ -51,6 +52,7 @@ const EffectParameterBaseSchema = z.object({
     ParameterType.MULTI_HSL,
     ParameterType.RGB,
     ParameterType.COLOR,
+    ParameterType.MULTI_COLOR,
   ]),
   group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
@@ -118,6 +120,11 @@ const ColorEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: ColorValueSchema,
 });
 
+const MultiColorEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.MULTI_COLOR),
+  value: z.array(ColorValueSchema).min(1),
+});
+
 const EffectParameterSchema = z.discriminatedUnion('type', [
   RangeEffectParameterSchema,
   BooleanEffectParameterSchema,
@@ -126,6 +133,7 @@ const EffectParameterSchema = z.discriminatedUnion('type', [
   MultiHslEffectParameterSchema,
   RgbEffectParameterSchema,
   ColorEffectParameterSchema,
+  MultiColorEffectParameterSchema,
 ]);
 
 const EffectInfoSchema = z.object({
@@ -260,6 +268,7 @@ const ParameterValueSchema = z.union([
   z.array(HslValueSchema),
   RgbFloatValueSchema,
   ColorValueSchema,
+  z.array(ColorValueSchema),
 ]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
@@ -324,6 +333,7 @@ export type MultiHslEffectParameter = z.infer<typeof MultiHslEffectParameterSche
 export type RgbEffectParameter = z.infer<typeof RgbEffectParameterSchema>;
 export type ColorValue = z.infer<typeof ColorValueSchema>;
 export type ColorEffectParameter = z.infer<typeof ColorEffectParameterSchema>;
+export type MultiColorEffectParameter = z.infer<typeof MultiColorEffectParameterSchema>;
 
 // Backend API contract
 const DeviceModeSchema = z.object({

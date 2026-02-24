@@ -16,6 +16,7 @@
     type MultiHslEffectParameter,
     type RgbEffectParameter,
     type ColorEffectParameter,
+    type MultiColorEffectParameter,
   } from '@twinkly-ts/common';
   import RangeParameter from './params/RangeParameter.svelte';
   import BooleanParameter from './params/BooleanParameter.svelte';
@@ -24,6 +25,7 @@
   import MultiHslParameter from './params/MultiHslParameter.svelte';
   import RgbParameter from './params/RgbParameter.svelte';
   import ColorParameter from './params/ColorParameter.svelte';
+  import MultiColorParameter from './params/MultiColorParameter.svelte';
 
   interface Props {
     deviceId: string;
@@ -33,7 +35,7 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat | ColorValue;
+  type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat | ColorValue | ColorValue[];
 
   let parameterElements: (HTMLElement | null)[] = [];
   const optimisticValues = new Map<string, ParameterValue>();
@@ -120,19 +122,26 @@
     }, waitTime);
   }
 
+  function cloneColorValue(cv: ColorValue): ColorValue {
+    if (cv.mode === ColorMode.HSL) {
+      return { mode: ColorMode.HSL, hsl: { ...cv.hsl } };
+    }
+    return { mode: ColorMode.RGB, rgb: { ...cv.rgb } };
+  }
+
   function cloneValue(value: ParameterValue): ParameterValue {
-    if (Array.isArray(value)) return value.map((v) => ({ ...v }));
+    if (Array.isArray(value)) {
+      // Detect ColorValue[] vs Hsl[]
+      if (value.length > 0 && 'mode' in value[0]) {
+        return (value as ColorValue[]).map(cloneColorValue);
+      }
+      return (value as Hsl[]).map((v) => ({ ...v })) as Hsl[];
+    }
     if (typeof value === 'object') {
       // Deep-clone ColorValue (has nested hsl/rgb object)
       const cv = value as Record<string, unknown>;
       if ('mode' in cv) {
-        const mode = cv.mode as string;
-        if (mode === ColorMode.HSL && 'hsl' in cv) {
-          return { mode, hsl: { ...(cv.hsl as Hsl) } };
-        }
-        if (mode === ColorMode.RGB && 'rgb' in cv) {
-          return { mode, rgb: { ...(cv.rgb as RgbFloat) } };
-        }
+        return cloneColorValue(value as ColorValue);
       }
       return { ...value };
     }
@@ -155,6 +164,13 @@
     );
   }
 
+  function areColorValuesEqual(a: ColorValue, b: ColorValue): boolean {
+    if (a.mode !== b.mode) return false;
+    if (a.mode === ColorMode.HSL && b.mode === ColorMode.HSL) return areHslEqual(a.hsl, b.hsl);
+    if (a.mode === ColorMode.RGB && b.mode === ColorMode.RGB) return areRgbEqual(a.rgb, b.rgb);
+    return false;
+  }
+
   function areValuesEqual(type: string, a: ParameterValue, b: ParameterValue): boolean {
     if (type === ParameterType.HSL) {
       return typeof a === 'object' && typeof b === 'object' && areHslEqual(a as Hsl, b as Hsl);
@@ -167,16 +183,11 @@
       return typeof a === 'object' && typeof b === 'object' && areRgbEqual(a as RgbFloat, b as RgbFloat);
     }
     if (type === ParameterType.COLOR) {
-      const ca = a as ColorValue;
-      const cb = b as ColorValue;
-      if (ca.mode !== cb.mode) return false;
-      if (ca.mode === ColorMode.HSL && cb.mode === ColorMode.HSL) {
-        return areHslEqual(ca.hsl, cb.hsl);
-      }
-      if (ca.mode === ColorMode.RGB && cb.mode === ColorMode.RGB) {
-        return areRgbEqual(ca.rgb, cb.rgb);
-      }
-      return false;
+      return areColorValuesEqual(a as ColorValue, b as ColorValue);
+    }
+    if (type === ParameterType.MULTI_COLOR) {
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+      return (a as ColorValue[]).every((color, i) => areColorValuesEqual(color, (b as ColorValue[])[i]));
     }
     return a === b;
   }
@@ -306,6 +317,14 @@
           <ColorParameter
             param={typedParam}
             value={getEffectiveValue(param) as ColorValue}
+            onchange={(v) => updateParameter(param, v)}
+            onregister={(el) => (parameterElements[index] = el)}
+          />
+        {:else if param.type === ParameterType.MULTI_COLOR}
+          {@const typedParam = param as MultiColorEffectParameter}
+          <MultiColorParameter
+            param={typedParam}
+            value={getEffectiveValue(param) as ColorValue[]}
             onchange={(v) => updateParameter(param, v)}
             onregister={(el) => (parameterElements[index] = el)}
           />
