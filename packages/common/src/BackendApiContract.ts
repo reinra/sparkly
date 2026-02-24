@@ -111,10 +111,7 @@ const ColorValueRgbSchema = z.object({
   rgb: RgbFloatValueSchema,
 });
 
-const ColorValueSchema = z.discriminatedUnion('mode', [
-  ColorValueHslSchema,
-  ColorValueRgbSchema,
-]);
+const ColorValueSchema = z.discriminatedUnion('mode', [ColorValueHslSchema, ColorValueRgbSchema]);
 
 const ColorEffectParameterSchema = EffectParameterBaseSchema.extend({
   type: z.literal(ParameterType.COLOR),

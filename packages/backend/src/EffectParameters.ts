@@ -122,10 +122,7 @@ function initColorFields(parameter: EffectParameter): void {
   } else if (parameter.type === ParameterType.COLOR) {
     const colorValue = parameter.value;
     Object.defineProperty(parameter, 'color', {
-      value:
-        colorValue.mode === ColorMode.HSL
-          ? new HslColor(colorValue.hsl)
-          : new RgbColor(colorValue.rgb),
+      value: colorValue.mode === ColorMode.HSL ? new HslColor(colorValue.hsl) : new RgbColor(colorValue.rgb),
       writable: true,
       enumerable: false,
       configurable: true,
@@ -145,10 +142,7 @@ function updateColorField(parameter: EffectParameter): void {
     parameter.color = new RgbColor(parameter.value);
   } else if (parameter.type === ParameterType.COLOR) {
     const colorValue = parameter.value;
-    parameter.color =
-      colorValue.mode === ColorMode.HSL
-        ? new HslColor(colorValue.hsl)
-        : new RgbColor(colorValue.rgb);
+    parameter.color = colorValue.mode === ColorMode.HSL ? new HslColor(colorValue.hsl) : new RgbColor(colorValue.rgb);
   }
 }
 
@@ -293,7 +287,10 @@ export class EffectParameterStorage implements EffectParameterView {
         parameter.value = { mode: ColorMode.HSL, hsl: { ...colorValue.hsl } };
       } else if (colorValue.mode === ColorMode.RGB) {
         validateRgbFloatValue(id, colorValue.rgb);
-        parameter.value = { mode: ColorMode.RGB, rgb: { red: colorValue.rgb.red, green: colorValue.rgb.green, blue: colorValue.rgb.blue } };
+        parameter.value = {
+          mode: ColorMode.RGB,
+          rgb: { red: colorValue.rgb.red, green: colorValue.rgb.green, blue: colorValue.rgb.blue },
+        };
       } else {
         throw new Error(`Parameter '${id}': unknown color mode`);
       }
