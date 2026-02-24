@@ -13,7 +13,6 @@
     type BooleanEffectParameter,
     type HslEffectParameter,
     type OptionEffectParameter,
-    type MultiHslEffectParameter,
     type RgbEffectParameter,
     type ColorEffectParameter,
     type MultiColorEffectParameter,
@@ -22,7 +21,6 @@
   import BooleanParameter from './params/BooleanParameter.svelte';
   import HslParameter from './params/HslParameter.svelte';
   import OptionParameter from './params/OptionParameter.svelte';
-  import MultiHslParameter from './params/MultiHslParameter.svelte';
   import RgbParameter from './params/RgbParameter.svelte';
   import ColorParameter from './params/ColorParameter.svelte';
   import MultiColorParameter from './params/MultiColorParameter.svelte';
@@ -176,6 +174,7 @@
       return typeof a === 'object' && typeof b === 'object' && areHslEqual(a as Hsl, b as Hsl);
     }
     if (type === ParameterType.MULTI_HSL) {
+      // Legacy: treat as MULTI_COLOR with HSL values
       if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
       return (a as Hsl[]).every((color, i) => areHslEqual(color, (b as Hsl[])[i]));
     }
@@ -293,14 +292,6 @@
           <OptionParameter
             param={typedParam}
             value={getEffectiveValue(param) as string}
-            onchange={(v) => updateParameter(param, v)}
-            onregister={(el) => (parameterElements[index] = el)}
-          />
-        {:else if param.type === ParameterType.MULTI_HSL}
-          {@const typedParam = param as MultiHslEffectParameter}
-          <MultiHslParameter
-            param={typedParam}
-            value={getEffectiveValue(param) as Hsl[]}
             onchange={(v) => updateParameter(param, v)}
             onregister={(el) => (parameterElements[index] = el)}
           />

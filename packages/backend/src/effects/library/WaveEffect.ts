@@ -17,7 +17,7 @@ import {
   type LedPoint1D,
 } from '../Effect';
 import { PaletteParameters, PaletteType, MultipleMode } from '../util/Palette';
-import type { Hsl } from '../../ParameterTypes';
+import { type Hsl, hslColorValue } from '../../ParameterTypes';
 
 export class WaveEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
@@ -85,7 +85,7 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
       ['custom.custom.num_waves', numWaves],
       ['custom.palette.type', PaletteType.Multiple],
       ['custom.palette.multipleOrder', MultipleMode.RoundRobin],
-      ['custom.palette.colors', colors],
+      ['custom.palette.colors', colors.map(hslColorValue) as ParameterValue],
     ]);
     if (easing !== undefined) {
       config.set('custom.easing.type', easing);

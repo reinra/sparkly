@@ -13,7 +13,7 @@ import {
 import { BaseSameColorEffectLogic } from '../BaseEffects';
 import { PaletteParameters, PaletteType, MultipleMode, RainbowMode } from '../util/Palette';
 import { EasingParameters, EasingMode } from '../util/EasingMode';
-import type { Hsl } from '../../ParameterTypes';
+import { type Hsl, hslColorValue } from '../../ParameterTypes';
 
 const ORANGE_HSL: Hsl = { hue: 30 / 360, saturation: 1, lightness: 0.5 };
 const CYAN_HSL: Hsl = { hue: 180 / 360, saturation: 1, lightness: 0.5 };
@@ -118,7 +118,7 @@ export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
     const config = new Map<string, ParameterValue>([
       ['custom.palette.type', PaletteType.Multiple],
       ['custom.palette.multipleOrder', order],
-      ['custom.palette.colors', colors],
+      ['custom.palette.colors', colors.map(hslColorValue) as ParameterValue],
     ]);
     if (easing !== undefined) {
       config.set('custom.easing.type', easing);

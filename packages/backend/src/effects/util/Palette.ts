@@ -2,10 +2,11 @@ import { Hsl } from '@twinkly-ts/common';
 import { Color, HslColor, RgbColor } from '../../color/Color';
 import { EffectParameterStorage } from '../../EffectParameters';
 import {
-  MultiHslEffectParameter,
+  MultiColorEffectParameter,
   OptionEffectParameter,
   RangeEffectParameter,
   ParameterType,
+  hslColorValue,
 } from '../../ParameterTypes';
 import { BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR } from '../../color/Hsl';
 
@@ -33,26 +34,26 @@ export enum MultipleMode {
 }
 
 export class RandomMultiplePalette implements Palette {
-  constructor(private colors: Hsl[]) {
+  constructor(private colors: Color[]) {
     if (colors.length === 0) {
       throw new Error('RandomMultiplePalette requires at least one color');
     }
   }
   nextColor(): Color {
     const index = Math.floor(Math.random() * this.colors.length);
-    return new HslColor(this.colors[index]);
+    return this.colors[index];
   }
 }
 
 export class RoundRobinPalette implements Palette {
   private index = 0;
-  constructor(private colors: Hsl[]) {
+  constructor(private colors: Color[]) {
     if (colors.length === 0) {
       throw new Error('RoundRobinPalette requires at least one color');
     }
   }
   nextColor(): Color {
-    const color = new HslColor(this.colors[this.index]);
+    const color = this.colors[this.index];
     this.index = (this.index + 1) % this.colors.length;
     return color;
   }
@@ -176,13 +177,13 @@ export class PaletteParameters {
     },
     () => this.onUpdate()
   );
-  private readonly colors: MultiHslEffectParameter = this.parameters.register(
+  private readonly colors: MultiColorEffectParameter = this.parameters.register(
     {
       id: 'colors',
       name: 'Colors',
-      description: 'List of HSL colors to pick from',
-      type: ParameterType.MULTI_HSL,
-      value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
+      description: 'List of colors to pick from',
+      type: ParameterType.MULTI_COLOR,
+      value: [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)],
       hidden: this.shouldHideColorsParameter(),
     },
     () => this.onUpdate()
@@ -214,8 +215,8 @@ export class PaletteParameters {
         return new StaticPalette(new HslColor(this.color.value));
       case PaletteType.Multiple:
         return this.multipleOrder.value === MultipleMode.RoundRobin
-          ? new RoundRobinPalette(this.colors.value)
-          : new RandomMultiplePalette(this.colors.value);
+          ? new RoundRobinPalette(this.colors.colors)
+          : new RandomMultiplePalette(this.colors.colors);
       case PaletteType.RandomSaturatedHsl:
         return this.rainbowMode.value === RainbowMode.Rotate
           ? new RotatingRainbowPalette(this.colorRateOfChange.value / 100)

@@ -18,6 +18,11 @@ export type ColorValueHsl = { mode: ColorMode.HSL; hsl: Hsl };
 export type ColorValueRgb = { mode: ColorMode.RGB; rgb: RgbFloat };
 export type ColorValue = ColorValueHsl | ColorValueRgb;
 
+/** Convenience wrapper: wrap a plain Hsl value into a ColorValue */
+export function hslColorValue(hsl: Hsl): ColorValueHsl {
+  return { mode: ColorMode.HSL, hsl };
+}
+
 export enum ParameterGroup {
   DEVICE = 'device',
   EFFECT = 'effect',
