@@ -1,13 +1,15 @@
 import { type EffectParameterView, type ParameterValue, MultiParameterStorageView } from '../../effectParameters';
 import { hslToRgbFloat } from '../../color/Hsl';
 import { lerp, type RgbFloat } from '../../color/ColorFloat';
+import { BLUE_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR, YELLOW_HSL_COLOR } from '../../color/Hsl';
 import {
-  BLUE_HSL_COLOR,
-  GREEN_HSL_COLOR,
-  RED_HSL_COLOR,
-  YELLOW_HSL_COLOR,
-} from '../../color/Hsl';
-import { AnimationMode, type EffectContextLoop, type EffectLoop, type EffectLogic, type EffectPreset, type LedPoint1D } from '../Effect';
+  AnimationMode,
+  type EffectContextLoop,
+  type EffectLoop,
+  type EffectLogic,
+  type EffectPreset,
+  type LedPoint1D,
+} from '../Effect';
 import { BaseSameColorEffectLogic } from '../BaseEffects';
 import { PaletteParameters, PaletteType, MultipleMode, RainbowMode } from '../util/Palette';
 import { EasingParameters, EasingMode } from '../util/EasingMode';
@@ -38,11 +40,30 @@ export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
   getPresets(): EffectPreset[] {
     return [
       // Flip presets (instant color change)
-      ChangeColorEffect.multiplePreset('flip_rgb', 'Flip RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR], EasingMode.Noop),
-      ChangeColorEffect.multiplePreset('flip_rgby', 'Flip RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR], EasingMode.Noop),
+      ChangeColorEffect.multiplePreset(
+        'flip_rgb',
+        'Flip RGB',
+        [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
+        EasingMode.Noop
+      ),
+      ChangeColorEffect.multiplePreset(
+        'flip_rgby',
+        'Flip RGBY',
+        [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR],
+        EasingMode.Noop
+      ),
       // Fade presets (smooth color transitions)
-      ChangeColorEffect.multiplePreset('change_color_rgb', 'Change Color: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
-      ChangeColorEffect.multiplePreset('change_color_rgby', 'Change Color: RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
+      ChangeColorEffect.multiplePreset('change_color_rgb', 'Change Color: RGB', [
+        RED_HSL_COLOR,
+        GREEN_HSL_COLOR,
+        BLUE_HSL_COLOR,
+      ]),
+      ChangeColorEffect.multiplePreset('change_color_rgby', 'Change Color: RGBY', [
+        RED_HSL_COLOR,
+        GREEN_HSL_COLOR,
+        BLUE_HSL_COLOR,
+        YELLOW_HSL_COLOR,
+      ]),
       // Rainbow presets
       ChangeColorEffect.rainbowPreset('fade_rainbow', 'Fade Rainbow'),
       ChangeColorEffect.rainbowPreset('smooth_rainbow', 'Smooth Rainbow', EasingMode.Sine),
@@ -50,9 +71,25 @@ export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
       // Random color preset
       ChangeColorEffect.simplePreset('random_colors', 'Random Colors', PaletteType.RandomColorRgb),
       // Themed presets
-      ChangeColorEffect.multiplePreset('warm_pulse', 'Warm Pulse', [RED_HSL_COLOR, ORANGE_HSL, YELLOW_HSL_COLOR], EasingMode.Sine),
-      ChangeColorEffect.multiplePreset('cool_pulse', 'Cool Pulse', [BLUE_HSL_COLOR, CYAN_HSL, PURPLE_HSL], EasingMode.Sine),
-      ChangeColorEffect.multiplePreset('fire', 'Fire', [RED_HSL_COLOR, ORANGE_HSL, YELLOW_HSL_COLOR, DARK_RED_HSL], EasingMode.Noop, MultipleMode.Random),
+      ChangeColorEffect.multiplePreset(
+        'warm_pulse',
+        'Warm Pulse',
+        [RED_HSL_COLOR, ORANGE_HSL, YELLOW_HSL_COLOR],
+        EasingMode.Sine
+      ),
+      ChangeColorEffect.multiplePreset(
+        'cool_pulse',
+        'Cool Pulse',
+        [BLUE_HSL_COLOR, CYAN_HSL, PURPLE_HSL],
+        EasingMode.Sine
+      ),
+      ChangeColorEffect.multiplePreset(
+        'fire',
+        'Fire',
+        [RED_HSL_COLOR, ORANGE_HSL, YELLOW_HSL_COLOR, DARK_RED_HSL],
+        EasingMode.Noop,
+        MultipleMode.Random
+      ),
     ];
   }
 
@@ -75,7 +112,13 @@ export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
     return { id, name, config };
   }
 
-  private static multiplePreset(id: string, name: string, colors: Hsl[], easing?: EasingMode, order: MultipleMode = MultipleMode.RoundRobin): EffectPreset {
+  private static multiplePreset(
+    id: string,
+    name: string,
+    colors: Hsl[],
+    easing?: EasingMode,
+    order: MultipleMode = MultipleMode.RoundRobin
+  ): EffectPreset {
     const config = new Map<string, ParameterValue>([
       ['custom.palette.type', PaletteType.Multiple],
       ['custom.palette.multipleOrder', order],
