@@ -29,7 +29,7 @@ import { BaseSameColorEffect, PerPixelEffect, type StatelessEffect } from '../Ba
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 import { PaletteParameters } from '../util/Palette';
 
-export class SingleHslColorEffect extends BaseSameColorEffect<AnimationMode.Static> {
+export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.Static> {
   readonly animationMode = AnimationMode.Static;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({

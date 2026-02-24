@@ -8,7 +8,7 @@ import {
   RainbowGradientEffect,
   RotatingColorGradientEffect,
   SineEffect,
-  SingleHslColorEffect,
+  StaticSingleColorEffect,
   StaticColorGradientEffect,
   TestPerLedEffect,
   TwinkleEffect,
@@ -45,18 +45,11 @@ function add(id: string, effect: AnyEffect): void {
   effects[id] = new EffectWrapper(id, effect, effect.getName());
 }
 
-addPresets(FlipColorCustomEffect);
-addPresets(ChangeColorEffect);
-addPresets(SingleHslColorEffect);
-addPresets(StaticAlternatingColorCustomEffect);
-addPresets(StaticColorGradientEffect);
-addPresets(RotatingColorGradientEffect);
+add('blocks', new BlocksEffect());
 addPresets(AlternatingCustomColorFadingEffect);
 add('random_dots_clear', new RandomDotsClearEffect());
 add('random_dots_loop', new RandomDotsLoopEffect());
 add('random_dots_static', new RandomDotsStaticEffect());
-add('gradient_custom', new StaticCustomColorGradientEffect());
-add('rainbow', new RainbowGradientEffect());
 add('meteor', new MeteorEffect());
 add('rain_single_color', new SingleColorRainEffect());
 add('rain_multi_color', new MultiColorRainEffect());
@@ -69,7 +62,22 @@ add('slime', new Slime());
 add('clouds', new CloudsEffect());
 add('plasma', new PlasmaEffect());
 add('gravity_fountain', new GravityFountainEffect());
-add('blocks', new BlocksEffect());
+
+// Simple effects
+add('rainbow', new RainbowGradientEffect());
+addPresets(RotatingColorGradientEffect);
+
+// Simple same color effects
+addPresets(FlipColorCustomEffect);
+addPresets(ChangeColorEffect);
+
+// Static effects
+addPresets(StaticSingleColorEffect);
+addPresets(StaticAlternatingColorCustomEffect);
+addPresets(StaticColorGradientEffect);
+add('gradient_custom', new StaticCustomColorGradientEffect());
+
+// Test effects
 add('test_per_led', new TestPerLedEffect());
 add('test_all_leds_flash', new TestAllLedsFlash());
 
