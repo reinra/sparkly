@@ -461,7 +461,6 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 
 export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
-  readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly probability = this.parameters.register({

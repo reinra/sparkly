@@ -7,7 +7,6 @@ import { AnimationMode, type EffectSequence, type LedPoint1D, EffectLogic, type 
 
 abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
-  readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly parameters = new EffectParameterStorage();

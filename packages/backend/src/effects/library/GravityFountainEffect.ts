@@ -4,7 +4,6 @@ import { AnimationMode, type EffectSequence, LedPoint2D, EffectLogic, type Effec
 
 export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
-  readonly supportsSeamlessLooping = false;
   pointType: '2D' = '2D';
   readonly isStateful: true = true;
   getName(): string {

@@ -23,7 +23,6 @@ import { PaletteParameters } from '../util/Palette';
  */
 export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
-  readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
 

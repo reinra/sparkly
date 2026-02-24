@@ -109,9 +109,6 @@ export interface EffectLoop<P extends LedPoint> extends Effect<AnimationMode.Loo
 
 export interface EffectSequence<P extends LedPoint> extends Effect<AnimationMode.Sequence, P> {
   readonly animationMode: AnimationMode.Sequence;
-  // If the effect can seamlessly loop, it can use the total_time_ms parameter from the EffectContextSequence to loop seamlessly.
-  // If false, the effect may look choppy when recorded and repeated. An external (not from effect) helping transition may be needed in this case to make the loop less jarring.
-  supportsSeamlessLooping: boolean;
 }
 
 export interface EffectLogic<A extends AnimationMode, P extends LedPoint> {

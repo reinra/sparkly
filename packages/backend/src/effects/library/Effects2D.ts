@@ -109,7 +109,6 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
 
 export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
-  readonly supportsSeamlessLooping = false;
   pointType: '2D' = '2D';
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
