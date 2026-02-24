@@ -45,10 +45,7 @@
     loading = true;
     error = '';
     try {
-      data = await handleApiCall<DebugEffectsResponse>(
-        () => backendClient.debugEffects(),
-        'Failed to load effects.'
-      );
+      data = await handleApiCall<DebugEffectsResponse>(() => backendClient.debugEffects(), 'Failed to load effects.');
     } catch (e) {
       error = (e as Error).message;
     } finally {
@@ -77,10 +74,14 @@
             <th class="sortable" onclick={() => toggleSort('id')}>ID{sortIndicator('id')}</th>
             <th class="sortable" onclick={() => toggleSort('name')}>Name{sortIndicator('name')}</th>
             <th class="sortable" onclick={() => toggleSort('pointType')}>Point Type{sortIndicator('pointType')}</th>
-            <th class="sortable" onclick={() => toggleSort('animationMode')}>Animation Mode{sortIndicator('animationMode')}</th>
+            <th class="sortable" onclick={() => toggleSort('animationMode')}
+              >Animation Mode{sortIndicator('animationMode')}</th
+            >
             <th class="sortable" onclick={() => toggleSort('isStateful')}>State{sortIndicator('isStateful')}</th>
             <th class="sortable" onclick={() => toggleSort('duration')}>Duration{sortIndicator('duration')}</th>
-            <th class="sortable" onclick={() => toggleSort('parametersCount')}>Params{sortIndicator('parametersCount')}</th>
+            <th class="sortable" onclick={() => toggleSort('parametersCount')}
+              >Params{sortIndicator('parametersCount')}</th
+            >
           </tr>
         </thead>
         <tbody>

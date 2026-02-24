@@ -177,7 +177,10 @@ export class DeviceService {
         if (effect.animationMode === AnimationMode.Loop) {
           duration = (effect as EffectLoop<LedPoint>).getLoopDurationSeconds(100);
         }
-        const parametersCount = wrapper.getEffectParameters().list().filter((p) => !p.hidden).length;
+        const parametersCount = wrapper
+          .getEffectParameters()
+          .list()
+          .filter((p) => !p.hidden).length;
         return {
           id,
           name: wrapper.getName(),
