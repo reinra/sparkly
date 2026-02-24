@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { backendClient } from '../../../frontendApiClient';
+  import { backendClient } from '../../../FrontendApiClient';
   import type { DebugEffectsResponse, DebugEffectEntry } from '@twinkly-ts/common';
-  import { handleApiCall } from '../../../utils/apiHelper';
+  import { handleApiCall } from '../../../utils/ApiHelper';
 
   type SortKey =
     | 'id'

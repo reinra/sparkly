@@ -1,11 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import {
-    backendClient,
-    type DeviceDebugResponse,
-  } from '../../../frontendApiClient';
-  import { handleApiCall } from '../../../utils/apiHelper';
+  import { backendClient, type DeviceDebugResponse } from '../../../FrontendApiClient';
+  import { handleApiCall } from '../../../utils/ApiHelper';
 
   let sections = $state<DeviceDebugResponse['sections']>([]);
   let loading = $state(false);

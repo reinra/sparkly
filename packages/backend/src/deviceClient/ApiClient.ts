@@ -1,8 +1,8 @@
 import { initClient, tsRestFetchApi } from '@ts-rest/core';
 import type { ApiFetcher } from '@ts-rest/core';
 import { z } from 'zod';
-import { closeUdpSocket, sendLedValues } from './udpSend';
-import { apiContract, EnabledDisabledSchema, AbsoluteOrRelativeSchema, DeviceModeSchema } from './apiContract';
+import { closeUdpSocket, sendLedValues } from './UdpSend';
+import { apiContract, EnabledDisabledSchema, AbsoluteOrRelativeSchema, DeviceModeSchema } from './ApiContract';
 import { logger } from '../logger';
 
 type ApiNoAuthClientType = typeof dummyNoAuthClient;

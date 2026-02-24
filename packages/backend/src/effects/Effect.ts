@@ -1,6 +1,6 @@
 import type { LedType } from '../color/Color8bit';
 import { RgbFloat } from '../color/ColorFloat';
-import { EffectParameterView, ParameterValue } from '../effectParameters';
+import { EffectParameterView, ParameterValue } from '../EffectParameters';
 
 export enum AnimationMode {
   // Single frame.

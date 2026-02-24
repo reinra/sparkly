@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HslEffectParameter, Hsl } from '@twinkly-ts/common';
   import HslColorPicker from '../HslColorPicker.svelte';
-  import { formatHslDisplay } from '../../utils/hslUtils';
+  import { formatHslDisplay } from '../../utils/HslUtils';
 
   interface Props {
     param: HslEffectParameter;

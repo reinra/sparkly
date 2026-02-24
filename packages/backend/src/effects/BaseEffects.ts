@@ -1,5 +1,5 @@
 import { RgbFloat } from '../color/ColorFloat';
-import { EffectParameterView } from '../effectParameters';
+import { EffectParameterView } from '../EffectParameters';
 import {
   AnimationMode,
   type Effect,

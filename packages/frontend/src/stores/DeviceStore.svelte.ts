@@ -1,4 +1,4 @@
-import { backendClient, type GetInfoResponse } from '../frontendApiClient';
+import { backendClient, type GetInfoResponse } from '../FrontendApiClient';
 import type { DeviceMode } from '@twinkly-ts/common';
 
 // Shared device state
@@ -24,7 +24,7 @@ export const deviceStore = {
   get deviceModes() {
     return deviceModes;
   },
-  
+
   async fetchSystemInfo() {
     try {
       const response = await backendClient.getSystemInfo();
@@ -64,13 +64,13 @@ export const deviceStore = {
       if (response.status === 200 && response.body.devices.length > 0) {
         const updatedDevice = response.body.devices[0];
         const index = devices.findIndex((d) => d.id === deviceId);
-        
+
         if (index >= 0) {
           devices[index] = updatedDevice;
         } else {
           devices.push(updatedDevice);
         }
-        
+
         // Update effects if they changed
         if (response.body.effects.length > 0) {
           effects = response.body.effects;
@@ -83,5 +83,5 @@ export const deviceStore = {
 
   getDevice(deviceId: string) {
     return devices.find((d) => d.id === deviceId) || null;
-  }
+  },
 };

@@ -4,11 +4,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { logger, logError } from './logger';
-import { openBrowser } from './utils/browserUtils';
+import { openBrowser } from './utils/BrowserUtils';
 import { backendApiContract } from '@twinkly-ts/common';
-import { registerRoutes } from './typedHandler';
-import { tryToConnectAll } from './deviceList';
-import { apiRoutes } from './apiRoutes';
+import { registerRoutes } from './TypedHandler';
+import { tryToConnectAll } from './DeviceList';
+import { apiRoutes } from './ApiRoutes';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,19 +32,19 @@ function validateFrontendStructure(): { valid: boolean; error?: string } {
   if (!fs.existsSync(frontendPath)) {
     return {
       valid: false,
-      error: `Frontend build directory not found: ${frontendPath}. Run "npm run build" first.`
+      error: `Frontend build directory not found: ${frontendPath}. Run "npm run build" first.`,
     };
   }
-  
+
   // Check if handler.js exists
   const handlerPath = path.join(frontendPath, 'handler.js');
   if (!fs.existsSync(handlerPath)) {
     return {
       valid: false,
-      error: `SvelteKit handler not found: ${handlerPath}. The frontend build may be incomplete.`
+      error: `SvelteKit handler not found: ${handlerPath}. The frontend build may be incomplete.`,
     };
   }
-  
+
   return { valid: true };
 }
 
@@ -61,25 +61,25 @@ async function startServer() {
     logger.error(`Expected frontend path: ${frontendPath}`);
     process.exit(1);
   }
-  
+
   try {
     // Import the SvelteKit handler
     const handlerPath = path.join(frontendPath, 'handler.js');
     logger.info(`Loading SvelteKit handler from: ${handlerPath}`);
-    
+
     // Convert to file:// URL for proper ESM import
     const handlerUrl = `file://${handlerPath.replace(/\\/g, '/')}`;
-    
+
     const handlerModule = await import(handlerUrl);
     const handler = handlerModule.handler;
-    
+
     if (!handler) {
       throw new Error('SvelteKit handler not found in module');
     }
-    
+
     // Use the SvelteKit handler for all remaining routes
     app.use(handler);
-    
+
     logger.info('SvelteKit frontend loaded successfully');
   } catch (error) {
     logger.withError(error as Error).error('Failed to load SvelteKit handler');
@@ -91,7 +91,7 @@ async function startServer() {
     logger.info(`Production server running on ${url}`);
     logger.info(`Serving frontend from: ${frontendPath}`);
     logger.info(`Opening browser automatically...`);
-    
+
     // Open browser after a short delay to ensure server is ready
     setTimeout(() => openBrowser(url), 1000);
 

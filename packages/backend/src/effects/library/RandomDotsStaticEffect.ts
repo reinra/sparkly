@@ -1,5 +1,5 @@
 import { type RgbFloat, BLACK } from '../../color/ColorFloat';
-import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
+import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../EffectParameters';
 import { ParameterType } from '../../ParameterTypes';
 import {
   AnimationMode,

@@ -5,14 +5,14 @@ import {
   ParameterType,
   RangeEffectParameter,
 } from './ParameterTypes';
-import { GestaltResponseType, TwinklyApiClient } from './deviceClient/apiClient';
+import { GestaltResponseType, TwinklyApiClient } from './deviceClient/ApiClient';
 import {
   DynamicParameterStorageView,
   EffectParameterStorage,
   EffectParameterView,
   emptyParameterStorageView,
   MultiParameterStorageView,
-} from './effectParameters';
+} from './EffectParameters';
 import {
   adjustColorTemperatureNormalized,
   applyChannelGain,
@@ -23,7 +23,7 @@ import {
 import { RgbValue } from './color/Color8bit';
 import { type AnyEffect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
-import { EnabledDisabledSchema } from './deviceClient/apiContract';
+import { EnabledDisabledSchema } from './deviceClient/ApiContract';
 import { EffectWrapper } from './EffectWrapper';
 
 export interface LedMapping {

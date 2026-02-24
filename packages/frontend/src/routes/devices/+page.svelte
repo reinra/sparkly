@@ -1,6 +1,6 @@
 <script lang="ts">
   import DeviceCard from '../../components/DeviceCard.svelte';
-  import { deviceStore } from '../../stores/deviceStore.svelte';
+  import { deviceStore } from '../../stores/DeviceStore.svelte';
 
   $effect(() => {
     // Fetch devices on mount if not already loaded

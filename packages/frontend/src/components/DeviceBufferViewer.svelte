@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { backendClient } from '../frontendApiClient';
+  import { backendClient } from '../FrontendApiClient';
 
   interface Props {
     deviceId: string;

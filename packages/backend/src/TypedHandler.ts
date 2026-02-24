@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction, Express } from 'express';
 import { z } from 'zod';
 import { logError } from './logger';
-import { DeviceUnreachableError } from './deviceClient/apiClient';
+import { DeviceUnreachableError } from './deviceClient/ApiClient';
 import { DeviceNotFoundError, EffectNotFoundError } from './DeviceService';
 
 interface EndpointDefinition {
@@ -16,11 +16,13 @@ interface EndpointDefinition {
 
 type InferBody<T extends EndpointDefinition> = T['body'] extends z.ZodTypeAny ? z.infer<T['body']> : never;
 
-type InferQuery<T extends EndpointDefinition> = T['query'] extends z.ZodTypeAny ? z.infer<T['query']> : Request['query'];
+type InferQuery<T extends EndpointDefinition> = T['query'] extends z.ZodTypeAny
+  ? z.infer<T['query']>
+  : Request['query'];
 
 type InferResponse<
   T extends EndpointDefinition,
-  Status extends keyof T['responses']
+  Status extends keyof T['responses'],
 > = T['responses'][Status] extends z.ZodTypeAny ? z.infer<T['responses'][Status]> : never;
 
 type TypedRequest<T extends EndpointDefinition> = Omit<Request, 'body' | 'query'> & {
@@ -33,7 +35,10 @@ interface TypedResponse<T extends EndpointDefinition> extends Response {
   status(code: number): this;
 }
 
-export type TypedHandler<T extends EndpointDefinition> = (req: TypedRequest<T>, res: TypedResponse<T>) => Promise<void> | void;
+export type TypedHandler<T extends EndpointDefinition> = (
+  req: TypedRequest<T>,
+  res: TypedResponse<T>
+) => Promise<void> | void;
 
 export type TypedHandlers<T extends Record<string, EndpointDefinition>> = {
   [K in keyof T]: TypedHandler<T[K]>;

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { backendClient } from '../frontendApiClient';
-  import { handleApiUpdate } from '../utils/apiHelper';
-  import { deviceStore } from '../stores/deviceStore.svelte';
+  import { backendClient } from '../FrontendApiClient';
+  import { handleApiUpdate } from '../utils/ApiHelper';
+  import { deviceStore } from '../stores/DeviceStore.svelte';
   import {
     ParameterType,
     type EffectParameter,

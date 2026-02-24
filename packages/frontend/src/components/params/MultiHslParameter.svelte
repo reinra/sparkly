@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { MultiHslEffectParameter, Hsl } from '@twinkly-ts/common';
   import HslColorPicker from '../HslColorPicker.svelte';
-  import { formatHslDisplay } from '../../utils/hslUtils';
+  import { formatHslDisplay } from '../../utils/HslUtils';
 
   interface Props {
     param: MultiHslEffectParameter;
@@ -23,7 +23,7 @@
       destroy() {
         containerEl = null;
         onregister?.(null);
-      }
+      },
     };
   }
 
@@ -169,8 +169,8 @@
             class="multi-color-remove"
             title="Remove color"
             aria-label={`Remove color ${colorIndex + 1}`}
-            onclick={() => removeColor(colorIndex)}
-          >✕</button>
+            onclick={() => removeColor(colorIndex)}>✕</button
+          >
         {:else}
           <span class="multi-color-remove-spacer"></span>
         {/if}

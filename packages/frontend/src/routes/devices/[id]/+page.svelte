@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { backendClient } from '../../../frontendApiClient';
-  import { handleApiUpdate } from '../../../utils/apiHelper';
+  import { backendClient } from '../../../FrontendApiClient';
+  import { handleApiUpdate } from '../../../utils/ApiHelper';
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
   import EffectParameters from '../../../components/EffectParameters.svelte';
   import SendMovieDialog from '../../../components/SendMovieDialog.svelte';
-  import { deviceStore } from '../../../stores/deviceStore.svelte';
+  import { deviceStore } from '../../../stores/DeviceStore.svelte';
   import { page } from '$app/state';
   import { ParameterGroup } from '@twinkly-ts/common';
 

@@ -1,7 +1,7 @@
-import type { TypedHandlers } from './typedHandler';
+import type { TypedHandlers } from './TypedHandler';
 import { backendApiContract } from '@twinkly-ts/common';
 import { deviceService } from './DeviceService';
-import { isMovieTaskActive } from './movieTaskTracker';
+import { isMovieTaskActive } from './MovieTaskTracker';
 
 /**
  * Controller layer. Receives HTTP requests, validates required params,

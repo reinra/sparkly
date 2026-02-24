@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import { logger, logError } from './logger';
 import { backendApiContract } from '@twinkly-ts/common';
-import { registerRoutes } from './typedHandler';
-import { tryToConnectAll } from './deviceList';
-import { apiRoutes } from './apiRoutes';
+import { registerRoutes } from './TypedHandler';
+import { tryToConnectAll } from './DeviceList';
+import { apiRoutes } from './ApiRoutes';
 
 const app = express();
 const PORT = 3001;

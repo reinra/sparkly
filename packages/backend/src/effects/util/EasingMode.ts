@@ -1,4 +1,4 @@
-import { EffectParameterStorage } from '../../effectParameters';
+import { EffectParameterStorage } from '../../EffectParameters';
 import { OptionEffectParameter, ParameterType } from '../../ParameterTypes';
 import {
   circularEasing,

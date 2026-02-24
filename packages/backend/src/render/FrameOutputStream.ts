@@ -1,4 +1,4 @@
-import type { TwinklyApiClient } from '../deviceClient/apiClient';
+import type { TwinklyApiClient } from '../deviceClient/ApiClient';
 import { logger } from '../logger';
 import { hasWhiteChannel, LedType, type LedValue } from '../color/Color8bit';
 import type { LedMapper } from './LedMapper';

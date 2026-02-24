@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { backendClient, type GetInfoResponse } from '../frontendApiClient';
-  import { handleApiUpdate } from '../utils/apiHelper';
+  import { backendClient, type GetInfoResponse } from '../FrontendApiClient';
+  import { handleApiUpdate } from '../utils/ApiHelper';
   import DeviceBufferViewer from './DeviceBufferViewer.svelte';
   import SendMovieDialog from './SendMovieDialog.svelte';
-  import { deviceStore } from '../stores/deviceStore.svelte';
+  import { deviceStore } from '../stores/DeviceStore.svelte';
 
   interface Props {
     device: GetInfoResponse['devices'][0];

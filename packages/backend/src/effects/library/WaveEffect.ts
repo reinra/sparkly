@@ -6,7 +6,7 @@ import {
   type EffectParameterView,
   type ParameterValue,
   MultiParameterStorageView,
-} from '../../effectParameters';
+} from '../../EffectParameters';
 import { FullEasingParameters, EasingMode } from '../util/EasingMode';
 import {
   AnimationMode,

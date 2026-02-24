@@ -13,7 +13,7 @@ import {
   WHITE_HSL_COLOR,
   YELLOW_HSL_COLOR,
 } from '../../color/Hsl';
-import { EffectParameterStorage, type EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
+import { EffectParameterStorage, type EffectParameterView, MultiParameterStorageView } from '../../EffectParameters';
 import {
   AnimationMode,
   type EffectContextStatic,

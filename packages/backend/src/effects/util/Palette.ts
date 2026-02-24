@@ -1,6 +1,6 @@
 import { Hsl } from '@twinkly-ts/common';
 import { Color, HslColor, RgbColor } from '../../color/Color';
-import { EffectParameterStorage } from '../../effectParameters';
+import { EffectParameterStorage } from '../../EffectParameters';
 import {
   MultiHslEffectParameter,
   OptionEffectParameter,

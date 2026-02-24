@@ -1,4 +1,4 @@
-import { type EffectParameterView, type ParameterValue, MultiParameterStorageView } from '../../effectParameters';
+import { type EffectParameterView, type ParameterValue, MultiParameterStorageView } from '../../EffectParameters';
 import { hslToRgbFloat } from '../../color/Hsl';
 import { lerp, type RgbFloat } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR, YELLOW_HSL_COLOR } from '../../color/Hsl';

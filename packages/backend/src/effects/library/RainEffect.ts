@@ -1,6 +1,6 @@
 import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, hslToRgbFloat, randomColorMaxSaturation } from '../../color/Hsl';
-import { EffectParameterStorage } from '../../effectParameters';
+import { EffectParameterStorage } from '../../EffectParameters';
 import { ParameterType } from '../../ParameterTypes';
 import {
   AnimationMode,

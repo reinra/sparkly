@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { backendClient } from '../frontendApiClient';
+  import { backendClient } from '../FrontendApiClient';
   import type { MovieTaskProgressResponse } from '@twinkly-ts/common';
 
   interface Props {

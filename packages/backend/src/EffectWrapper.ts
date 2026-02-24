@@ -4,7 +4,7 @@ import {
   emptyParameterStorageView,
   MultiParameterStorageView,
   ParameterValue,
-} from './effectParameters';
+} from './EffectParameters';
 import { AnimationMode, EffectPreset, LedPoint1D, LedPoint2D, type AnyEffect } from './effects/Effect';
 import { BaseSameColorEffect } from './effects/BaseEffects';
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';

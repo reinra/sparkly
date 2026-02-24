@@ -1,9 +1,9 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { backendClient } from '../frontendApiClient';
-  import { deviceStore } from '../stores/deviceStore.svelte';
-  
+  import { backendClient } from '../FrontendApiClient';
+  import { deviceStore } from '../stores/DeviceStore.svelte';
+
   let { children } = $props();
   let buildDate = $state<string | undefined>(undefined);
 
@@ -33,19 +33,15 @@
       </div>
       <ul class="menu">
         <li>
-          <a href="/devices" class:active={page.url.pathname === '/devices'}>
-            Devices
-          </a>
+          <a href="/devices" class:active={page.url.pathname === '/devices'}> Devices </a>
         </li>
         <li>
-          <a href="/debug" class:active={page.url.pathname === '/debug'}>
-            Debug
-          </a>
+          <a href="/debug" class:active={page.url.pathname === '/debug'}> Debug </a>
         </li>
       </ul>
     </div>
   </nav>
-  
+
   <main>
     {@render children()}
   </main>

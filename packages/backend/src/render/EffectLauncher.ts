@@ -1,4 +1,4 @@
-import type { Device } from '../deviceList';
+import type { Device } from '../DeviceList';
 import {
   MultipleFrameOutputStream,
   BufferReplacingFrameOutputStream,
@@ -10,7 +10,7 @@ import {
 } from './FrameOutputStream';
 import { EffectRenderer } from './Renderer';
 import { logger } from '../logger';
-import { DeviceModeSchema } from '../deviceClient/apiContract';
+import { DeviceModeSchema } from '../deviceClient/ApiContract';
 import { AnimationMode, type EffectLoop, type EffectSequence } from '../effects/Effect';
 import type { RenderContext } from './RenderContext';
 

@@ -1,10 +1,10 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
-import { abortTask, startAndAbortPreviousTask } from './backendLoops';
-import { devices, type Device } from './deviceList';
+import { abortTask, startAndAbortPreviousTask } from './BackendLoops';
+import { devices, type Device } from './DeviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
-import { DeviceModeSchema } from './deviceClient/apiContract';
+import { DeviceModeSchema } from './deviceClient/ApiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
 import { getEffectGroup } from './DeviceHelper';
 import { AnimationMode, type EffectLoop, type EffectSequence, type LedPoint } from './effects/Effect';
@@ -12,7 +12,7 @@ import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
 import type { LedMapping } from './DeviceHelper';
 import type { DeviceInfo } from '@twinkly-ts/common';
-import type { ParameterValue } from './effectParameters';
+import type { ParameterValue } from './EffectParameters';
 import {
   startMovieTask,
   getMovieTaskProgress,
@@ -20,7 +20,7 @@ import {
   completeMovieTask,
   failMovieTask,
   type MovieTaskProgress,
-} from './movieTaskTracker';
+} from './MovieTaskTracker';
 
 // ── Result types ──────────────────────────────────────────────────────
 
