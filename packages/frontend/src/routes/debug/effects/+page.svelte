@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    backendClient,
-    type GetInfoResponse,
-  } from '../../../frontendApiClient';
+  import { backendClient, type GetInfoResponse } from '../../../frontendApiClient';
   import { handleApiCall } from '../../../utils/apiHelper';
 
   let info = $state<GetInfoResponse | null>(null);

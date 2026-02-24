@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    backendClient,
-    type HelloResponse,
-    type GetInfoResponse,
-  } from '../../frontendApiClient';
+  import { backendClient, type HelloResponse, type GetInfoResponse } from '../../frontendApiClient';
   import { handleApiCall } from '../../utils/apiHelper';
 
   let message = $state('');
@@ -73,9 +69,7 @@
       <ul class="device-list">
         {#each info.devices as device}
           <li>
-            <a
-              class="device-link"
-              href={`/debug/${device.id}?alias=${encodeURIComponent(device.alias)}`}
+            <a class="device-link" href={`/debug/${device.id}?alias=${encodeURIComponent(device.alias)}`}
               >{device.alias}</a
             >
           </li>
@@ -91,7 +85,6 @@
     <h3>Effect library</h3>
     <a class="device-link" href="/debug/effects">View Effects &rarr;</a>
   </div>
-
 </div>
 
 <style>
