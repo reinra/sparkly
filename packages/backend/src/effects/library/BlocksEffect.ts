@@ -8,6 +8,7 @@ import {
   type EffectLogic,
   type EffectContextSequence,
 } from '../Effect';
+import { createBlackBuffer } from '../util/ArrayUtils';
 import { FlashAnimation } from '../util/FlashAnimation';
 import { PaletteParameters } from '../util/Palette';
 
@@ -166,7 +167,7 @@ class BlocksLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
   private reset(total: number): void {
     this.total = total;
     this.initialized = true;
-    this.floor = new Array(total).fill(BLACK);
+    this.floor = createBlackBuffer(total);
     this.floorLevel = total; // entirely empty — next landing position is at end
     this.activeBlock = null;
     this.flash = null;

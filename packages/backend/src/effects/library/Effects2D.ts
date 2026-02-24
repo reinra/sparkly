@@ -4,6 +4,7 @@ import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { LedPoint2D, type EffectContextLoop, type EffectContextSequence, EffectLogic, AnimationMode } from '../Effect';
 import { PerPixelEffect, type StatelessEffect } from '../BaseEffects';
+import { createBlackBuffer } from '../util/ArrayUtils';
 import { NoiseGenerator } from '../util/NoiseUtils';
 
 export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, LedPoint2D> {
@@ -48,7 +49,7 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
     const currentRadius = ctx.phase * maxRadius;
     const thickness = 0.1;
 
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
     for (const pt of points) {
       const dist = Math.sqrt((pt.x - centerX) ** 2 + (pt.y - centerY) ** 2);
 
@@ -94,7 +95,7 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
     // Get seamless loop coordinates
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
     for (const pt of points) {
       // Scale coordinates to control "blob" size
       const noiseVal = this.noise.get4D(pt.x * 2, pt.y * 2, nz, nw);
@@ -126,7 +127,7 @@ export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, Led
   }
   createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContextSequence, points: LedPoint2D[]): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
 
     for (const pt of points) {
       // Animate by scrolling through the Z dimension of 3D noise
@@ -165,7 +166,7 @@ export class PlasmaEffect implements StatelessEffect<AnimationMode.Loop, LedPoin
   }
   createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContextLoop, points: LedPoint2D[]): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
     const [nz, nw] = this.noise.getLoopCoordinates(ctx.phase);
 
     for (const pt of points) {

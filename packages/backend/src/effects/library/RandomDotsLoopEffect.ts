@@ -2,6 +2,7 @@ import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import { ParameterType } from '../../ParameterTypes';
 import { AnimationMode, type EffectLoop, type EffectContextLoop, type LedPoint1D, type EffectLogic } from '../Effect';
+import { createBlackBuffer, createShuffledIndices, shuffleParallel } from '../util/ArrayUtils';
 import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
 
@@ -76,14 +77,9 @@ class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D>
 
   private generateSnapshot(total: number): RgbFloat[] {
     const litCount = this.config.getMaxLitCount(total);
-    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+    const buffer = createBlackBuffer(total);
 
-    // Fisher-Yates shuffle to pick random LED positions
-    const indices = Array.from({ length: total }, (_, i) => i);
-    for (let i = total - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
+    const indices = createShuffledIndices(total);
 
     for (let i = 0; i < litCount; i++) {
       buffer[indices[i]] = this.config.palette.palette.nextColor().asRgb();
@@ -107,12 +103,7 @@ class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D>
     }
 
     // Shuffle the change order
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-      [fromColors[i], fromColors[j]] = [fromColors[j], fromColors[i]];
-      [toColors[i], toColors[j]] = [toColors[j], toColors[i]];
-    }
+    shuffleParallel(indices, fromColors, toColors);
 
     return { indices, fromColors, toColors };
   }

@@ -1,4 +1,5 @@
 import { type RgbFloat, BLACK } from '../../color/ColorFloat';
+import { createBlackBuffer } from './ArrayUtils';
 
 /**
  * Reusable flashing animation that alternates between a saved buffer and black.
@@ -27,7 +28,7 @@ export class FlashAnimation {
 
   /** Advances the flash animation by deltaMs and returns the frame to display. */
   advance(total: number, deltaMs: number): RgbFloat[] {
-    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+    const buffer = createBlackBuffer(total);
     this.accumulatedMs += deltaMs;
     while (this.accumulatedMs >= this.msPerStep) {
       this.accumulatedMs -= this.msPerStep;

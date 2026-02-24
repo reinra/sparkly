@@ -11,6 +11,7 @@ import {
 import { EasingParameters } from '../util/EasingMode';
 import { FlashAnimation } from '../util/FlashAnimation';
 import { PaletteParameters } from '../util/Palette';
+import { createBlackBuffer, pickRandomFreeIndex } from '../util/ArrayUtils';
 
 // ---------------------------------------------------------------------------
 // Effect definition
@@ -77,35 +78,6 @@ interface DotInfo {
   readonly birthTimeMs: number;
 }
 
-/**
- * Pick a random LED index that is not already occupied.
- * Uses rejection sampling for low occupancy and linear scan for high occupancy.
- */
-function pickRandomFreeIndex(total: number, occupied: { has(index: number): boolean; size: number }): number {
-  const remaining = total - occupied.size;
-  if (remaining <= 0) return -1;
-
-  // Low occupancy — rejection sampling is fast
-  if (occupied.size < total * 0.7) {
-    let index: number;
-    do {
-      index = Math.floor(Math.random() * total);
-    } while (occupied.has(index));
-    return index;
-  }
-
-  // High occupancy — pick the nth free slot
-  const nth = Math.floor(Math.random() * remaining);
-  let count = 0;
-  for (let i = 0; i < total; i++) {
-    if (!occupied.has(i)) {
-      if (count === nth) return i;
-      count++;
-    }
-  }
-  return -1; // unreachable
-}
-
 /** Render a set of dots into a fresh buffer, applying fade-in easing. */
 function renderDotsToBuffer(
   total: number,
@@ -114,7 +86,7 @@ function renderDotsToBuffer(
   fadeDuration: number,
   easingIn: (t: number) => number
 ): RgbFloat[] {
-  const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+  const buffer = createBlackBuffer(total);
   for (const [index, dot] of dots) {
     const age = totalTimeMs - dot.birthTimeMs;
     if (age < fadeDuration) {

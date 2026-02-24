@@ -9,6 +9,7 @@ import {
   EffectLogic,
   type EffectContextSequence,
 } from '../Effect';
+import { createBlackBuffer } from '../util/ArrayUtils';
 
 abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
@@ -76,7 +77,7 @@ class RainEffectLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D>
       this.particles.push({ position: 0, velocity: Math.random() * 10, color: this.config.nextColor() });
     }
 
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
 
     // Draw particles
     for (const p of this.particles) {

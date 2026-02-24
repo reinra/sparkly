@@ -8,6 +8,7 @@ import {
   type LedPoint1D,
   type EffectLogic,
 } from '../Effect';
+import { createBlackBuffer, createShuffledIndices } from '../util/ArrayUtils';
 import { PaletteParameters } from '../util/Palette';
 
 /**
@@ -69,14 +70,10 @@ export class RandomDotsStaticEffect implements EffectStatic<LedPoint1D> {
         this.dirty = false;
 
         const litCount = Math.max(1, Math.round(total * (this.coverage.value / 100)));
-        const buffer: RgbFloat[] = new Array(total).fill(BLACK);
+        const buffer = createBlackBuffer(total);
 
         // Build shuffled indices and pick the first litCount
-        const indices = Array.from({ length: total }, (_, i) => i);
-        for (let i = total - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [indices[i], indices[j]] = [indices[j], indices[i]];
-        }
+        const indices = createShuffledIndices(total);
 
         for (let i = 0; i < litCount; i++) {
           buffer[indices[i]] = this.palette.palette.nextColor().asRgb();

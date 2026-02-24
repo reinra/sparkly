@@ -26,6 +26,7 @@ import {
   EffectPreset,
 } from '../Effect';
 import { BaseSameColorEffect, PerPixelEffect, type StatelessEffect } from '../BaseEffects';
+import { createBlackBuffer } from '../util/ArrayUtils';
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 import { PaletteParameters } from '../util/Palette';
 
@@ -330,7 +331,7 @@ export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, Led
   }
   createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => this;
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
-    const result: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const result = createBlackBuffer(points.length);
     const index = Math.floor(ctx.phase * points.length);
     result[index] = WHITE;
     return result;
@@ -419,7 +420,7 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     if (this.lastBuffer === null || this.lastBuffer.length !== ctx.total_leds) {
-      this.lastBuffer = new Array(ctx.total_leds).fill(BLACK);
+      this.lastBuffer = createBlackBuffer(ctx.total_leds);
       this.previousPhase = ctx.phase;
       this.previousHeadIndex = -1;
     }

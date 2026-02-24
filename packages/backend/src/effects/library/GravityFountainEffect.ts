@@ -1,5 +1,6 @@
 import { type RgbFloat, BLACK, WHITE } from '../../color/ColorFloat';
 import { AnimationMode, type EffectSequence, LedPoint2D, EffectLogic, type EffectContextSequence } from '../Effect';
+import { createBlackBuffer } from '../util/ArrayUtils';
 
 export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
@@ -39,7 +40,7 @@ class GravityFountainLogic implements EffectLogic<AnimationMode.Sequence, LedPoi
     this.particles = this.particles.filter((p) => p.y <= 1.1);
 
     // 4. Render
-    const buffer: RgbFloat[] = new Array(points.length).fill(BLACK);
+    const buffer = createBlackBuffer(points.length);
     for (const p of this.particles) {
       // Find the closest LED to the particle's X, Y
       // Use a radius-based blend for better looks
