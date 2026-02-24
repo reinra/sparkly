@@ -65,8 +65,7 @@ export class RandomDotsNewClearEffect implements EffectSequence<LedPoint1D> {
     return (durationSeconds * 1000) / maxLit;
   }
 
-  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () =>
-    new RandomDotsNewClearLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RandomDotsNewClearLogic(this);
 }
 
 // ---------------------------------------------------------------------------
@@ -82,10 +81,7 @@ interface DotInfo {
  * Pick a random LED index that is not already occupied.
  * Uses rejection sampling for low occupancy and linear scan for high occupancy.
  */
-function pickRandomFreeIndex(
-  total: number,
-  occupied: { has(index: number): boolean; size: number },
-): number {
+function pickRandomFreeIndex(total: number, occupied: { has(index: number): boolean; size: number }): number {
   const remaining = total - occupied.size;
   if (remaining <= 0) return -1;
 
@@ -116,7 +112,7 @@ function renderDotsToBuffer(
   dots: ReadonlyMap<number, DotInfo>,
   totalTimeMs: number,
   fadeDuration: number,
-  easingIn: (t: number) => number,
+  easingIn: (t: number) => number
 ): RgbFloat[] {
   const buffer: RgbFloat[] = new Array(total).fill(BLACK);
   for (const [index, dot] of dots) {
