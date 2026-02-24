@@ -19,10 +19,10 @@ export enum AnimationMode {
 export type EffectContextGeneric<T extends AnimationMode> = T extends AnimationMode.Static
   ? EffectContextStatic
   : T extends AnimationMode.Loop
-  ? EffectContextLoop
-  : T extends AnimationMode.Sequence
-  ? EffectContextSequence
-  : never;
+    ? EffectContextLoop
+    : T extends AnimationMode.Sequence
+      ? EffectContextSequence
+      : never;
 
 export interface EffectContextBase {
   // 1. CHANGING LESS
@@ -123,18 +123,15 @@ export interface StatelessEffect<A extends AnimationMode, P extends LedPoint> ex
   readonly isStateful: false;
 }
 
-export function is1DEffect<A extends AnimationMode>(effect: Effect<A,LedPoint>): effect is Effect<A,LedPoint1D> {
+export function is1DEffect<A extends AnimationMode>(effect: Effect<A, LedPoint>): effect is Effect<A, LedPoint1D> {
   return effect.pointType === '1D';
 }
-export function is2DEffect<A extends AnimationMode>(effect: Effect<A,LedPoint>): effect is Effect<A,LedPoint2D> {
+export function is2DEffect<A extends AnimationMode>(effect: Effect<A, LedPoint>): effect is Effect<A, LedPoint2D> {
   return effect.pointType === '2D';
 }
-
-
 
 export interface EffectPreset {
   readonly id: string;
   readonly name: string;
   readonly config: Map<string, ParameterValue>;
 }
- 

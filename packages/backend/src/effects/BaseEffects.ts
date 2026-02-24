@@ -29,18 +29,24 @@ export abstract class BaseSameColorEffectLogic<A extends AnimationMode> implemen
   abstract renderColor(ctx: EffectContextGeneric<A>): RgbFloat;
 }
 
-export abstract class BaseSameColorEffect<A extends AnimationMode> extends BaseSameColorEffectLogic<A> implements Effect<A, LedPoint1D> {
+export abstract class BaseSameColorEffect<A extends AnimationMode>
+  extends BaseSameColorEffectLogic<A>
+  implements Effect<A, LedPoint1D>
+{
   abstract readonly animationMode: A;
-  pointType: '1D' = '1D'
+  pointType: '1D' = '1D';
   isStateful: boolean = false;
   parameters?: EffectParameterView;
   abstract getName(): string;
   createLogic() {
     return this;
-  }  
+  }
 }
 
-export abstract class PerPixelEffect<A extends AnimationMode, P extends LedPoint> extends PerPixelEffectLogic<A, P> implements Effect<A, P> {
+export abstract class PerPixelEffect<A extends AnimationMode, P extends LedPoint>
+  extends PerPixelEffectLogic<A, P>
+  implements Effect<A, P>
+{
   abstract readonly animationMode: A;
   abstract readonly pointType: LedPointType;
   isStateful: boolean = false;
