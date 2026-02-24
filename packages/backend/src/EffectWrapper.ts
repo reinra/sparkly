@@ -5,7 +5,8 @@ import {
   MultiParameterStorageView,
   ParameterValue,
 } from './effectParameters';
-import { AnimationMode, BaseSameColorEffect, Effect, EffectPreset, LedPoint1D, LedPoint2D, LedPoint, type AnyEffect } from './effects/Effect';
+import { AnimationMode, EffectPreset, LedPoint1D, LedPoint2D, type AnyEffect } from './effects/Effect';
+import { BaseSameColorEffect } from './effects/BaseEffects';
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';
 
 export const enum MappingMode {
