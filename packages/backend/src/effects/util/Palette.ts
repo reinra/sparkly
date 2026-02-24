@@ -1,7 +1,12 @@
 import { Hsl } from '@twinkly-ts/common';
 import { Color, HslColor, RgbColor } from '../../color/Color';
 import { EffectParameterStorage } from '../../effectParameters';
-import { MultiHslEffectParameter, OptionEffectParameter, RangeEffectParameter, ParameterType } from '../../ParameterTypes';
+import {
+  MultiHslEffectParameter,
+  OptionEffectParameter,
+  RangeEffectParameter,
+  ParameterType,
+} from '../../ParameterTypes';
 import { BLUE_HSL_COLOR, DEFAULT_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR } from '../../color/Hsl';
 
 export interface Palette {
