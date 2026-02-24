@@ -271,20 +271,21 @@ export class DeviceService {
 
     const renderCtx = new RenderContextImpl(device.helper, effect);
     const progressCb: MovieProgressCallback = {
-      onRenderStart(totalFrames) {
-        updateMovieTask(deviceId, { totalFrames });
+      onRenderStart(totalFrames, effectDurationMs) {
+        updateMovieTask(deviceId, { totalFrames, effectDurationMs });
       },
       onFrameRendered(frameIndex, totalFrames) {
         const progress = totalFrames ? frameIndex / totalFrames : 0;
         updateMovieTask(deviceId, { framesRendered: frameIndex, progress });
       },
-      onUploadStart(frameCount, uploadBytesTotal) {
+      onUploadStart(frameCount, uploadBytesTotal, effectDurationMs) {
         updateMovieTask(deviceId, {
           status: 'uploading',
           frameCount,
           framesRendered: frameCount,
           uploadBytesTotal,
           uploadBytesSent: 0,
+          effectDurationMs,
         });
       },
       onUploadProgress(bytesSent, _bytesTotal) {
@@ -293,8 +294,8 @@ export class DeviceService {
       onConfiguring() {
         updateMovieTask(deviceId, { status: 'configuring' });
       },
-      onComplete(frameCount) {
-        completeMovieTask(deviceId, frameCount);
+      onComplete(frameCount, effectDurationMs) {
+        completeMovieTask(deviceId, frameCount, effectDurationMs);
       },
       onError(error) {
         failMovieTask(deviceId, error);

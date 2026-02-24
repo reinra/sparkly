@@ -21,18 +21,18 @@ const DEFAULT_SEQUENCE_DURATION_MS = 30_000;
 
 /** Callback interface for reporting movie-send progress. */
 export interface MovieProgressCallback {
-  /** Called once, before rendering starts. totalFrames may be null if unknown. */
-  onRenderStart(totalFrames: number | null): void;
+  /** Called once, before rendering starts. totalFrames and effectDurationMs may be null if unknown (estimates). */
+  onRenderStart(totalFrames: number | null, effectDurationMs: number | null): void;
   /** Called after each frame is rendered. */
   onFrameRendered(frameIndex: number, totalFrames: number | null): void;
   /** Called when rendering is done, about to upload. */
-  onUploadStart(frameCount: number, uploadBytesTotal: number): void;
+  onUploadStart(frameCount: number, uploadBytesTotal: number, effectDurationMs: number): void;
   /** Called periodically during upload with bytes sent so far. */
   onUploadProgress(bytesSent: number, bytesTotal: number): void;
   /** Called when upload is done, configuring device. */
   onConfiguring(): void;
   /** Called when everything is done. */
-  onComplete(frameCount: number): void;
+  onComplete(frameCount: number, effectDurationMs: number): void;
   /** Called on error. */
   onError(error: string): void;
 }
@@ -98,9 +98,10 @@ export async function sendEffectAsMovie(
   const frameFormat = await buildFrameFormat(renderCtx);
   const movieBuffer = new MovieBufferOutputStream(frameFormat);
 
-  // Estimate total frame count before rendering
+  // Estimate total frame count and duration before rendering
   const totalFrames = estimateTotalFrames(renderCtx, frameFormat.led_count);
-  progressCb?.onRenderStart(totalFrames);
+  const estimatedDurationMs = estimateEffectDurationMs(renderCtx, frameFormat.led_count);
+  progressCb?.onRenderStart(totalFrames, estimatedDurationMs);
 
   // Wrap output to track frame-by-frame progress
   const progressOutput = new ProgressTrackingFrameOutputStream(movieBuffer, (frameIndex) => {
@@ -116,7 +117,9 @@ export async function sendEffectAsMovie(
   logger.debug(`renderAsap completed in ${renderDuration}ms with ${movieBuffer.getFrameCount()} frames`);
 
   const movieData = movieBuffer.getMovieBuffer();
-  progressCb?.onUploadStart(movieBuffer.getFrameCount(), movieData.byteLength);
+  const frameMs = renderCtx.getMinFrameTimeMs();
+  const effectDurationMs = Math.round(movieBuffer.getFrameCount() * frameMs);
+  progressCb?.onUploadStart(movieBuffer.getFrameCount(), movieData.byteLength, effectDurationMs);
 
   const postStart = Date.now();
   const movieResult = await device.api_client.postMovieFull(movieData, (bytesSent, bytesTotal) => {
@@ -127,7 +130,6 @@ export async function sendEffectAsMovie(
 
   progressCb?.onConfiguring();
 
-  const frameMs = renderCtx.getMinFrameTimeMs();
   await device.api_client.setLedMovieConfig({
     frame_delay: frameMs,
     leds_number: frameFormat.led_count,
@@ -135,7 +137,30 @@ export async function sendEffectAsMovie(
   });
 
   await device.api_client.setMode(DeviceModeSchema.Values.movie);
-  progressCb?.onComplete(movieBuffer.getFrameCount());
+  progressCb?.onComplete(movieBuffer.getFrameCount(), effectDurationMs);
+}
+
+/**
+ * Estimate the effect's own duration in milliseconds before rendering,
+ * based on the effect's animation mode. Returns null if unknown.
+ */
+function estimateEffectDurationMs(renderCtx: RenderContext, ledCount: number): number | null {
+  const effect = renderCtx.effect;
+  const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
+
+  switch (effect.animationMode) {
+    case AnimationMode.Static:
+      return Math.round(frameTimeMs);
+    case AnimationMode.Loop: {
+      const loopEffect = effect as EffectLoop<any>;
+      const loopDurationMs = loopEffect.getLoopDurationSeconds(ledCount) * 1000;
+      return loopDurationMs > 0 ? Math.round(loopDurationMs) : null;
+    }
+    case AnimationMode.Sequence:
+      return DEFAULT_SEQUENCE_DURATION_MS;
+    default:
+      return null;
+  }
 }
 
 /**

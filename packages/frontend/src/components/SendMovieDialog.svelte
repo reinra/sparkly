@@ -111,6 +111,20 @@
     return '';
   });
 
+  function formatDuration(ms: number): string {
+    if (ms < 1000) return `${ms} ms`;
+    const seconds = ms / 1000;
+    if (seconds < 60) return `${seconds.toFixed(1)} s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds.toFixed(0)}s`;
+  }
+
+  let durationInfo = $derived.by(() => {
+    if (!task || task.effectDurationMs === null || task.effectDurationMs === undefined) return '';
+    return formatDuration(task.effectDurationMs);
+  });
+
   function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -164,8 +178,12 @@
         </div>
       {/if}
 
-      {#if frameInfo}
-        <div class="frame-info">{frameInfo}</div>
+      {#if frameInfo || durationInfo}
+        <div class="frame-info">
+          {#if frameInfo}{frameInfo}{/if}
+          {#if frameInfo && durationInfo} &middot; {/if}
+          {#if durationInfo}{durationInfo}{/if}
+        </div>
       {/if}
 
       {#if uploadInfo}

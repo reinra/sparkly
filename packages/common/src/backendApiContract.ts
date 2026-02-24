@@ -197,6 +197,8 @@ const MovieTaskProgressSchema = z.object({
   uploadBytesSent: z.number(),
   /** Error message if status is 'error' */
   error: z.string().nullable(),
+  /** Effect's own duration in milliseconds (null for static effects) */
+  effectDurationMs: z.number().nullable(),
   /** Name of the effect being sent */
   effectName: z.string(),
   /** Device ID */

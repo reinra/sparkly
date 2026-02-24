@@ -20,6 +20,8 @@ export interface MovieTaskProgress {
   uploadBytesSent: number;
   /** Error message if status is 'error'. */
   error: string | null;
+  /** Effect's own duration in milliseconds (null for static effects). */
+  effectDurationMs: number | null;
   /** Name of the effect being sent. */
   effectName: string;
   /** Device ID this task belongs to. */
@@ -40,6 +42,7 @@ export function startMovieTask(deviceId: string, effectName: string): MovieTaskP
     uploadBytesTotal: null,
     uploadBytesSent: 0,
     error: null,
+    effectDurationMs: null,
     effectName,
     deviceId,
   };
@@ -59,14 +62,15 @@ export function updateMovieTask(deviceId: string, update: Partial<MovieTaskProgr
   }
 }
 
-export function completeMovieTask(deviceId: string, frameCount: number): void {
+export function completeMovieTask(deviceId: string, frameCount: number, effectDurationMs: number): void {
   updateMovieTask(deviceId, {
     status: 'completed',
     progress: 1,
     frameCount,
     framesRendered: frameCount,
+    effectDurationMs,
   });
-  logger.withMetadata({ deviceId, frameCount }).info('Movie task completed');
+  logger.withMetadata({ deviceId, frameCount, effectDurationMs }).info('Movie task completed');
 }
 
 export function failMovieTask(deviceId: string, error: string): void {
