@@ -146,7 +146,7 @@ class RandomDotsClearLogic implements EffectLogic<AnimationMode.Sequence, LedPoi
     const maxLit = this.config.getMaxLitCount(total);
     const millisPerDot = this.config.getMillisPerDot(total);
     const fadeDuration = millisPerDot;
-    const easingFn = this.config.easing.getInEasingFunction().easingFunction;
+    const easingFn = this.config.easing.getInEasingFunction();
 
     // Spawn new dots until coverage is reached
     while (this.totalTimeMs >= this.nextSpawnMs) {

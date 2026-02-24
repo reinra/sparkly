@@ -2,7 +2,6 @@ import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { EffectParameterStorage, EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import { ParameterType } from '../../ParameterTypes';
 import { AnimationMode, type EffectLoop, type EffectContextLoop, type LedPoint1D, type EffectLogic } from '../Effect';
-import { createBlackBuffer, createShuffledIndices, shuffleParallel } from '../util/ArrayUtils';
 import { EasingParameters } from '../util/EasingMode';
 import { PaletteParameters } from '../util/Palette';
 
@@ -14,7 +13,7 @@ const SEGMENT_COUNT = 2;
  * Pre-generates SEGMENT_COUNT random snapshots and crossfades between them.
  * The last segment transitions back to the first snapshot, ensuring a seamless loop.
  */
-export class RandomDotsLoopEffect implements EffectLoop<LedPoint1D> {
+export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
@@ -54,7 +53,7 @@ export class RandomDotsLoopEffect implements EffectLoop<LedPoint1D> {
     return Math.max(1, Math.round(ledCount * (this.coverage.value / 100)));
   }
 
-  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new RandomDotsLoopLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new RandomDotsNewLoopLogic(this);
 }
 
 /** Pre-computed transition info for one segment. */
@@ -67,19 +66,24 @@ interface SegmentTransition {
   readonly toColors: RgbFloat[];
 }
 
-class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
+class RandomDotsNewLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private snapshots: RgbFloat[][] = [];
   private transitions: SegmentTransition[] = [];
   private initialized = false;
   private lastLedCount = 0;
 
-  constructor(private readonly config: RandomDotsLoopEffect) {}
+  constructor(private readonly config: RandomDotsNewLoopEffect) {}
 
   private generateSnapshot(total: number): RgbFloat[] {
     const litCount = this.config.getMaxLitCount(total);
-    const buffer = createBlackBuffer(total);
+    const buffer: RgbFloat[] = new Array(total).fill(BLACK);
 
-    const indices = createShuffledIndices(total);
+    // Fisher-Yates shuffle to pick random LED positions
+    const indices = Array.from({ length: total }, (_, i) => i);
+    for (let i = total - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
 
     for (let i = 0; i < litCount; i++) {
       buffer[indices[i]] = this.config.palette.palette.nextColor().asRgb();
@@ -103,7 +107,12 @@ class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D>
     }
 
     // Shuffle the change order
-    shuffleParallel(indices, fromColors, toColors);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+      [fromColors[i], fromColors[j]] = [fromColors[j], fromColors[i]];
+      [toColors[i], toColors[j]] = [toColors[j], toColors[i]];
+    }
 
     return { indices, fromColors, toColors };
   }

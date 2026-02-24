@@ -1,18 +1,6 @@
 import { EffectParameterStorage } from '../../effectParameters';
 import { OptionEffectParameter, ParameterType } from '../../ParameterTypes';
-import {
-  CubicIn,
-  CubicOut,
-  Direction,
-  EasingFunction,
-  EasingIn,
-  EasingOut,
-  LinearIn,
-  LinearOut,
-  NoopIn,
-  NoopOut,
-  wrapWithDirection,
-} from './Easing';
+import { cubicEasing, Direction, EasingFunction, linearEasing, noopEasing, wrapWithDirection } from './Easing';
 
 export enum EasingMode {
   Noop = 'noop',
@@ -20,6 +8,21 @@ export enum EasingMode {
   Cubic = 'cubic',
 }
 
+function getBaseEasingFunction(mode: EasingMode): EasingFunction {
+  switch (mode) {
+    case EasingMode.Noop:
+      return noopEasing;
+    case EasingMode.Linear:
+      return linearEasing;
+    case EasingMode.Cubic:
+      return cubicEasing;
+  }
+}
+
+/**
+ * Easing parameter that lets the user choose an easing curve (Noop, Linear, Cubic).
+ * Provides convenience methods for In/Out wrapped functions.
+ */
 export class EasingParameters {
   public readonly parameters = new EffectParameterStorage();
   private readonly type: OptionEffectParameter = this.parameters.register({
@@ -34,38 +37,13 @@ export class EasingParameters {
       { value: EasingMode.Cubic, label: 'Cubic', description: 'Cubic easing' },
     ],
   });
-  public getInEasingFunction(): EasingIn {
-    const mode = this.type.value as EasingMode;
-    switch (mode) {
-      case EasingMode.Noop:
-        return NoopIn;
-      case EasingMode.Linear:
-        return LinearIn;
-      case EasingMode.Cubic:
-        return CubicIn;
-    }
-  }
-  public getOutEasingFunction(): EasingOut {
-    const mode = this.type.value as EasingMode;
-    switch (mode) {
-      case EasingMode.Noop:
-        return NoopOut;
-      case EasingMode.Linear:
-        return LinearOut;
-      case EasingMode.Cubic:
-        return CubicOut;
-    }
-  }
-}
 
-function getBaseEasingFunction(mode: EasingMode): EasingFunction {
-  switch (mode) {
-    case EasingMode.Noop:
-      return NoopIn.easingFunction;
-    case EasingMode.Linear:
-      return LinearIn.easingFunction;
-    case EasingMode.Cubic:
-      return CubicIn.easingFunction;
+  public getInEasingFunction(): EasingFunction {
+    return wrapWithDirection(getBaseEasingFunction(this.type.value as EasingMode), Direction.In);
+  }
+
+  public getOutEasingFunction(): EasingFunction {
+    return wrapWithDirection(getBaseEasingFunction(this.type.value as EasingMode), Direction.Out);
   }
 }
 
