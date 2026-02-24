@@ -130,6 +130,21 @@ const DeviceDebugResponseSchema = z.object({
   ),
 });
 
+const DebugEffectEntrySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  pointType: z.enum(['1D', '2D']),
+  animationMode: z.string(),
+  isStateful: z.boolean(),
+  canDelete: z.boolean(),
+  duration: z.number().nullable(),
+  parametersCount: z.number(),
+});
+
+const DebugEffectsResponseSchema = z.object({
+  effects: z.array(DebugEffectEntrySchema),
+});
+
 const SetModeRequestSchema = DeviceRequestBaseSchema.extend({
   mode: z.string(),
 });
@@ -244,6 +259,8 @@ export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export type EffectInfo = z.infer<typeof EffectInfoSchema>;
 export type MovieTaskProgressResponse = z.infer<typeof MovieTaskProgressSchema>;
 export type GetMovieStatusResponse = z.infer<typeof GetMovieStatusResponseSchema>;
+export type DebugEffectEntry = z.infer<typeof DebugEffectEntrySchema>;
+export type DebugEffectsResponse = z.infer<typeof DebugEffectsResponseSchema>;
 
 // Export parameter-related types inferred from Zod schemas
 export type Hsl = z.infer<typeof HslValueSchema>;
@@ -302,6 +319,14 @@ export const backendApiContract = c.router({
     query: DeviceRequestBaseSchema,
     responses: {
       200: DeviceDebugResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  debugEffects: {
+    method: 'GET',
+    path: '/api/debug/effects',
+    responses: {
+      200: DebugEffectsResponseSchema,
       500: ErrorResponseSchema,
     },
   },

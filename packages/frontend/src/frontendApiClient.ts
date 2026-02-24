@@ -26,4 +26,5 @@ export type {
   SystemInfoResponse,
   MovieTaskProgressResponse,
   GetMovieStatusResponse,
+  DebugEffectsResponse,
 } from '@twinkly-ts/common';

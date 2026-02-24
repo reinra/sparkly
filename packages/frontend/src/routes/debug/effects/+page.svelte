@@ -1,18 +1,53 @@
 <script lang="ts">
-  import { backendClient, type GetInfoResponse } from '../../../frontendApiClient';
+  import { backendClient } from '../../../frontendApiClient';
+  import type { DebugEffectsResponse, DebugEffectEntry } from '@twinkly-ts/common';
   import { handleApiCall } from '../../../utils/apiHelper';
 
-  let info = $state<GetInfoResponse | null>(null);
+  type SortKey = 'id' | 'name' | 'pointType' | 'animationMode' | 'isStateful' | 'duration' | 'parametersCount';
+  type SortDir = 'asc' | 'desc';
+
+  let data = $state<DebugEffectsResponse | null>(null);
   let loading = $state(false);
   let error = $state('');
+  let sortKey = $state<SortKey>('name');
+  let sortDir = $state<SortDir>('asc');
 
-  async function fetchInfo() {
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortKey = key;
+      sortDir = 'asc';
+    }
+  }
+
+  function sortIndicator(key: SortKey): string {
+    if (sortKey !== key) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  }
+
+  let sortedEffects = $derived.by(() => {
+    if (!data?.effects) return [];
+    return [...data.effects].sort((a, b) => {
+      const rawA = a[sortKey];
+      const rawB = b[sortKey];
+      let cmp: number;
+      if (typeof rawA === 'number' || typeof rawB === 'number') {
+        cmp = ((rawA as number) ?? -1) - ((rawB as number) ?? -1);
+      } else {
+        cmp = String(rawA).localeCompare(String(rawB));
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  });
+
+  async function fetchEffects() {
     loading = true;
     error = '';
     try {
-      info = await handleApiCall<GetInfoResponse>(
-        () => backendClient.getInfo(),
-        'Failed to get info. Make sure config.toml is properly configured.'
+      data = await handleApiCall<DebugEffectsResponse>(
+        () => backendClient.debugEffects(),
+        'Failed to load effects.'
       );
     } catch (e) {
       error = (e as Error).message;
@@ -22,7 +57,7 @@
   }
 
   $effect(() => {
-    fetchInfo();
+    fetchEffects();
   });
 </script>
 
@@ -31,23 +66,33 @@
   <h2>Effect Library</h2>
 
   <div class="card">
-    {#if loading && !info}
+    {#if loading && !data}
       <p class="loading">Loading...</p>
     {:else if error}
       <p class="error">{error}</p>
-    {:else if info?.effects?.length}
+    {:else if data?.effects?.length}
       <table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
+            <th class="sortable" onclick={() => toggleSort('id')}>ID{sortIndicator('id')}</th>
+            <th class="sortable" onclick={() => toggleSort('name')}>Name{sortIndicator('name')}</th>
+            <th class="sortable" onclick={() => toggleSort('pointType')}>Point Type{sortIndicator('pointType')}</th>
+            <th class="sortable" onclick={() => toggleSort('animationMode')}>Animation Mode{sortIndicator('animationMode')}</th>
+            <th class="sortable" onclick={() => toggleSort('isStateful')}>State{sortIndicator('isStateful')}</th>
+            <th class="sortable" onclick={() => toggleSort('duration')}>Duration{sortIndicator('duration')}</th>
+            <th class="sortable" onclick={() => toggleSort('parametersCount')}>Params{sortIndicator('parametersCount')}</th>
           </tr>
         </thead>
         <tbody>
-          {#each info.effects as effect}
+          {#each sortedEffects as effect}
             <tr>
               <td>{effect.id}</td>
               <td>{effect.name}</td>
+              <td>{effect.pointType}</td>
+              <td>{effect.animationMode}</td>
+              <td>{effect.isStateful ? 'Stateful' : 'Stateless'}</td>
+              <td>{effect.duration != null ? `${effect.duration}s` : '—'}</td>
+              <td>{effect.parametersCount}</td>
             </tr>
           {/each}
         </tbody>
@@ -55,13 +100,13 @@
     {:else}
       <p class="success">No effects found.</p>
     {/if}
-    <button onclick={fetchInfo} disabled={loading}>Refresh</button>
+    <button onclick={fetchEffects} disabled={loading}>Refresh</button>
   </div>
 </div>
 
 <style>
   .effects-page {
-    max-width: 800px;
+    max-width: 1100px;
   }
 
   .back-link {
@@ -145,15 +190,26 @@
 
   th {
     text-align: left;
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 0.75rem;
     font-weight: 600;
     color: #333;
     border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+  }
+
+  th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  th.sortable:hover {
+    background: #eee;
   }
 
   td {
-    padding: 0.75rem 1rem;
+    padding: 0.3rem 0.75rem;
     border-bottom: 1px solid #eee;
+    white-space: nowrap;
   }
 
   tbody tr:hover {

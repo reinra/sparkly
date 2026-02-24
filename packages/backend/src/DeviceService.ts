@@ -46,6 +46,17 @@ export interface DebugSection {
   content: string;
 }
 
+export interface DebugEffectEntry {
+  id: string;
+  name: string;
+  pointType: '1D' | '2D';
+  animationMode: string;
+  isStateful: boolean;
+  canDelete: boolean;
+  duration: number | null;
+  parametersCount: number;
+}
+
 // ── Errors ────────────────────────────────────────────────────────────
 
 export class DeviceNotFoundError extends Error {
@@ -155,6 +166,29 @@ export class DeviceService {
         name: effect.getName(),
         canDelete: effect.canDelete,
       })),
+    };
+  }
+
+  getDebugEffects(): { effects: DebugEffectEntry[] } {
+    return {
+      effects: Object.entries(effects).map(([id, wrapper]) => {
+        const effect = wrapper.effect;
+        let duration: number | null = null;
+        if (effect.animationMode === AnimationMode.Loop) {
+          duration = (effect as EffectLoop<LedPoint>).getLoopDurationSeconds(100);
+        }
+        const parametersCount = wrapper.getEffectParameters().list().filter((p) => !p.hidden).length;
+        return {
+          id,
+          name: wrapper.getName(),
+          pointType: effect.pointType,
+          animationMode: effect.animationMode as string,
+          isStateful: effect.isStateful,
+          canDelete: wrapper.canDelete,
+          duration,
+          parametersCount,
+        };
+      }),
     };
   }
 

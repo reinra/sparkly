@@ -29,6 +29,11 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     res.json({ sections });
   },
 
+  debugEffects: (_req, res) => {
+    const result = deviceService.getDebugEffects();
+    res.json(result);
+  },
+
   setMode: async (req, res) => {
     await deviceService.setMode(req.body.device_id, req.body.mode);
     res.json({ success: true, mode: req.body.mode });
