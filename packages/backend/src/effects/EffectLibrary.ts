@@ -25,6 +25,7 @@ import { RandomDotsLoopEffect } from './library/RandomDotsLoopEffect';
 import { RandomDotsStaticEffect } from './library/RandomDotsStaticEffect';
 import { CloudsEffect, PlasmaEffect, PulseScanner, RainbowGradientEffect2D, Slime } from './library/Effects2D';
 import { GravityFountainEffect } from './library/GravityFountainEffect';
+import { StarsEffect } from './library/StarsEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
@@ -46,6 +47,7 @@ function add(id: string, effect: AnyEffect): void {
 }
 
 add('blocks', new BlocksEffect());
+add('stars', new StarsEffect());
 addPresets(AlternatingCustomColorFadingEffect);
 add('random_dots_clear', new RandomDotsClearEffect());
 add('random_dots_loop', new RandomDotsLoopEffect());

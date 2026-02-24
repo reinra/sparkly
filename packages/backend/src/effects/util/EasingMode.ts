@@ -2,17 +2,16 @@ import { EffectParameterStorage } from '../../effectParameters';
 import { OptionEffectParameter, ParameterType } from '../../ParameterTypes';
 import {
   CubicIn,
-  CubicInOut,
   CubicOut,
-  Easing,
+  Direction,
+  EasingFunction,
   EasingIn,
   EasingOut,
   LinearIn,
-  LinearInOut,
   LinearOut,
   NoopIn,
-  NoopInOut,
   NoopOut,
+  wrapWithDirection,
 } from './Easing';
 
 export enum EasingMode {
@@ -59,56 +58,51 @@ export class EasingParameters {
   }
 }
 
-export enum FullEasingMode {
-  Noop = 'noop',
-  LinearIn = 'linear_in',
-  LinearOut = 'linear_out',
-  LinearInOut = 'linear_in_out',
-  CubicIn = 'cubic_in',
-  CubicOut = 'cubic_out',
-  CubicInOut = 'cubic_in_out',
+function getBaseEasingFunction(mode: EasingMode): EasingFunction {
+  switch (mode) {
+    case EasingMode.Noop:
+      return NoopIn.easingFunction;
+    case EasingMode.Linear:
+      return LinearIn.easingFunction;
+    case EasingMode.Cubic:
+      return CubicIn.easingFunction;
+  }
 }
 
 /**
- * Easing parameter that lets the user choose the full easing function
- * including direction (In, Out, In-Out).
+ * Easing parameter that lets the user choose direction (In, Out, In+Out)
+ * and easing function (Noop, Linear, Cubic) independently.
+ * The direction wraps the base easing function accordingly.
  */
 export class FullEasingParameters {
   public readonly parameters = new EffectParameterStorage();
+  private readonly direction: OptionEffectParameter = this.parameters.register({
+    id: 'direction',
+    name: 'Direction',
+    description: 'Easing direction',
+    type: ParameterType.OPTION,
+    value: Direction.InOut,
+    options: [
+      { value: Direction.In, label: 'In', description: 'Fade in (0→1)' },
+      { value: Direction.Out, label: 'Out', description: 'Fade out (1→0)' },
+      { value: Direction.InOut, label: 'In+Out', description: 'Wave (0→1→0)' },
+    ],
+  });
   private readonly type: OptionEffectParameter = this.parameters.register({
     id: 'type',
     name: 'Easing',
-    description: 'Easing function including direction',
+    description: 'Easing function',
     type: ParameterType.OPTION,
-    value: FullEasingMode.LinearIn,
+    value: EasingMode.Linear,
     options: [
-      { value: FullEasingMode.Noop, label: 'None', description: 'No easing' },
-      { value: FullEasingMode.LinearIn, label: 'Linear In', description: 'Linear ease in' },
-      { value: FullEasingMode.LinearOut, label: 'Linear Out', description: 'Linear ease out' },
-      { value: FullEasingMode.LinearInOut, label: 'Linear In-Out', description: 'Linear ease in-out' },
-      { value: FullEasingMode.CubicIn, label: 'Cubic In', description: 'Cubic ease in' },
-      { value: FullEasingMode.CubicOut, label: 'Cubic Out', description: 'Cubic ease out' },
-      { value: FullEasingMode.CubicInOut, label: 'Cubic In-Out', description: 'Cubic ease in-out' },
+      { value: EasingMode.Noop, label: 'Noop', description: 'No easing (instant)' },
+      { value: EasingMode.Linear, label: 'Linear', description: 'Linear easing' },
+      { value: EasingMode.Cubic, label: 'Cubic', description: 'Cubic easing' },
     ],
   });
 
-  public getEasingFunction(): Easing {
-    const mode = this.type.value as FullEasingMode;
-    switch (mode) {
-      case FullEasingMode.Noop:
-        return NoopIn;
-      case FullEasingMode.LinearIn:
-        return LinearIn;
-      case FullEasingMode.LinearOut:
-        return LinearOut;
-      case FullEasingMode.LinearInOut:
-        return LinearInOut;
-      case FullEasingMode.CubicIn:
-        return CubicIn;
-      case FullEasingMode.CubicOut:
-        return CubicOut;
-      case FullEasingMode.CubicInOut:
-        return CubicInOut;
-    }
+  public getEasingFunction(): EasingFunction {
+    const baseFn = getBaseEasingFunction(this.type.value as EasingMode);
+    return wrapWithDirection(baseFn, this.direction.value as Direction);
   }
 }
