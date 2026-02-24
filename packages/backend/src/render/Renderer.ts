@@ -50,7 +50,7 @@ export class EffectRenderer implements Renderer {
         const loopEffect = effect as EffectLoop<any>;
         const loopDurationMs = loopEffect.getLoopDurationSeconds(numberOfLeds) * 1000;
         if (loopDurationMs <= 0) {
-          throw new Error(`Loop effect ${effect.getName()} has invalid loop duration`);
+          throw new Error(`Loop effect ${renderCtx.effectName} has invalid loop duration`);
         }
         const firstStartTime = performance.now();
         let lastTime = firstStartTime;
@@ -137,7 +137,7 @@ export class EffectRenderer implements Renderer {
         const loopEffect = effect as EffectLoop<any>;
         const loopDurationMs = loopEffect.getLoopDurationSeconds(numberOfLeds) * 1000;
         if (loopDurationMs <= 0) {
-          throw new Error(`Loop effect ${effect.getName()} has invalid loop duration`);
+          throw new Error(`Loop effect ${renderCtx.effectName} has invalid loop duration`);
         }
         let virtualTime = 0;
         let frameIndex = 0;

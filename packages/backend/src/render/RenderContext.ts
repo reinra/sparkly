@@ -16,6 +16,9 @@ export interface RenderContext {
   /** The effect to render. */
   readonly effect: AnyEffect;
 
+  /** Human-readable name of the effect. */
+  readonly effectName: string;
+
   /** Number of LEDs on the device. */
   getNumberOfLeds(): Promise<number>;
 
@@ -55,6 +58,10 @@ export class RenderContextImpl implements RenderContext {
 
   get effect(): AnyEffect {
     return this.effectWrapper.effect;
+  }
+
+  get effectName(): string {
+    return this.effectWrapper.getName();
   }
 
   async getNumberOfLeds(): Promise<number> {
