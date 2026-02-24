@@ -21,19 +21,24 @@ export class RandomDotsStaticEffect implements EffectStatic<LedPoint1D> {
   isStateful: boolean = true;
 
   private dirty: boolean = true;
-  private readonly invalidate = () => { this.dirty = true; };
+  private readonly invalidate = () => {
+    this.dirty = true;
+  };
 
   readonly customParams = new EffectParameterStorage();
-  private readonly coverage = this.customParams.register({
-    id: 'coverage',
-    name: 'Coverage',
-    description: 'Approximate percentage of LEDs lit (0.0 - 100.0)%',
-    type: ParameterType.RANGE,
-    value: 50,
-    min: 0,
-    max: 100,
-    unit: '%',
-  }, this.invalidate);
+  private readonly coverage = this.customParams.register(
+    {
+      id: 'coverage',
+      name: 'Coverage',
+      description: 'Approximate percentage of LEDs lit (0.0 - 100.0)%',
+      type: ParameterType.RANGE,
+      value: 50,
+      min: 0,
+      max: 100,
+      unit: '%',
+    },
+    this.invalidate
+  );
 
   readonly palette = new PaletteParameters();
 
