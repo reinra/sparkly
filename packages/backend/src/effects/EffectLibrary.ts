@@ -6,7 +6,6 @@ import {
   PingPongEffect,
   RainbowGradientEffect,
   RotatingColorGradientEffect,
-  SineEffect,
   StaticSingleColorEffect,
   StaticColorGradientEffect,
   TestPerLedEffect,
@@ -16,6 +15,7 @@ import {
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
 } from './library/Effects1D';
+import { WaveEffect } from './library/WaveEffect';
 import { ChangeColorEffect } from './library/ChangeColorEffect';
 import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
 import { BlocksEffect } from './library/BlocksEffect';
@@ -55,7 +55,7 @@ add('meteor', new MeteorEffect());
 add('rain_single_color', new SingleColorRainEffect());
 add('rain_multi_color', new MultiColorRainEffect());
 add('twinkle', new TwinkleEffect());
-add('sine', new SineEffect());
+addPresets(WaveEffect);
 add('ping_pong', new PingPongEffect());
 add('rainbow_2d', new RainbowGradientEffect2D());
 add('pulse_scanner', new PulseScanner());

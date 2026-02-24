@@ -424,44 +424,6 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
   }
 }
 
-export class SineEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
-  readonly animationMode = AnimationMode.Loop;
-  pointType: '1D' = '1D';
-  readonly parameters = new EffectParameterStorage();
-  private readonly frequency = this.parameters.register({
-    id: 'sine_frequency',
-    name: 'Sine Frequency',
-    description: 'Frequency of the sine wave (cycles per LED)',
-    type: ParameterType.RANGE,
-    value: 3,
-    min: 1,
-    max: 10,
-  });
-  private readonly color = this.parameters.register({
-    id: 'color',
-    name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: { hue: 0.1, saturation: 1.0, lightness: 0.5 },
-  });
-  getName(): string {
-    return `Sine Wave`;
-  }
-  getLoopDurationSeconds(ledCount: number): number {
-    return 5;
-  }
-  renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
-    // We combine spatial position (pt.distance) with temporal progress (ctx.phase)
-    const wave = Math.sin((point.distance * this.frequency.value + ctx.phase) * Math.PI * 2);
-
-    // Map wave (-1 to 1) to brightness (0 to 1)
-    const brightness = (wave + 1) / 2;
-
-    // Use HSL to keep a consistent color but vary the lightness
-    return hslToRgbFloat({ ...this.color.value, lightness: this.color.value.lightness * brightness });
-  }
-}
-
 export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
