@@ -14,6 +14,7 @@ import {
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
+  TestRgbPickerEffect,
 } from './library/Effects1D';
 import { WaveEffect } from './library/WaveEffect';
 import { ChangeColorEffect } from './library/ChangeColorEffect';
@@ -85,6 +86,7 @@ register(StaticCustomColorGradientEffect);
 // Test effects
 register(TestPerLedEffect);
 register(TestAllLedsFlash);
+register(TestRgbPickerEffect);
 
 export function deleteEffect(effectId: string): void {
   const effect = effects[effectId];

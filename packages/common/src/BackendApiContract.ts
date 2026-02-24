@@ -8,6 +8,7 @@ export const ParameterType = {
   HSL: 'hsl',
   OPTION: 'option',
   MULTI_HSL: 'multi_hsl',
+  RGB: 'rgb',
 } as const;
 
 export const ParameterGroup = {
@@ -31,6 +32,12 @@ const HslValueSchema = z.object({
   lightness: z.number().min(0).max(1),
 });
 
+const RgbFloatValueSchema = z.object({
+  red: z.number().min(0).max(1),
+  green: z.number().min(0).max(1),
+  blue: z.number().min(0).max(1),
+});
+
 const EffectParameterBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -41,6 +48,7 @@ const EffectParameterBaseSchema = z.object({
     ParameterType.HSL,
     ParameterType.OPTION,
     ParameterType.MULTI_HSL,
+    ParameterType.RGB,
   ]),
   group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
@@ -81,12 +89,18 @@ const MultiHslEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: z.array(HslValueSchema).min(1),
 });
 
+const RgbEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.RGB),
+  value: RgbFloatValueSchema,
+});
+
 const EffectParameterSchema = z.discriminatedUnion('type', [
   RangeEffectParameterSchema,
   BooleanEffectParameterSchema,
   HslEffectParameterSchema,
   OptionEffectParameterSchema,
   MultiHslEffectParameterSchema,
+  RgbEffectParameterSchema,
 ]);
 
 const EffectInfoSchema = z.object({
@@ -213,7 +227,14 @@ const GetMovieStatusResponseSchema = z.object({
   task: MovieTaskProgressSchema.nullable(),
 });
 
-const ParameterValueSchema = z.union([z.number(), z.boolean(), z.string(), HslValueSchema, z.array(HslValueSchema)]);
+const ParameterValueSchema = z.union([
+  z.number(),
+  z.boolean(),
+  z.string(),
+  HslValueSchema,
+  z.array(HslValueSchema),
+  RgbFloatValueSchema,
+]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
   parameters: z.array(
@@ -267,12 +288,14 @@ export type DebugEffectsResponse = z.infer<typeof DebugEffectsResponseSchema>;
 
 // Export parameter-related types inferred from Zod schemas
 export type Hsl = z.infer<typeof HslValueSchema>;
+export type RgbFloat = z.infer<typeof RgbFloatValueSchema>;
 export type EffectParameter = z.infer<typeof EffectParameterSchema>;
 export type RangeEffectParameter = z.infer<typeof RangeEffectParameterSchema>;
 export type BooleanEffectParameter = z.infer<typeof BooleanEffectParameterSchema>;
 export type HslEffectParameter = z.infer<typeof HslEffectParameterSchema>;
 export type OptionEffectParameter = z.infer<typeof OptionEffectParameterSchema>;
 export type MultiHslEffectParameter = z.infer<typeof MultiHslEffectParameterSchema>;
+export type RgbEffectParameter = z.infer<typeof RgbEffectParameterSchema>;
 
 // Backend API contract
 const DeviceModeSchema = z.object({

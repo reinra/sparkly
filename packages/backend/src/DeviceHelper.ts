@@ -20,7 +20,7 @@ import {
   gammaCorrect,
   RgbFloat,
 } from './color/ColorFloat';
-import { RgbValue } from './color/Color8bit';
+import { Rgb24 } from './color/Color8bit';
 import { type AnyEffect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { EnabledDisabledSchema } from './deviceClient/ApiContract';
@@ -294,17 +294,17 @@ export class DeviceHelper {
     return this.ledMappingCache;
   }
 
-  public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0, invertColors: boolean = false): RgbValue[] {
+  public floatTo8bitColor(colors: RgbFloat[], effectGamma: number = 1.0, invertColors: boolean = false): Rgb24[] {
     const gamma = this.gamma.value * effectGamma;
     const temperature = this.temperature.value;
     const redGain = this.gainRed.value;
     const greenGain = this.gainGreen.value;
     const blueGain = this.gainBlue.value;
-    const result: RgbValue[] = new Array(colors.length);
+    const result: Rgb24[] = new Array(colors.length);
     for (let i = 0; i < colors.length; i++) {
       let color = colors[i];
       if (invertColors) {
-        color = { red_f: 1 - color.red_f, green_f: 1 - color.green_f, blue_f: 1 - color.blue_f };
+        color = { red: 1 - color.red, green: 1 - color.green, blue: 1 - color.blue };
       }
       color = applyChannelGain(color, redGain, greenGain, blueGain);
       result[i] = floatTo8bit(adjustColorTemperatureNormalized(gammaCorrect(color, gamma), temperature));

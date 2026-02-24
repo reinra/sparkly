@@ -1,5 +1,5 @@
 import type { RgbFloat } from '../color/ColorFloat';
-import type { LedType, RgbValue } from '../color/Color8bit';
+import type { LedType, Rgb24 } from '../color/Color8bit';
 import type { LedPoint1D, LedPoint2D, AnyEffect } from '../effects/Effect';
 import type { LedMapper } from './LedMapper';
 import type { DeviceHelper } from '../DeviceHelper';
@@ -29,7 +29,7 @@ export interface RenderContext {
   getPoints(): Promise<LedPoint1D[] | LedPoint2D[]>;
 
   /** Convert float colours to 8-bit applying gamma / temperature corrections. */
-  floatTo8bitColor(colors: RgbFloat[]): RgbValue[];
+  floatTo8bitColor(colors: RgbFloat[]): Rgb24[];
 
   /** Minimum time between frames in milliseconds (derived from max FPS). */
   getMinFrameTimeMs(): number;
@@ -80,7 +80,7 @@ export class RenderContextImpl implements RenderContext {
     return points;
   }
 
-  floatTo8bitColor(colors: RgbFloat[]): RgbValue[] {
+  floatTo8bitColor(colors: RgbFloat[]): Rgb24[] {
     return this.deviceHelper.floatTo8bitColor(
       colors,
       this.effectWrapper.getGamma(),

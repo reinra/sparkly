@@ -1,13 +1,29 @@
-import type { EffectParameter, RangeEffectParameter, BooleanEffectParameter, HslEffectParameter, OptionEffectParameter, MultiHslEffectParameter, Hsl } from './ParameterTypes';
+import type {
+  EffectParameter,
+  RangeEffectParameter,
+  BooleanEffectParameter,
+  HslEffectParameter,
+  OptionEffectParameter,
+  MultiHslEffectParameter,
+  RgbEffectParameter,
+  Hsl,
+} from './ParameterTypes';
 import { ParameterType } from './ParameterTypes';
+import type { RgbFloat } from './color/ColorFloat';
 
-type ParameterValueType<T extends EffectParameter> =
-  T extends RangeEffectParameter ? number :
-  T extends BooleanEffectParameter ? boolean :
-  T extends HslEffectParameter ? Hsl :
-  T extends OptionEffectParameter ? string :
-  T extends MultiHslEffectParameter ? Hsl[] :
-  never;
+type ParameterValueType<T extends EffectParameter> = T extends RangeEffectParameter
+  ? number
+  : T extends BooleanEffectParameter
+    ? boolean
+    : T extends HslEffectParameter
+      ? Hsl
+      : T extends OptionEffectParameter
+        ? string
+        : T extends MultiHslEffectParameter
+          ? Hsl[]
+          : T extends RgbEffectParameter
+            ? RgbFloat
+            : never;
 
 export type ParameterChangeListener<T extends EffectParameter = EffectParameter> = (
   parameter: T,
@@ -15,9 +31,10 @@ export type ParameterChangeListener<T extends EffectParameter = EffectParameter>
   newValue: ParameterValueType<T>
 ) => void | Promise<void>;
 
-export type ParameterValue = number | boolean | Hsl | string | Hsl[];
+export type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat;
 
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
+const RGB_RANGE_ERROR = `RGB components must be between 0 and 1 inclusive`;
 
 function validateHslValue(id: string, value: Hsl): void {
   const ensure = (component: keyof Hsl) => {
@@ -33,6 +50,22 @@ function validateHslValue(id: string, value: Hsl): void {
   ensure('hue');
   ensure('saturation');
   ensure('lightness');
+}
+
+function validateRgbFloatValue(id: string, value: RgbFloat): void {
+  const ensure = (component: keyof RgbFloat) => {
+    const componentValue = value[component];
+    if (typeof componentValue !== 'number' || Number.isNaN(componentValue)) {
+      throw new Error(`Parameter '${id}' expects numeric ${component} value`);
+    }
+    if (componentValue < 0 || componentValue > 1) {
+      throw new Error(`Parameter '${id}': ${RGB_RANGE_ERROR} (received ${component}: ${componentValue})`);
+    }
+  };
+
+  ensure('red');
+  ensure('green');
+  ensure('blue');
 }
 
 /**
@@ -159,6 +192,13 @@ export class EffectParameterStorage implements EffectParameterView {
         validateHslValue(id, hsl);
       }
       parameter.value = value.map((hsl) => ({ ...hsl }));
+    } else if (parameter.type === ParameterType.RGB) {
+      if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error(`Parameter '${id}' expects an RGB value`);
+      }
+      const rgbValue = value as RgbFloat;
+      validateRgbFloatValue(id, rgbValue);
+      parameter.value = { red: rgbValue.red, green: rgbValue.green, blue: rgbValue.blue };
     }
 
     // Invoke listener asynchronously (fire-and-forget) if registered

@@ -1,10 +1,10 @@
-
 export enum ParameterType {
   RANGE = 'range',
   BOOLEAN = 'boolean',
   HSL = 'hsl',
   OPTION = 'option',
   MULTI_HSL = 'multi_hsl',
+  RGB = 'rgb',
 }
 
 export enum ParameterGroup {
@@ -60,9 +60,17 @@ export interface MultiHslEffectParameter extends BaseEffectParameter {
   value: Hsl[];
 }
 
+import type { RgbFloat } from './color/ColorFloat';
+
+export interface RgbEffectParameter extends BaseEffectParameter {
+  type: ParameterType.RGB;
+  value: RgbFloat;
+}
+
 export type EffectParameter =
   | RangeEffectParameter
   | BooleanEffectParameter
   | HslEffectParameter
   | OptionEffectParameter
-  | MultiHslEffectParameter;
+  | MultiHslEffectParameter
+  | RgbEffectParameter;

@@ -91,9 +91,9 @@ export class RotatingRainbowPalette implements Palette {
 export class RandomColorPalette implements Palette {
   nextColor(): Color {
     return new RgbColor({
-      red_f: Math.random(),
-      green_f: Math.random(),
-      blue_f: Math.random(),
+      red: Math.random(),
+      green: Math.random(),
+      blue: Math.random(),
     });
   }
 }

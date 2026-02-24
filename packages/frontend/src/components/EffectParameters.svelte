@@ -6,17 +6,20 @@
     ParameterType,
     type EffectParameter,
     type Hsl,
+    type RgbFloat,
     type RangeEffectParameter,
     type BooleanEffectParameter,
     type HslEffectParameter,
     type OptionEffectParameter,
     type MultiHslEffectParameter,
+    type RgbEffectParameter,
   } from '@twinkly-ts/common';
   import RangeParameter from './params/RangeParameter.svelte';
   import BooleanParameter from './params/BooleanParameter.svelte';
   import HslParameter from './params/HslParameter.svelte';
   import OptionParameter from './params/OptionParameter.svelte';
   import MultiHslParameter from './params/MultiHslParameter.svelte';
+  import RgbParameter from './params/RgbParameter.svelte';
 
   interface Props {
     deviceId: string;
@@ -26,7 +29,7 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  type ParameterValue = number | boolean | Hsl | string | Hsl[];
+  type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat;
 
   let parameterElements: (HTMLElement | null)[] = [];
   const optimisticValues = new Map<string, ParameterValue>();
@@ -115,7 +118,7 @@
 
   function cloneValue(value: ParameterValue): ParameterValue {
     if (Array.isArray(value)) return value.map((v) => ({ ...v }));
-    if (typeof value === 'object') return { ...(value as Hsl) };
+    if (typeof value === 'object') return { ...value };
     return value;
   }
 
@@ -128,6 +131,13 @@
     );
   }
 
+  function areRgbEqual(a: RgbFloat, b: RgbFloat) {
+    const EPSILON = 0.0001;
+    return (
+      Math.abs(a.red - b.red) < EPSILON && Math.abs(a.green - b.green) < EPSILON && Math.abs(a.blue - b.blue) < EPSILON
+    );
+  }
+
   function areValuesEqual(type: string, a: ParameterValue, b: ParameterValue): boolean {
     if (type === ParameterType.HSL) {
       return typeof a === 'object' && typeof b === 'object' && areHslEqual(a as Hsl, b as Hsl);
@@ -135,6 +145,9 @@
     if (type === ParameterType.MULTI_HSL) {
       if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
       return (a as Hsl[]).every((color, i) => areHslEqual(color, (b as Hsl[])[i]));
+    }
+    if (type === ParameterType.RGB) {
+      return typeof a === 'object' && typeof b === 'object' && areRgbEqual(a as RgbFloat, b as RgbFloat);
     }
     return a === b;
   }
@@ -248,6 +261,14 @@
           <MultiHslParameter
             param={typedParam}
             value={getEffectiveValue(param) as Hsl[]}
+            onchange={(v) => updateParameter(param, v)}
+            onregister={(el) => (parameterElements[index] = el)}
+          />
+        {:else if param.type === ParameterType.RGB}
+          {@const typedParam = param as RgbEffectParameter}
+          <RgbParameter
+            param={typedParam}
+            value={getEffectiveValue(param) as RgbFloat}
             onchange={(v) => updateParameter(param, v)}
             onregister={(el) => (parameterElements[index] = el)}
           />

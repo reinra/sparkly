@@ -62,7 +62,7 @@ export class BufferReplacingFrameOutputStream implements FrameOutputStream {
   private encodeFrameToBase64(frame: LedValue[]): string {
     const bytes: number[] = [];
     for (const color of frame) {
-      bytes.push(color.red, color.green, color.blue);
+      bytes.push(color.red8, color.green8, color.blue8);
       // ignore white channel
     }
     const buffer = Buffer.from(bytes);
@@ -140,10 +140,10 @@ export class ProgressTrackingFrameOutputStream implements FrameOutputStream {
 async function copyValues(color: LedValue, targetType: LedType, output: number[]) {
   if (targetType === LedType.RGB) {
     // Ignore white even if provided
-    output.push(color.red, color.green, color.blue);
+    output.push(color.red8, color.green8, color.blue8);
   } else if (hasWhiteChannel(color)) {
-    output.push(color.white, color.red, color.green, color.blue);
+    output.push(color.white8, color.red8, color.green8, color.blue8);
   } else {
-    output.push(0, color.red, color.green, color.blue);
+    output.push(0, color.red8, color.green8, color.blue8);
   }
 }

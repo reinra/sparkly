@@ -1,5 +1,5 @@
 import type { Hsl } from '../ParameterTypes';
-import type { RgbValue } from './Color8bit';
+import type { Rgb24 } from './Color8bit';
 import { type RgbFloat } from './ColorFloat';
 
 export const RED_HSL_COLOR: Hsl = {
@@ -51,7 +51,7 @@ function hueToRgb(p: number, q: number, t: number): number {
  * @param l Lightness as a fraction [0, 1]
  * @returns Color tuple [r, g, b] in range [0, 255]
  */
-export function hslToRgb(hsl: Hsl): RgbValue {
+export function hslToRgb(hsl: Hsl): Rgb24 {
   let r: number, g: number, b: number; // 0..1
 
   if (hsl.saturation === 0) {
@@ -67,7 +67,7 @@ export function hslToRgb(hsl: Hsl): RgbValue {
     b = hueToRgb(p, q, hsl.hue - 1 / 3);
   }
 
-  return { red: Math.round(r * 255), green: Math.round(g * 255), blue: Math.round(b * 255) };
+  return { red8: Math.round(r * 255), green8: Math.round(g * 255), blue8: Math.round(b * 255) };
 }
 
 /**
@@ -91,13 +91,13 @@ export function hslToRgbFloat(hsl: Hsl): RgbFloat {
     b = hueToRgb(p, q, hsl.hue - 1 / 3);
   }
 
-  return { red_f: r, green_f: g, blue_f: b };
+  return { red: r, green: g, blue: b };
 }
 
 export function rgbFloatToHsl(rgb: RgbFloat): Hsl {
-  const red = Math.max(0, Math.min(1, rgb.red_f));
-  const green = Math.max(0, Math.min(1, rgb.green_f));
-  const blue = Math.max(0, Math.min(1, rgb.blue_f));
+  const red = Math.max(0, Math.min(1, rgb.red));
+  const green = Math.max(0, Math.min(1, rgb.green));
+  const blue = Math.max(0, Math.min(1, rgb.blue));
 
   const max = Math.max(red, green, blue);
   const min = Math.min(red, green, blue);
@@ -108,8 +108,7 @@ export function rgbFloatToHsl(rgb: RgbFloat): Hsl {
   }
 
   const delta = max - min;
-  const saturation =
-    lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+  const saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
 
   let hue: number;
   if (max === red) {

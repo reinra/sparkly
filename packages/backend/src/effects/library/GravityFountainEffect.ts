@@ -50,9 +50,9 @@ class GravityFountainLogic implements EffectLogic<AnimationMode.Sequence, LedPoi
           const color = WHITE;
           // Blend with existing color
           buffer[pt.id] = {
-            red_f: Math.min(1, buffer[pt.id].red_f + color.red_f * intensity),
-            green_f: Math.min(1, buffer[pt.id].green_f + color.green_f * intensity),
-            blue_f: Math.min(1, buffer[pt.id].blue_f + color.blue_f * intensity),
+            red: Math.min(1, buffer[pt.id].red + color.red * intensity),
+            green: Math.min(1, buffer[pt.id].green + color.green * intensity),
+            blue: Math.min(1, buffer[pt.id].blue + color.blue * intensity),
           };
         }
       }

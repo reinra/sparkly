@@ -144,9 +144,9 @@ class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
       const color = this.waveColors[waveIndex];
 
       result[point.id] = {
-        red_f: color.red_f * brightness,
-        green_f: color.green_f * brightness,
-        blue_f: color.blue_f * brightness,
+        red: color.red * brightness,
+        green: color.green * brightness,
+        blue: color.blue * brightness,
       };
     }
     return result;

@@ -1,28 +1,28 @@
-import { RgbValue, RgbwValue } from './Color8bit';
+import { Rgb24, Rgbw32 } from './Color8bit';
 
 export interface RgbFloat {
-  red_f: number; // 0...1
-  green_f: number; // 0...1
-  blue_f: number; // 0...1
+  red: number; // 0...1
+  green: number; // 0...1
+  blue: number; // 0...1
 }
 
-export const BLACK: RgbFloat = { red_f: 0, green_f: 0, blue_f: 0 };
-export const WHITE: RgbFloat = { red_f: 1, green_f: 1, blue_f: 1 };
-export const RED: RgbFloat = { red_f: 1, green_f: 0, blue_f: 0 };
-export const GREEN: RgbFloat = { red_f: 0, green_f: 1, blue_f: 0 };
-export const BLUE: RgbFloat = { red_f: 0, green_f: 0, blue_f: 1 };
-export const YELLOW: RgbFloat = { red_f: 1, green_f: 1, blue_f: 0 };
-export const CYAN: RgbFloat = { red_f: 0, green_f: 1, blue_f: 1 };
-export const MAGENTA: RgbFloat = { red_f: 1, green_f: 0, blue_f: 1 };
+export const BLACK: RgbFloat = { red: 0, green: 0, blue: 0 };
+export const WHITE: RgbFloat = { red: 1, green: 1, blue: 1 };
+export const RED: RgbFloat = { red: 1, green: 0, blue: 0 };
+export const GREEN: RgbFloat = { red: 0, green: 1, blue: 0 };
+export const BLUE: RgbFloat = { red: 0, green: 0, blue: 1 };
+export const YELLOW: RgbFloat = { red: 1, green: 1, blue: 0 };
+export const CYAN: RgbFloat = { red: 0, green: 1, blue: 1 };
+export const MAGENTA: RgbFloat = { red: 1, green: 0, blue: 1 };
 
 export interface RgbwFloat extends RgbFloat {
-  white_f: number; // 0...1
+  white: number; // 0...1
 }
 
 export type LedFloat = RgbFloat | RgbwFloat;
 
 export function hasWhiteChannel(value: LedFloat): value is RgbwFloat {
-  return (value as RgbwFloat).white_f !== undefined;
+  return (value as RgbwFloat).white !== undefined;
 }
 
 /**
@@ -36,9 +36,9 @@ export function lerp(c1: RgbFloat, c2: RgbFloat, t: number): RgbFloat {
   t = Math.max(0, Math.min(1, t));
 
   return {
-    red_f: c1.red_f + (c2.red_f - c1.red_f) * t,
-    green_f: c1.green_f + (c2.green_f - c1.green_f) * t,
-    blue_f: c1.blue_f + (c2.blue_f - c1.blue_f) * t,
+    red: c1.red + (c2.red - c1.red) * t,
+    green: c1.green + (c2.green - c1.green) * t,
+    blue: c1.blue + (c2.blue - c1.blue) * t,
   };
 }
 
@@ -49,21 +49,21 @@ export function blend(background: RgbFloat, foreground: RgbFloat, opacity: numbe
   return lerp(background, foreground, opacity);
 }
 
-export function floatTo8bit(color: RgbFloat): RgbValue;
-export function floatTo8bit(color: RgbwFloat): RgbwValue;
-export function floatTo8bit(color: LedFloat): RgbValue | RgbwValue {
+export function floatTo8bit(color: RgbFloat): Rgb24;
+export function floatTo8bit(color: RgbwFloat): Rgbw32;
+export function floatTo8bit(color: LedFloat): Rgb24 | Rgbw32 {
   if (hasWhiteChannel(color)) {
     return {
-      red: Math.round(color.red_f * 255),
-      green: Math.round(color.green_f * 255),
-      blue: Math.round(color.blue_f * 255),
-      white: Math.round(color.white_f * 255),
+      red8: Math.round(color.red * 255),
+      green8: Math.round(color.green * 255),
+      blue8: Math.round(color.blue * 255),
+      white8: Math.round(color.white * 255),
     };
   }
   return {
-    red: Math.round(color.red_f * 255),
-    green: Math.round(color.green_f * 255),
-    blue: Math.round(color.blue_f * 255),
+    red8: Math.round(color.red * 255),
+    green8: Math.round(color.green * 255),
+    blue8: Math.round(color.blue * 255),
   };
 }
 
@@ -78,16 +78,16 @@ export function gammaCorrect(color: LedFloat, gamma: number): LedFloat {
   }
   if (hasWhiteChannel(color)) {
     return {
-      red_f: Math.pow(color.red_f, gamma),
-      green_f: Math.pow(color.green_f, gamma),
-      blue_f: Math.pow(color.blue_f, gamma),
-      white_f: Math.pow(color.white_f, gamma),
+      red: Math.pow(color.red, gamma),
+      green: Math.pow(color.green, gamma),
+      blue: Math.pow(color.blue, gamma),
+      white: Math.pow(color.white, gamma),
     };
   }
   return {
-    red_f: Math.pow(color.red_f, gamma),
-    green_f: Math.pow(color.green_f, gamma),
-    blue_f: Math.pow(color.blue_f, gamma),
+    red: Math.pow(color.red, gamma),
+    green: Math.pow(color.green, gamma),
+    blue: Math.pow(color.blue, gamma),
   };
 }
 
@@ -101,9 +101,9 @@ export function applyChannelGain(color: RgbFloat, redGain: number, greenGain: nu
     return color; // No adjustment needed
   }
   return {
-    red_f: Math.max(0, Math.min(1, color.red_f * (1 + redGain / 100))),
-    green_f: Math.max(0, Math.min(1, color.green_f * (1 + greenGain / 100))),
-    blue_f: Math.max(0, Math.min(1, color.blue_f * (1 + blueGain / 100))),
+    red: Math.max(0, Math.min(1, color.red * (1 + redGain / 100))),
+    green: Math.max(0, Math.min(1, color.green * (1 + greenGain / 100))),
+    blue: Math.max(0, Math.min(1, color.blue * (1 + blueGain / 100))),
   };
 }
 
@@ -120,16 +120,16 @@ export function adjustColorTemperatureNormalized(color: RgbFloat, temperature: n
   if (t > 0) {
     // Warm shift: increase red, slightly reduce green, reduce blue
     return {
-      red_f: Math.min(1, color.red_f + t * 0.3 * (1 - color.red_f)),
-      green_f: Math.max(0, color.green_f - t * 0.1),
-      blue_f: Math.max(0, color.blue_f - t * 0.5),
+      red: Math.min(1, color.red + t * 0.3 * (1 - color.red)),
+      green: Math.max(0, color.green - t * 0.1),
+      blue: Math.max(0, color.blue - t * 0.5),
     };
   } else {
     // Cool shift: reduce red, slightly increase green, increase blue
     return {
-      red_f: Math.max(0, color.red_f + t * 0.5), // t is negative, so this reduces
-      green_f: Math.min(1, color.green_f - t * 0.1 * (1 - color.green_f)),
-      blue_f: Math.min(1, color.blue_f - t * 0.3 * (1 - color.blue_f)),
+      red: Math.max(0, color.red + t * 0.5), // t is negative, so this reduces
+      green: Math.min(1, color.green - t * 0.1 * (1 - color.green)),
+      blue: Math.min(1, color.blue - t * 0.3 * (1 - color.blue)),
     };
   }
 }
