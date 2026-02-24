@@ -137,6 +137,7 @@ const DebugEffectEntrySchema = z.object({
   animationMode: z.string(),
   isStateful: z.boolean(),
   canDelete: z.boolean(),
+  hasCycleReset: z.boolean(),
   duration: z.number().nullable(),
   parametersCount: z.number(),
 });

@@ -25,6 +25,7 @@ export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
+  readonly hasCycleReset = true;
 
   readonly customParams = new EffectParameterStorage();
   private readonly coverage = this.customParams.register({
@@ -130,6 +131,7 @@ function renderDotsToBuffer(
 // ---------------------------------------------------------------------------
 
 class RandomDotsClearLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
+  cycleJustCompleted = false;
   private dots = new Map<number, DotInfo>();
   private totalTimeMs = 0;
   private nextSpawnMs = 0;
@@ -160,9 +162,14 @@ class RandomDotsClearLogic implements EffectLogic<AnimationMode.Sequence, LedPoi
     // Drive the flash animation when active
     if (this.flash) {
       const result = this.flash.advance(total, ctx.delta_time_ms);
-      if (this.flash.finished) this.reset(total);
+      if (this.flash.finished) {
+        this.reset(total);
+        this.cycleJustCompleted = true;
+      }
       return result;
     }
+
+    this.cycleJustCompleted = false;
 
     const maxLit = this.config.getMaxLitCount(total);
     const millisPerDot = this.config.getMillisPerDot(total);

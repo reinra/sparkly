@@ -20,6 +20,7 @@ export class BlocksEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   readonly pointType: '1D' = '1D';
   readonly isStateful: boolean = true;
+  readonly hasCycleReset = true;
 
   readonly customParams = new EffectParameterStorage();
 
@@ -94,6 +95,7 @@ interface Block {
 const BASE_MS_PER_STEP = 30;
 
 class BlocksLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
+  cycleJustCompleted = false;
   private total: number = 0;
   private initialized: boolean = false;
 
@@ -129,9 +131,12 @@ class BlocksLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
       const result = this.flash.advance(total, ctx.delta_time_ms);
       if (this.flash.finished) {
         this.reset(total);
+        this.cycleJustCompleted = true;
       }
       return result;
     }
+
+    this.cycleJustCompleted = false;
 
     // --- Spawn a new block if needed ---
     if (!this.activeBlock) {

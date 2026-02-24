@@ -109,11 +109,15 @@ export interface EffectLoop<P extends LedPoint> extends Effect<AnimationMode.Loo
 
 export interface EffectSequence<P extends LedPoint> extends Effect<AnimationMode.Sequence, P> {
   readonly animationMode: AnimationMode.Sequence;
+  /** True if the effect naturally resets/cycles at non-deterministic intervals (e.g. flash-and-clear). */
+  readonly hasCycleReset?: boolean;
 }
 
 export interface EffectLogic<A extends AnimationMode, P extends LedPoint> {
   // Renders the full LED buffer for the current effect state
   renderGlobal(ctx: EffectContextGeneric<A>, points: P[]): RgbFloat[];
+  /** Set to true by the logic when a full cycle has just completed (e.g. flash finished, state reset). */
+  cycleJustCompleted?: boolean;
 }
 
 export function is1DEffect<A extends AnimationMode>(effect: Effect<A, LedPoint>): effect is Effect<A, LedPoint1D> {

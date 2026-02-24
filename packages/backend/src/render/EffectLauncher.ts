@@ -11,7 +11,7 @@ import {
 import { EffectRenderer } from './Renderer';
 import { logger } from '../logger';
 import { DeviceModeSchema } from '../deviceClient/apiContract';
-import { AnimationMode, type EffectLoop } from '../effects/Effect';
+import { AnimationMode, type EffectLoop, type EffectSequence } from '../effects/Effect';
 import type { RenderContext } from './RenderContext';
 
 const renderer = new EffectRenderer();
@@ -156,8 +156,11 @@ function estimateEffectDurationMs(renderCtx: RenderContext, ledCount: number): n
       const loopDurationMs = loopEffect.getLoopDurationSeconds(ledCount) * 1000;
       return loopDurationMs > 0 ? Math.round(loopDurationMs) : null;
     }
-    case AnimationMode.Sequence:
+    case AnimationMode.Sequence: {
+      const seqEffect = effect as EffectSequence<any>;
+      if (seqEffect.hasCycleReset) return null; // Duration depends on randomness
       return DEFAULT_SEQUENCE_DURATION_MS;
+    }
     default:
       return null;
   }
@@ -180,8 +183,11 @@ function estimateTotalFrames(renderCtx: RenderContext, ledCount: number): number
       if (loopDurationMs <= 0) return null;
       return Math.ceil(loopDurationMs / frameTimeMs);
     }
-    case AnimationMode.Sequence:
+    case AnimationMode.Sequence: {
+      const seqEffect = effect as EffectSequence<any>;
+      if (seqEffect.hasCycleReset) return null; // Duration depends on randomness
       return Math.ceil(DEFAULT_SEQUENCE_DURATION_MS / frameTimeMs);
+    }
     default:
       return null;
   }

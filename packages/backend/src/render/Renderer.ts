@@ -5,6 +5,7 @@ import {
   type EffectContextLoop,
   type EffectContextSequence,
   type EffectLoop,
+  type EffectSequence,
 } from '../effects/Effect';
 import type { RenderContext } from './RenderContext';
 
@@ -12,6 +13,9 @@ const YIELD_FRAME_COUNT = 50;
 
 /** Default recording duration for Sequence effects in renderAsap. */
 const DEFAULT_SEQUENCE_DURATION_MS = 30_000;
+
+/** Fallback max duration for cycle-reset effects (5 minutes). */
+const MAX_CYCLE_RESET_DURATION_MS = 5 * 60 * 1000;
 
 export interface Renderer {
   renderLive(ctx: RenderContext, output: FrameOutputStream, signal: AbortSignal): Promise<void>;
@@ -156,8 +160,9 @@ export class EffectRenderer implements Renderer {
       }
 
       case AnimationMode.Sequence: {
-        // Render a fixed duration (30s by default)
-        const totalDurationMs = DEFAULT_SEQUENCE_DURATION_MS;
+        const seqEffect = effect as EffectSequence<any>;
+        const isCycleReset = seqEffect.hasCycleReset === true;
+        const totalDurationMs = isCycleReset ? MAX_CYCLE_RESET_DURATION_MS : DEFAULT_SEQUENCE_DURATION_MS;
         let virtualTime = 0;
         let frameIndex = 0;
         while (virtualTime < totalDurationMs) {
@@ -165,12 +170,15 @@ export class EffectRenderer implements Renderer {
           const ctx: EffectContextSequence = {
             total_leds: numberOfLeds,
             led_type: ledProfile,
-            total_time_ms: totalDurationMs,
+            total_time_ms: isCycleReset ? null : totalDurationMs,
             time_ms: virtualTime,
             delta_time_ms: frameTimeMs,
           };
           const ledValues = logic.renderGlobal(ctx as any, points);
           await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
+          if (isCycleReset && logic.cycleJustCompleted) {
+            break; // Seamless loop point reached
+          }
           if (frameIndex % YIELD_FRAME_COUNT === 0) {
             await yieldNow();
           }

@@ -7,7 +7,7 @@ import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/apiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
 import { getEffectGroup } from './DeviceHelper';
-import { AnimationMode, type EffectLoop, type LedPoint } from './effects/Effect';
+import { AnimationMode, type EffectLoop, type EffectSequence, type LedPoint } from './effects/Effect';
 import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
 import type { LedMapping } from './DeviceHelper';
@@ -53,6 +53,7 @@ export interface DebugEffectEntry {
   animationMode: string;
   isStateful: boolean;
   canDelete: boolean;
+  hasCycleReset: boolean;
   duration: number | null;
   parametersCount: number;
 }
@@ -177,6 +178,9 @@ export class DeviceService {
         if (effect.animationMode === AnimationMode.Loop) {
           duration = (effect as EffectLoop<LedPoint>).getLoopDurationSeconds(100);
         }
+        const hasCycleReset =
+          effect.animationMode === AnimationMode.Sequence &&
+          (effect as EffectSequence<any>).hasCycleReset === true;
         const parametersCount = wrapper
           .getEffectParameters()
           .list()
@@ -188,6 +192,7 @@ export class DeviceService {
           animationMode: effect.animationMode as string,
           isStateful: effect.isStateful,
           canDelete: wrapper.canDelete,
+          hasCycleReset,
           duration,
           parametersCount,
         };
