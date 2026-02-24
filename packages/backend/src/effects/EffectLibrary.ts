@@ -20,7 +20,6 @@ import {
 } from './library/Effects1D';
 import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
 import { BlocksEffect } from './library/BlocksEffect';
-import { RandomDotsEffect, RandomDotsClearEffect } from './library/RandomDotsEffect';
 import { RandomDotsNewClearEffect } from './library/RandomDotsNewClearEffect';
 import { RandomDotsNewLoopEffect } from './library/RandomDotsNewLoopEffect';
 import { RandomDotsStaticEffect } from './library/RandomDotsStaticEffect';
@@ -53,8 +52,6 @@ addPresets(StaticAlternatingColorCustomEffect);
 addPresets(StaticColorGradientEffect);
 addPresets(RotatingColorGradientEffect);
 addPresets(AlternatingCustomColorFadingEffect);
-add('random_dots', new RandomDotsEffect());
-add('random_dots_clear', new RandomDotsClearEffect());
 add('random_dots_new_clear', new RandomDotsNewClearEffect());
 add('random_dots_loop', new RandomDotsNewLoopEffect());
 add('random_dots_static', new RandomDotsStaticEffect());
