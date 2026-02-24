@@ -59,7 +59,7 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
       // Fade out as the ring gets larger
       const alpha = intensity * (1.0 - ctx.phase);
 
-      buffer[pt.id] = hslToRgbFloat({ ...this.color.value, lightness: this.color.value.lightness * alpha });
+      buffer[pt.id] = hslToRgbFloat(multiplyIntensity(this.color.color.asHsl(), alpha));
     }
     return buffer;
   }
@@ -132,7 +132,7 @@ export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, Led
       // Use noise for brightness (clouds are white/blue)
       const brightness = this.noise.map(noiseVal, 0.2, 1.0);
 
-      buffer[pt.id] = hslToRgbFloat(multiplyIntensity(this.color.value, brightness));
+      buffer[pt.id] = hslToRgbFloat(multiplyIntensity(this.color.color.asHsl(), brightness));
     }
     return buffer;
   }

@@ -52,7 +52,7 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
     ];
   }
   renderColor(ctx: EffectContextStatic): RgbFloat {
-    return hslToRgbFloat(this.color.value);
+    return this.color.color.asRgb();
   }
 }
 
@@ -89,8 +89,9 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<Animation
     ];
   }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
-    const index = point.position % this.colors.value.length;
-    return hslToRgbFloat(this.colors.value[index]);
+    const colors = this.colors.colors;
+    const index = point.position % colors.length;
+    return colors[index].asRgb();
   }
 }
 
@@ -119,11 +120,12 @@ export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Stat
   }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
-    const scaledPos = point.distance * (this.colors.value.length - 1);
+    const colors = this.colors.colors;
+    const scaledPos = point.distance * (colors.length - 1);
     const fromIndex = Math.floor(scaledPos);
-    const toIndex = Math.min(fromIndex + 1, this.colors.value.length - 1);
+    const toIndex = Math.min(fromIndex + 1, colors.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
-    return lerp(hslToRgbFloat(this.colors.value[fromIndex]), hslToRgbFloat(this.colors.value[toIndex]), t);
+    return lerp(colors[fromIndex].asRgb(), colors[toIndex].asRgb(), t);
   }
 }
 
@@ -149,7 +151,7 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMod
   });
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
-    return hslToRgbFloat(lerpHsl(this.color1.value, this.color2.value, point.distance));
+    return lerp(this.color1.color.asRgb(), this.color2.color.asRgb(), point.distance);
   }
 }
 
@@ -181,11 +183,12 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
   }
   renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
-    const scaledPos = ((point.distance + ctx.phase) % 1.0) * (this.colors.value.length - 1);
+    const colors = this.colors.colors;
+    const scaledPos = ((point.distance + ctx.phase) % 1.0) * (colors.length - 1);
     const fromIndex = Math.floor(scaledPos);
-    const toIndex = Math.min(fromIndex + 1, this.colors.value.length - 1);
+    const toIndex = Math.min(fromIndex + 1, colors.length - 1);
     const t = scaledPos - fromIndex; // Interpolation factor 0 to 1
-    return lerp(hslToRgbFloat(this.colors.value[fromIndex]), hslToRgbFloat(this.colors.value[toIndex]), t);
+    return lerp(colors[fromIndex].asRgb(), colors[toIndex].asRgb(), t);
   }
 }
 
@@ -218,17 +221,18 @@ export class AlternatingCustomColorFadingEffect extends PerPixelEffect<Animation
     return 10;
   }
   renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
-    const totalColors = this.colors.value.length;
+    const colors = this.colors.colors;
+    const totalColors = colors.length;
     const index = point.position % totalColors;
     // Divide phase into N segments, one per color — only the active color's LEDs light up
     const activeIndex = Math.floor(ctx.phase * totalColors);
+    const bgColor = this.colorBg.color;
     if (index !== activeIndex) {
-      return hslToRgbFloat(this.colorBg.value);
+      return bgColor.asRgb();
     }
     const segmentPhase = (ctx.phase * totalColors) % 1.0;
     const fadeFactor = backAndForthPhaseWithPause(segmentPhase);
-    const color = this.colors.value[index];
-    return hslToRgbFloat(lerpHsl(this.colorBg.value, color, fadeFactor));
+    return lerp(bgColor.asRgb(), colors[index].asRgb(), fadeFactor);
   }
 }
 
@@ -395,7 +399,7 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
   });
   renderPixel(ctx: EffectContextSequence, point: LedPoint1D): RgbFloat {
     if (Math.random() < this.probability.value / 100) {
-      return hslToRgbFloat(this.color.value);
+      return this.color.color.asRgb();
     }
     return BLACK;
   }
@@ -437,9 +441,9 @@ export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1
     const intensity = Math.max(0, 1.0 - dist / pulseWidth);
 
     // Shift hue based on direction
-    const color = ctx.phase < 0.5 ? this.color1.value : this.color2.value;
+    const color = ctx.phase < 0.5 ? this.color1.color : this.color2.color;
 
-    return hslToRgbFloat(multiplyIntensity(color, intensity));
+    return hslToRgbFloat(multiplyIntensity(color.asHsl(), intensity));
   }
 }
 
@@ -456,6 +460,6 @@ export class TestRgbPickerEffect extends BaseSameColorEffect<AnimationMode.Stati
     value: RED,
   });
   renderColor(ctx: EffectContextStatic): RgbFloat {
-    return this.color.value;
+    return this.color.color.asRgb();
   }
 }

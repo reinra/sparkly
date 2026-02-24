@@ -41,7 +41,7 @@ export class SingleColorRainEffect extends BaseRainEffect {
     value: BLUE_HSL_COLOR,
   });
   nextColor(): RgbFloat {
-    return hslToRgbFloat(this.color.value);
+    return this.color.color.asRgb();
   }
 }
 

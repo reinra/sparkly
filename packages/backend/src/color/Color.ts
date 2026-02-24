@@ -1,6 +1,6 @@
-import { Hsl } from "../ParameterTypes";
-import { RgbFloat } from "./ColorFloat";
-import { hslToRgb, hslToRgbFloat, rgbFloatToHsl } from "./Hsl";
+import type { Hsl } from "../ParameterTypes";
+import type { RgbFloat } from "./ColorFloat";
+import { hslToRgbFloat, rgbFloatToHsl } from "./Hsl";
 
 export interface Color {
     asRgb(): RgbFloat;

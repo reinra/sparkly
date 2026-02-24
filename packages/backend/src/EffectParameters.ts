@@ -10,6 +10,7 @@ import type {
 } from './ParameterTypes';
 import { ParameterType } from './ParameterTypes';
 import type { RgbFloat } from './color/ColorFloat';
+import { HslColor, RgbColor } from './color/Color';
 
 type ParameterValueType<T extends EffectParameter> = T extends RangeEffectParameter
   ? number
@@ -88,20 +89,66 @@ export interface EffectParameterView {
   setValue(id: string, value: ParameterValue): void;
 }
 
+/**
+ * Initialize the non-enumerable `color`/`colors` field on a color parameter.
+ * Non-enumerable so it is excluded from JSON serialization (backend-internal).
+ */
+function initColorFields(parameter: EffectParameter): void {
+  if (parameter.type === ParameterType.HSL) {
+    Object.defineProperty(parameter, 'color', {
+      value: new HslColor(parameter.value),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+  } else if (parameter.type === ParameterType.MULTI_HSL) {
+    Object.defineProperty(parameter, 'colors', {
+      value: parameter.value.map((hsl) => new HslColor(hsl)),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+  } else if (parameter.type === ParameterType.RGB) {
+    Object.defineProperty(parameter, 'color', {
+      value: new RgbColor(parameter.value),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+  }
+}
+
+/**
+ * Update the `color`/`colors` field after a value change.
+ */
+function updateColorField(parameter: EffectParameter): void {
+  if (parameter.type === ParameterType.HSL) {
+    parameter.color = new HslColor(parameter.value);
+  } else if (parameter.type === ParameterType.MULTI_HSL) {
+    parameter.colors = parameter.value.map((hsl) => new HslColor(hsl));
+  } else if (parameter.type === ParameterType.RGB) {
+    parameter.color = new RgbColor(parameter.value);
+  }
+}
+
 export class EffectParameterStorage implements EffectParameterView {
   private parameters: Map<string, EffectParameter> = new Map();
   private listeners: Map<string, ParameterChangeListener> = new Map();
 
   /**
-   * Register a new parameter in the storage
-   * @param parameter The parameter to register
-   * @param listener Optional callback invoked asynchronously when the parameter value changes
-   * @throws Error if a parameter with the same ID already exists
+   * Register a new parameter in the storage.
+   * For HSL, RGB, and MULTI_HSL parameters, the `color`/`colors` field is populated automatically.
    */
-  register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): T {
+  register(parameter: Omit<HslEffectParameter, 'color'>, listener?: ParameterChangeListener<HslEffectParameter>): HslEffectParameter;
+  register(parameter: Omit<RgbEffectParameter, 'color'>, listener?: ParameterChangeListener<RgbEffectParameter>): RgbEffectParameter;
+  register(parameter: Omit<MultiHslEffectParameter, 'colors'>, listener?: ParameterChangeListener<MultiHslEffectParameter>): MultiHslEffectParameter;
+  register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): T;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register(parameter: any, listener?: any): any {
     if (this.parameters.has(parameter.id)) {
       throw new Error(`Parameter with id '${parameter.id}' is already registered`);
     }
+    initColorFields(parameter);
     this.parameters.set(parameter.id, parameter);
     if (listener) {
       this.listeners.set(parameter.id, listener as ParameterChangeListener);
@@ -172,6 +219,7 @@ export class EffectParameterStorage implements EffectParameterView {
       const hslValue = value as Hsl;
       validateHslValue(id, hslValue);
       parameter.value = { ...hslValue };
+      updateColorField(parameter);
     } else if (parameter.type === ParameterType.OPTION) {
       if (typeof value !== 'string') {
         throw new Error(`Parameter '${id}' expects a string value`);
@@ -192,6 +240,7 @@ export class EffectParameterStorage implements EffectParameterView {
         validateHslValue(id, hsl);
       }
       parameter.value = value.map((hsl) => ({ ...hsl }));
+      updateColorField(parameter);
     } else if (parameter.type === ParameterType.RGB) {
       if (typeof value !== 'object' || Array.isArray(value)) {
         throw new Error(`Parameter '${id}' expects an RGB value`);
@@ -199,6 +248,7 @@ export class EffectParameterStorage implements EffectParameterView {
       const rgbValue = value as RgbFloat;
       validateRgbFloatValue(id, rgbValue);
       parameter.value = { red: rgbValue.red, green: rgbValue.green, blue: rgbValue.blue };
+      updateColorField(parameter);
     }
 
     // Invoke listener asynchronously (fire-and-forget) if registered

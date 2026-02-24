@@ -42,6 +42,8 @@ export interface Hsl {
 export interface HslEffectParameter extends BaseEffectParameter {
   type: ParameterType.HSL;
   value: Hsl;
+  /** Backend-only: the current value as a Color object, kept in sync with `value` */
+  color: Color;
 }
 
 export interface Option {
@@ -58,13 +60,18 @@ export interface OptionEffectParameter extends BaseEffectParameter {
 export interface MultiHslEffectParameter extends BaseEffectParameter {
   type: ParameterType.MULTI_HSL;
   value: Hsl[];
+  /** Backend-only: the current values as Color objects, kept in sync with `value` */
+  colors: Color[];
 }
 
 import type { RgbFloat } from './color/ColorFloat';
+import type { Color } from './color/Color';
 
 export interface RgbEffectParameter extends BaseEffectParameter {
   type: ParameterType.RGB;
   value: RgbFloat;
+  /** Backend-only: the current value as a Color object, kept in sync with `value` */
+  color: Color;
 }
 
 export type EffectParameter =
