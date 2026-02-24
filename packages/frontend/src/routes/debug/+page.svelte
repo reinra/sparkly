@@ -89,30 +89,7 @@
 
   <div class="card">
     <h3>Effect library</h3>
-    {#if loading && !message}
-      <p class="loading">Loading...</p>
-    {:else if error && !message}
-      <p class="error">{error}</p>
-    {:else if message}
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each info?.effects as effect}
-            <tr>
-              <td>{effect.id}</td>
-              <td>{effect.name}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    {/if}
-    <ul></ul>
-    <button onclick={fetchInfo} disabled={loading}>Refresh</button>
+    <a class="device-link" href="/debug/effects">View Effects &rarr;</a>
   </div>
 
 </div>
@@ -202,36 +179,5 @@
 
   .device-link:hover {
     text-decoration: underline;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-  }
-
-  thead {
-    background: #f5f5f5;
-  }
-
-  th {
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #ddd;
-  }
-
-  td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #eee;
-  }
-
-  tbody tr:hover {
-    background: #f9f9f9;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none;
   }
 </style>
