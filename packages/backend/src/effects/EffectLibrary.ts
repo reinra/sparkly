@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { EffectWrapper } from '../EffectWrapper';
 import { type AnyEffect, EffectPreset } from './Effect';
 import {
-  ChangeColorEffect,
   MeteorEffect,
   PingPongEffect,
   RainbowGradientEffect,
@@ -16,8 +15,8 @@ import {
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
   StaticAlternatingColorCustomEffect,
-  FlipColorCustomEffect,
 } from './library/Effects1D';
+import { ChangeColorEffect } from './library/ChangeColorEffect';
 import { SingleColorRainEffect, MultiColorRainEffect } from './library/RainEffect';
 import { BlocksEffect } from './library/BlocksEffect';
 import { RandomDotsClearEffect } from './library/RandomDotsClearEffect';
@@ -70,7 +69,6 @@ add('rainbow', new RainbowGradientEffect());
 addPresets(RotatingColorGradientEffect);
 
 // Simple same color effects
-addPresets(FlipColorCustomEffect);
 addPresets(ChangeColorEffect);
 
 // Static effects
