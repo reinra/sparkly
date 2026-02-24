@@ -83,8 +83,17 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<Animation
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
     return [
-      factory('alternate_rgb', 'Alternate RGB', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
-      factory('alternate_rgby', 'Alternate RGBY', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR), hslColorValue(YELLOW_HSL_COLOR)]),
+      factory('alternate_rgb', 'Alternate RGB', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
+      factory('alternate_rgby', 'Alternate RGBY', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+        hslColorValue(YELLOW_HSL_COLOR),
+      ]),
       factory('alternate_wb', 'Alternate WB', [hslColorValue(WHITE_HSL_COLOR), hslColorValue(BLACK_HSL_COLOR)]),
     ];
   }
@@ -109,13 +118,37 @@ export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Stat
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
     return [
-      factory('gradient_red_yellow', 'Gradient: Red-Yellow', [hslColorValue(RED_HSL_COLOR), hslColorValue(YELLOW_HSL_COLOR)]),
-      factory('gradient_rgb', 'Gradient: RGB', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
-      factory('gradient_rgbr', 'Gradient: RGBR', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR), hslColorValue(RED_HSL_COLOR)]),
-      factory('gradient_black_red', 'Gradient: Black-Red', [hslColorValue(BLACK_HSL_COLOR), hslColorValue(RED_HSL_COLOR)]),
-      factory('gradient_black_green', 'Gradient: Black-Green', [hslColorValue(BLACK_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR)]),
-      factory('gradient_black_blue', 'Gradient: Black-Blue', [hslColorValue(BLACK_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
-      factory('gradient_black_white', 'Gradient: Black-White', [hslColorValue(BLACK_HSL_COLOR), hslColorValue(WHITE_HSL_COLOR)]),
+      factory('gradient_red_yellow', 'Gradient: Red-Yellow', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(YELLOW_HSL_COLOR),
+      ]),
+      factory('gradient_rgb', 'Gradient: RGB', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
+      factory('gradient_rgbr', 'Gradient: RGBR', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+        hslColorValue(RED_HSL_COLOR),
+      ]),
+      factory('gradient_black_red', 'Gradient: Black-Red', [
+        hslColorValue(BLACK_HSL_COLOR),
+        hslColorValue(RED_HSL_COLOR),
+      ]),
+      factory('gradient_black_green', 'Gradient: Black-Green', [
+        hslColorValue(BLACK_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+      ]),
+      factory('gradient_black_blue', 'Gradient: Black-Blue', [
+        hslColorValue(BLACK_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
+      factory('gradient_black_white', 'Gradient: Black-White', [
+        hslColorValue(BLACK_HSL_COLOR),
+        hslColorValue(WHITE_HSL_COLOR),
+      ]),
     ];
   }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
@@ -164,7 +197,12 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
     name: 'Colors',
     description: 'Color values for the gradient',
     type: ParameterType.MULTI_COLOR,
-    value: [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR), hslColorValue(RED_HSL_COLOR)],
+    value: [
+      hslColorValue(RED_HSL_COLOR),
+      hslColorValue(GREEN_HSL_COLOR),
+      hslColorValue(BLUE_HSL_COLOR),
+      hslColorValue(RED_HSL_COLOR),
+    ],
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
@@ -175,7 +213,11 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
         hslColorValue(BLUE_HSL_COLOR),
         hslColorValue(RED_HSL_COLOR),
       ]),
-      factory('rotating_gradient_rgb', 'Rotating Gradient: RGB', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
+      factory('rotating_gradient_rgb', 'Rotating Gradient: RGB', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
     ];
   }
   getLoopDurationSeconds(ledCount: number): number {
@@ -213,8 +255,15 @@ export class AlternatingCustomColorFadingEffect extends PerPixelEffect<Animation
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
     return [
-      factory('alternating_rb', 'Alternating Fading: Red-Blue', [hslColorValue(RED_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
-      factory('alternating_rgb', 'Alternating Fading: RGB', [hslColorValue(RED_HSL_COLOR), hslColorValue(GREEN_HSL_COLOR), hslColorValue(BLUE_HSL_COLOR)]),
+      factory('alternating_rb', 'Alternating Fading: Red-Blue', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
+      factory('alternating_rgb', 'Alternating Fading: RGB', [
+        hslColorValue(RED_HSL_COLOR),
+        hslColorValue(GREEN_HSL_COLOR),
+        hslColorValue(BLUE_HSL_COLOR),
+      ]),
     ];
   }
   getLoopDurationSeconds(ledCount: number): number {
