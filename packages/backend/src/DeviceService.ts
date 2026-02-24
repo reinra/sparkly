@@ -179,8 +179,7 @@ export class DeviceService {
           duration = (effect as EffectLoop<LedPoint>).getLoopDurationSeconds(100);
         }
         const hasCycleReset =
-          effect.animationMode === AnimationMode.Sequence &&
-          (effect as EffectSequence<any>).hasCycleReset === true;
+          effect.animationMode === AnimationMode.Sequence && (effect as EffectSequence<any>).hasCycleReset === true;
         const parametersCount = wrapper
           .getEffectParameters()
           .list()

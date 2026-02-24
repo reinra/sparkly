@@ -3,7 +3,15 @@
   import type { DebugEffectsResponse, DebugEffectEntry } from '@twinkly-ts/common';
   import { handleApiCall } from '../../../utils/apiHelper';
 
-  type SortKey = 'id' | 'name' | 'pointType' | 'animationMode' | 'isStateful' | 'hasCycleReset' | 'duration' | 'parametersCount';
+  type SortKey =
+    | 'id'
+    | 'name'
+    | 'pointType'
+    | 'animationMode'
+    | 'isStateful'
+    | 'hasCycleReset'
+    | 'duration'
+    | 'parametersCount';
   type SortDir = 'asc' | 'desc';
 
   let data = $state<DebugEffectsResponse | null>(null);
@@ -78,7 +86,9 @@
               >Animation Mode{sortIndicator('animationMode')}</th
             >
             <th class="sortable" onclick={() => toggleSort('isStateful')}>State{sortIndicator('isStateful')}</th>
-            <th class="sortable" onclick={() => toggleSort('hasCycleReset')}>Cycle Reset{sortIndicator('hasCycleReset')}</th>
+            <th class="sortable" onclick={() => toggleSort('hasCycleReset')}
+              >Cycle Reset{sortIndicator('hasCycleReset')}</th
+            >
             <th class="sortable" onclick={() => toggleSort('duration')}>Duration{sortIndicator('duration')}</th>
             <th class="sortable" onclick={() => toggleSort('parametersCount')}
               >Params{sortIndicator('parametersCount')}</th
