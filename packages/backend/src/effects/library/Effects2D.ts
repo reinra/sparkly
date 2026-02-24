@@ -2,13 +2,7 @@ import { ParameterType } from '../../ParameterTypes';
 import { BLACK, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
-import {
-  LedPoint2D,
-  type EffectContextLoop,
-  type EffectContextSequence,
-  EffectLogic,
-  AnimationMode,
-} from '../Effect';
+import { LedPoint2D, type EffectContextLoop, type EffectContextSequence, EffectLogic, AnimationMode } from '../Effect';
 import { PerPixelEffect, type StatelessEffect } from '../BaseEffects';
 import { NoiseGenerator } from '../util/NoiseUtils';
 
