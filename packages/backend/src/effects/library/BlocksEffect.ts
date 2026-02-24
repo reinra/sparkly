@@ -127,7 +127,7 @@ class BlocksLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
 
     // --- Flash phase ---
     if (this.flash) {
-      const result = this.flash.advance(total, ctx.delta_time_ms, BASE_MS_PER_STEP);
+      const result = this.flash.advance(total, ctx.delta_time_ms);
       if (this.flash.finished) {
         this.reset(total);
       }

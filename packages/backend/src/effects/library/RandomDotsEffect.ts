@@ -297,7 +297,7 @@ class RandomDotsClearLogic extends RandomDotsLogicBase {
     millisPerStep: number
   ): RgbFloat[] | null {
     if (this.flash) {
-      const result = this.flash.advance(total, ctx.delta_time_ms, millisPerStep);
+      const result = this.flash.advance(total, ctx.delta_time_ms);
       if (this.flash.finished) this.reset(total);
       return result;
     }
