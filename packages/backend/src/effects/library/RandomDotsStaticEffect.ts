@@ -19,6 +19,8 @@ export class RandomDotsStaticEffect implements EffectStatic<LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
+  readonly effectId = 'random_dots_static';
+  readonly effectName = 'Random Dots (Static)';
 
   private dirty: boolean = true;
   private readonly invalidate = () => {
@@ -55,10 +57,6 @@ export class RandomDotsStaticEffect implements EffectStatic<LedPoint1D> {
       origOnUpdate();
       this.invalidate();
     };
-  }
-
-  getName(): string {
-    return 'Random Dots (Static)';
   }
 
   createLogic(): EffectLogic<AnimationMode.Static, LedPoint1D> {

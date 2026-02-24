@@ -40,9 +40,6 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
     type: ParameterType.HSL,
     value: DEFAULT_HSL_COLOR,
   });
-  getName(): string {
-    return 'Single Color';
-  }
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.color.id);
     return [
@@ -62,11 +59,9 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
 export class StaticAlternatingColorEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   pointType: LedPointType = '1D';
+  readonly effectName = 'Static Alternating Color';
   constructor(private readonly colors: RgbFloat[]) {
     super();
-  }
-  getName(): string {
-    return 'Static Alternating Color';
   }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     const index = point.position % this.colors.length;
@@ -92,9 +87,6 @@ export class StaticAlternatingColorCustomEffect extends PerPixelEffect<Animation
       factory('alternate_rgby', 'Alternate RGBY', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR, YELLOW_HSL_COLOR]),
       factory('alternate_wb', 'Alternate WB', [WHITE_HSL_COLOR, BLACK_HSL_COLOR]),
     ];
-  }
-  getName(): string {
-    return 'Static Alternating Colors';
   }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     const index = point.position % this.colors.value.length;
@@ -125,9 +117,6 @@ export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Stat
       factory('gradient_black_white', 'Gradient: Black-White', [BLACK_HSL_COLOR, WHITE_HSL_COLOR]),
     ];
   }
-  getName(): string {
-    return 'Static Color Gradient';
-  }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     const scaledPos = point.distance * (this.colors.value.length - 1);
@@ -141,6 +130,8 @@ export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Stat
 export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   pointType: '1D' = '1D';
+  readonly effectId = 'gradient_custom';
+  readonly effectName = 'Static Custom Color Gradient';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
     id: 'color1',
@@ -156,9 +147,6 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMod
     type: ParameterType.HSL,
     value: BLUE_HSL_COLOR,
   });
-  getName(): string {
-    return `Static Custom Color Gradient`;
-  }
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
     return hslToRgbFloat(lerpHsl(this.color1.value, this.color2.value, point.distance));
@@ -187,9 +175,6 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
       ]),
       factory('rotating_gradient_rgb', 'Rotating Gradient: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
     ];
-  }
-  getName(): string {
-    return 'Rotating Color Gradient';
   }
   getLoopDurationSeconds(ledCount: number): number {
     return 5; // Rotating effect has a loop duration
@@ -229,9 +214,6 @@ export class AlternatingCustomColorFadingEffect extends PerPixelEffect<Animation
       factory('alternating_rgb', 'Alternating Fading: RGB', [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR]),
     ];
   }
-  getName(): string {
-    return 'Alternating Colors Fading';
-  }
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
@@ -255,9 +237,8 @@ export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, Led
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: false = false;
-  getName(): string {
-    return 'Test Per-Led 1D';
-  }
+  readonly effectId = 'test_per_led';
+  readonly effectName = 'Test Per-Led 1D';
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
@@ -275,9 +256,8 @@ export class TestAllLedsFlash implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
-  getName(): string {
-    return 'Test All LEDs Flash';
-  }
+  readonly effectId = 'test_all_leds_flash';
+  readonly effectName = 'Test All LEDs Flash';
   getLoopDurationSeconds(ledCount: number): number {
     return 1;
   }
@@ -297,9 +277,8 @@ class TestAllLedsFlashLogic implements EffectLogic<AnimationMode.Loop, LedPoint1
 export class RainbowGradientEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
-  getName(): string {
-    return 'Rainbow Gradient 1D';
-  }
+  readonly effectId = 'rainbow';
+  readonly effectName = 'Rainbow Gradient 1D';
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
@@ -331,9 +310,8 @@ export class MeteorEffect implements EffectLoop<LedPoint1D> {
   );
   pointType: '1D' = '1D';
   isStateful: boolean = true;
-  getName(): string {
-    return 'Meteor';
-  }
+  readonly effectId = 'meteor';
+  readonly effectName = 'Meteor';
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
@@ -395,6 +373,8 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '1D' = '1D';
+  readonly effectId = 'twinkle';
+  readonly effectName = 'Twinkle';
   readonly parameters = new EffectParameterStorage();
   private readonly probability = this.parameters.register({
     id: 'twinkle_probability',
@@ -413,9 +393,6 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
     type: ParameterType.HSL,
     value: WHITE_HSL_COLOR,
   });
-  getName(): string {
-    return 'Twinkle';
-  }
   renderPixel(ctx: EffectContextSequence, point: LedPoint1D): RgbFloat {
     if (Math.random() < this.probability.value / 100) {
       return hslToRgbFloat(this.color.value);
@@ -427,6 +404,8 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
 export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
+  readonly effectId = 'ping_pong';
+  readonly effectName = 'Ping Pong';
   readonly parameters = new EffectParameterStorage();
   private readonly color1 = this.parameters.register({
     id: 'color1',
@@ -442,9 +421,6 @@ export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1
     type: ParameterType.HSL,
     value: { hue: 0.0, saturation: 1.0, lightness: 0.5 },
   });
-  getName(): string {
-    return 'Ping Pong';
-  }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }

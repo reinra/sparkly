@@ -6,9 +6,8 @@ export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '2D' = '2D';
   readonly isStateful: true = true;
-  getName(): string {
-    return 'Gravity Fountain';
-  }
+  readonly effectId = 'gravity_fountain';
+  readonly effectName = 'Gravity Fountain';
   createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => new GravityFountainLogic();
 }
 class GravityFountainLogic implements EffectLogic<AnimationMode.Sequence, LedPoint2D> {

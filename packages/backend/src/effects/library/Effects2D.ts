@@ -10,9 +10,8 @@ import { NoiseGenerator } from '../util/NoiseUtils';
 export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
-  getName(): string {
-    return 'Rainbow Gradient 2D';
-  }
+  readonly effectId = 'rainbow_2d';
+  readonly effectName = 'Rainbow Gradient 2D';
   getLoopDurationSeconds(ledCount: number): number {
     return 10;
   }
@@ -27,6 +26,8 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
   readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
+  readonly effectId = 'pulse_scanner';
+  readonly effectName = 'Pulse Scanner 2D';
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -35,9 +36,6 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
     type: ParameterType.HSL,
     value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
   });
-  getName(): string {
-    return 'Pulse Scanner 2D';
-  }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
@@ -71,6 +69,8 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
+  readonly effectId = 'slime';
+  readonly effectName = 'Slime';
   readonly parameters = new EffectParameterStorage();
   private readonly hueShift = this.parameters.register({
     id: 'hueShift',
@@ -84,9 +84,6 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
   });
   private noise = new NoiseGenerator();
 
-  getName(): string {
-    return 'Slime';
-  }
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
   }
@@ -111,6 +108,8 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
 export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '2D' = '2D';
+  readonly effectId = 'clouds';
+  readonly effectName = 'Clouds';
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -122,9 +121,6 @@ export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, Led
   readonly isStateful: false = false;
   private noise = new NoiseGenerator();
 
-  getName(): string {
-    return 'Clouds';
-  }
   createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => this;
   renderGlobal(ctx: EffectContextSequence, points: LedPoint2D[]): RgbFloat[] {
     const buffer = createBlackBuffer(points.length);
@@ -146,6 +142,8 @@ export class PlasmaEffect implements StatelessEffect<AnimationMode.Loop, LedPoin
   readonly animationMode = AnimationMode.Loop;
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
+  readonly effectId = 'plasma';
+  readonly effectName = 'Plasma';
   readonly parameters = new EffectParameterStorage();
   private readonly hueShift = this.parameters.register({
     id: 'hueShift',
@@ -158,9 +156,6 @@ export class PlasmaEffect implements StatelessEffect<AnimationMode.Loop, LedPoin
     step: 0.01,
   });
   private noise = new NoiseGenerator();
-  getName(): string {
-    return 'Plasma';
-  }
   getLoopDurationSeconds(ledCount: number): number {
     return 8;
   }

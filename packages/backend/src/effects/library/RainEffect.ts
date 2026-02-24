@@ -26,12 +26,13 @@ abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
     max: 100,
     unit: '%',
   });
-  abstract getName(): string;
   createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RainEffectLogic(this);
   abstract nextColor(): RgbFloat;
 }
 
 export class SingleColorRainEffect extends BaseRainEffect {
+  readonly effectId = 'rain_single_color';
+  readonly effectName = 'Single-Color Rain';
   readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
@@ -39,18 +40,14 @@ export class SingleColorRainEffect extends BaseRainEffect {
     type: ParameterType.HSL,
     value: BLUE_HSL_COLOR,
   });
-  getName(): string {
-    return 'Single-Color Rain';
-  }
   nextColor(): RgbFloat {
     return hslToRgbFloat(this.color.value);
   }
 }
 
 export class MultiColorRainEffect extends BaseRainEffect {
-  getName(): string {
-    return 'Multi-Color Rain';
-  }
+  readonly effectId = 'rain_multi_color';
+  readonly effectName = 'Multi-Color Rain';
   nextColor(): RgbFloat {
     return hslToRgbFloat(randomColorMaxSaturation());
   }

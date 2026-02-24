@@ -20,6 +20,8 @@ export class StarsEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
+  readonly effectId = 'stars';
+  readonly effectName = 'Stars';
 
   readonly customParams = new EffectParameterStorage();
   private readonly coverage = this.customParams.register({
@@ -65,10 +67,6 @@ export class StarsEffect implements EffectSequence<LedPoint1D> {
       ['easing.', this.easing.parameters],
     ])
   );
-
-  getName(): string {
-    return 'Stars';
-  }
 
   getStarCount(ledCount: number): number {
     return Math.max(1, Math.round(ledCount * (this.coverage.value / 100)));

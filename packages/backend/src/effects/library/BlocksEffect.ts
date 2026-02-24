@@ -22,6 +22,8 @@ export class BlocksEffect implements EffectSequence<LedPoint1D> {
   readonly pointType: '1D' = '1D';
   readonly isStateful: boolean = true;
   readonly hasCycleReset = true;
+  readonly effectId = 'blocks';
+  readonly effectName = 'Blocks';
 
   readonly customParams = new EffectParameterStorage();
 
@@ -55,10 +57,6 @@ export class BlocksEffect implements EffectSequence<LedPoint1D> {
       ['palette.', this.palette.parameters],
     ])
   );
-
-  getName(): string {
-    return 'Blocks';
-  }
 
   getMinBlockLength(): number {
     return Math.max(1, Math.round(this.minBlockLength.value));

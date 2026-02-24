@@ -18,6 +18,8 @@ export class RandomDotsLoopEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
+  readonly effectId = 'random_dots_loop';
+  readonly effectName = 'Random Dots (Loop)';
 
   readonly customParams = new EffectParameterStorage();
   private readonly coverage = this.customParams.register({
@@ -41,10 +43,6 @@ export class RandomDotsLoopEffect implements EffectLoop<LedPoint1D> {
       ['easing.', this.easing.parameters],
     ])
   );
-
-  getName(): string {
-    return 'Random Dots (Loop)';
-  }
 
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;

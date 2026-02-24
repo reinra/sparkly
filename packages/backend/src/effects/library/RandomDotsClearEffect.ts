@@ -27,6 +27,8 @@ export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly hasCycleReset = true;
+  readonly effectId = 'random_dots_clear';
+  readonly effectName = 'Random Dots Clear';
 
   readonly customParams = new EffectParameterStorage();
   private readonly coverage = this.customParams.register({
@@ -50,10 +52,6 @@ export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
       ['easing.', this.easing.parameters],
     ])
   );
-
-  getName(): string {
-    return 'Random Dots (Clear)';
-  }
 
   getMaxLitCount(ledCount: number): number {
     return Math.max(1, Math.round(ledCount * (this.coverage.value / 100)));

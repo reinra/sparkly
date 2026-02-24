@@ -91,7 +91,9 @@ export interface Effect<A extends AnimationMode, P extends LedPoint> {
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;
 
-  getName(): string;
+  // Self-identification: either effectId+effectName or getPresets() must be provided at registration time.
+  readonly effectId?: string;
+  readonly effectName?: string;
   getPresets?(): EffectPreset[];
 
   // Factory function to create a new instance of the effect logic, for stateless effects this can just return 'this'

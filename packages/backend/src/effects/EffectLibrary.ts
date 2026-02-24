@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { EffectWrapper } from '../EffectWrapper';
-import { type AnyEffect, EffectPreset } from './Effect';
+import { type AnyEffect } from './Effect';
 import {
   MeteorEffect,
   PingPongEffect,
@@ -28,58 +28,63 @@ import { StarsEffect } from './library/StarsEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
-function addPresets<T extends AnyEffect & { getPresets(): EffectPreset[] }>(EffectClass: new () => T): void {
+function register<T extends AnyEffect>(EffectClass: new () => T): void {
   const template = new EffectClass();
-  const presets = template.getPresets();
-  for (const preset of presets) {
-    const effect = new EffectClass();
-    const wrapper = new EffectWrapper(preset.id, effect, preset.name);
-    for (const [paramId, value] of preset.config.entries()) {
-      wrapper.getEffectParameters().setValue(paramId, value);
+  const presets = template.getPresets?.();
+
+  if (presets && presets.length > 0) {
+    // Preset-based: one library entry per preset
+    for (const preset of presets) {
+      const effect = new EffectClass();
+      const wrapper = new EffectWrapper(preset.id, effect, preset.name);
+      for (const [paramId, value] of preset.config.entries()) {
+        wrapper.getEffectParameters().setValue(paramId, value);
+      }
+      effects[preset.id] = wrapper;
     }
-    effects[preset.id] = wrapper;
+  } else if (template.effectId && template.effectName) {
+    // Single entry: use the effect's own id + name
+    effects[template.effectId] = new EffectWrapper(template.effectId, template, template.effectName);
+  } else {
+    throw new Error(`Effect ${EffectClass.name} must provide either getPresets() or effectId + effectName`);
   }
 }
 
-function add(id: string, effect: AnyEffect): void {
-  effects[id] = new EffectWrapper(id, effect, effect.getName());
-}
-
-add('blocks', new BlocksEffect());
-add('stars', new StarsEffect());
-addPresets(AlternatingCustomColorFadingEffect);
-add('random_dots_clear', new RandomDotsClearEffect());
-add('random_dots_loop', new RandomDotsLoopEffect());
-add('random_dots_static', new RandomDotsStaticEffect());
-add('meteor', new MeteorEffect());
-add('rain_single_color', new SingleColorRainEffect());
-add('rain_multi_color', new MultiColorRainEffect());
-add('twinkle', new TwinkleEffect());
-addPresets(WaveEffect);
-add('ping_pong', new PingPongEffect());
-add('rainbow_2d', new RainbowGradientEffect2D());
-add('pulse_scanner', new PulseScanner());
-add('slime', new Slime());
-add('clouds', new CloudsEffect());
-add('plasma', new PlasmaEffect());
-add('gravity_fountain', new GravityFountainEffect());
+register(BlocksEffect);
+register(StarsEffect);
+register(AlternatingCustomColorFadingEffect);
+register(RandomDotsClearEffect);
+register(RandomDotsLoopEffect);
+register(RandomDotsStaticEffect);
+register(MeteorEffect);
+register(SingleColorRainEffect);
+register(MultiColorRainEffect);
+register(TwinkleEffect);
+register(WaveEffect);
+register(PingPongEffect);
+register(RainbowGradientEffect2D);
+register(PulseScanner);
+register(Slime);
+register(CloudsEffect);
+register(PlasmaEffect);
+register(GravityFountainEffect);
 
 // Simple effects
-add('rainbow', new RainbowGradientEffect());
-addPresets(RotatingColorGradientEffect);
+register(RainbowGradientEffect);
+register(RotatingColorGradientEffect);
 
 // Simple same color effects
-addPresets(ChangeColorEffect);
+register(ChangeColorEffect);
 
 // Static effects
-addPresets(StaticSingleColorEffect);
-addPresets(StaticAlternatingColorCustomEffect);
-addPresets(StaticColorGradientEffect);
-add('gradient_custom', new StaticCustomColorGradientEffect());
+register(StaticSingleColorEffect);
+register(StaticAlternatingColorCustomEffect);
+register(StaticColorGradientEffect);
+register(StaticCustomColorGradientEffect);
 
 // Test effects
-add('test_per_led', new TestPerLedEffect());
-add('test_all_leds_flash', new TestAllLedsFlash());
+register(TestPerLedEffect);
+register(TestAllLedsFlash);
 
 export function deleteEffect(effectId: string): void {
   const effect = effects[effectId];

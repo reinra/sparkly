@@ -33,10 +33,6 @@ export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
 
-  getName(): string {
-    return 'Change Color';
-  }
-
   getPresets(): EffectPreset[] {
     return [
       // Flip presets (instant color change)

@@ -43,10 +43,6 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
   pointType: '1D' = '1D';
   isStateful: boolean = true;
 
-  getName(): string {
-    return 'Wave';
-  }
-
   getPresets(): EffectPreset[] {
     return [
       WaveEffect.preset('wave_rainbow', 'Wave: Rainbow', 3),

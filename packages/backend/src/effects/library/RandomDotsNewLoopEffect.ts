@@ -41,10 +41,6 @@ export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
     ])
   );
 
-  getName(): string {
-    return 'Random Dots (Loop)';
-  }
-
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
