@@ -1,11 +1,28 @@
 import { EffectParameterStorage } from '../../effectParameters';
 import { OptionEffectParameter, ParameterType } from '../../ParameterTypes';
-import { cubicEasing, Direction, EasingFunction, linearEasing, noopEasing, wrapWithDirection } from './Easing';
+import {
+  circularEasing,
+  cubicEasing,
+  Direction,
+  EasingFunction,
+  exponentialEasing,
+  linearEasing,
+  noopEasing,
+  quadraticEasing,
+  quarticEasing,
+  sineEasing,
+  wrapWithDirection,
+} from './Easing';
 
 export enum EasingMode {
   Noop = 'noop',
   Linear = 'linear',
+  Quadratic = 'quadratic',
   Cubic = 'cubic',
+  Quartic = 'quartic',
+  Sine = 'sine',
+  Exponential = 'exponential',
+  Circular = 'circular',
 }
 
 function getBaseEasingFunction(mode: EasingMode): EasingFunction {
@@ -14,8 +31,18 @@ function getBaseEasingFunction(mode: EasingMode): EasingFunction {
       return noopEasing;
     case EasingMode.Linear:
       return linearEasing;
+    case EasingMode.Quadratic:
+      return quadraticEasing;
     case EasingMode.Cubic:
       return cubicEasing;
+    case EasingMode.Quartic:
+      return quarticEasing;
+    case EasingMode.Sine:
+      return sineEasing;
+    case EasingMode.Exponential:
+      return exponentialEasing;
+    case EasingMode.Circular:
+      return circularEasing;
   }
 }
 
@@ -34,7 +61,12 @@ export class EasingParameters {
     options: [
       { value: EasingMode.Noop, label: 'Noop', description: 'No easing' },
       { value: EasingMode.Linear, label: 'Linear', description: 'Linear easing' },
+      { value: EasingMode.Quadratic, label: 'Quadratic', description: 'Gentle acceleration' },
       { value: EasingMode.Cubic, label: 'Cubic', description: 'Cubic easing' },
+      { value: EasingMode.Quartic, label: 'Quartic', description: 'Strong acceleration' },
+      { value: EasingMode.Sine, label: 'Sine', description: 'Smooth, natural feel' },
+      { value: EasingMode.Exponential, label: 'Exponential', description: 'Dramatic, starts slow then snaps' },
+      { value: EasingMode.Circular, label: 'Circular', description: 'Circle arc, smooth start' },
     ],
   });
 
@@ -75,7 +107,12 @@ export class FullEasingParameters {
     options: [
       { value: EasingMode.Noop, label: 'Noop', description: 'No easing (instant)' },
       { value: EasingMode.Linear, label: 'Linear', description: 'Linear easing' },
+      { value: EasingMode.Quadratic, label: 'Quadratic', description: 'Gentle acceleration' },
       { value: EasingMode.Cubic, label: 'Cubic', description: 'Cubic easing' },
+      { value: EasingMode.Quartic, label: 'Quartic', description: 'Strong acceleration' },
+      { value: EasingMode.Sine, label: 'Sine', description: 'Smooth, natural feel' },
+      { value: EasingMode.Exponential, label: 'Exponential', description: 'Dramatic, starts slow then snaps' },
+      { value: EasingMode.Circular, label: 'Circular', description: 'Circle arc, smooth start' },
     ],
   });
 

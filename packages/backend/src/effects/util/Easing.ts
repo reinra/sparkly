@@ -16,6 +16,21 @@ export const linearEasing: EasingFunction = (t: number) => t;
 /** Cubic easing — ease in curve. */
 export const cubicEasing: EasingFunction = (t: number) => t * t * t;
 
+/** Quadratic easing — gentle acceleration. */
+export const quadraticEasing: EasingFunction = (t: number) => t * t;
+
+/** Quartic easing — strong acceleration. */
+export const quarticEasing: EasingFunction = (t: number) => t * t * t * t;
+
+/** Sine easing — very smooth, natural feel. */
+export const sineEasing: EasingFunction = (t: number) => 1 - Math.cos((t * Math.PI) / 2);
+
+/** Exponential easing — dramatic, starts very slow then snaps. */
+export const exponentialEasing: EasingFunction = (t: number) => (t === 0 ? 0 : Math.pow(2, 10 * (t - 1)));
+
+/** Circular easing — based on circle arc, smooth start. */
+export const circularEasing: EasingFunction = (t: number) => 1 - Math.sqrt(1 - t * t);
+
 /**
  * Wraps a base easing function with a direction transformation.
  * - In:    f(t)               — 0 → 1
