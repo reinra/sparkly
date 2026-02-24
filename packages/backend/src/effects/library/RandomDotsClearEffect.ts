@@ -21,7 +21,7 @@ import { PaletteParameters } from '../util/Palette';
  * Dots are spawned at random positions on the fly (no pre-shuffled index list).
  * Once coverage is reached the buffer flashes and restarts.
  */
-export class RandomDotsNewClearEffect implements EffectSequence<LedPoint1D> {
+export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   readonly supportsSeamlessLooping = false;
   pointType: '1D' = '1D';
@@ -51,7 +51,7 @@ export class RandomDotsNewClearEffect implements EffectSequence<LedPoint1D> {
   );
 
   getName(): string {
-    return 'Random Dots (New Clear)';
+    return 'Random Dots (Clear)';
   }
 
   getMaxLitCount(ledCount: number): number {
@@ -65,7 +65,7 @@ export class RandomDotsNewClearEffect implements EffectSequence<LedPoint1D> {
     return (durationSeconds * 1000) / maxLit;
   }
 
-  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RandomDotsNewClearLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint1D> = () => new RandomDotsClearLogic(this);
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ function renderDotsToBuffer(
 // Logic (standalone, no base class)
 // ---------------------------------------------------------------------------
 
-class RandomDotsNewClearLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
+class RandomDotsClearLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
   private dots = new Map<number, DotInfo>();
   private totalTimeMs = 0;
   private nextSpawnMs = 0;
@@ -138,7 +138,7 @@ class RandomDotsNewClearLogic implements EffectLogic<AnimationMode.Sequence, Led
   private initialized = false;
   private flash: FlashAnimation | null = null;
 
-  constructor(private readonly config: RandomDotsNewClearEffect) {}
+  constructor(private readonly config: RandomDotsClearEffect) {}
 
   private reset(total: number): void {
     this.dots.clear();

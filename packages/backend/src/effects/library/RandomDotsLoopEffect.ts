@@ -13,7 +13,7 @@ const SEGMENT_COUNT = 2;
  * Pre-generates SEGMENT_COUNT random snapshots and crossfades between them.
  * The last segment transitions back to the first snapshot, ensuring a seamless loop.
  */
-export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
+export class RandomDotsLoopEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
@@ -53,7 +53,7 @@ export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
     return Math.max(1, Math.round(ledCount * (this.coverage.value / 100)));
   }
 
-  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new RandomDotsNewLoopLogic(this);
+  createLogic: () => EffectLogic<AnimationMode.Loop, LedPoint1D> = () => new RandomDotsLoopLogic(this);
 }
 
 /** Pre-computed transition info for one segment. */
@@ -66,13 +66,13 @@ interface SegmentTransition {
   readonly toColors: RgbFloat[];
 }
 
-class RandomDotsNewLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
+class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private snapshots: RgbFloat[][] = [];
   private transitions: SegmentTransition[] = [];
   private initialized = false;
   private lastLedCount = 0;
 
-  constructor(private readonly config: RandomDotsNewLoopEffect) {}
+  constructor(private readonly config: RandomDotsLoopEffect) {}
 
   private generateSnapshot(total: number): RgbFloat[] {
     const litCount = this.config.getMaxLitCount(total);
