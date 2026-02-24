@@ -2,8 +2,13 @@ import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, hslToRgbFloat, randomColorMaxSaturation } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../effectParameters';
 import { ParameterType } from '../../ParameterTypes';
-import { AnimationMode, type EffectSequence, type LedPoint1D, EffectLogic, type EffectContextSequence } from '../Effect';
-
+import {
+  AnimationMode,
+  type EffectSequence,
+  type LedPoint1D,
+  EffectLogic,
+  type EffectContextSequence,
+} from '../Effect';
 
 abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
@@ -56,7 +61,7 @@ interface Particle {
 }
 class RainEffectLogic implements EffectLogic<AnimationMode.Sequence, LedPoint1D> {
   private particles: Particle[] = [];
-  constructor(private readonly config: BaseRainEffect) { }
+  constructor(private readonly config: BaseRainEffect) {}
   renderGlobal(ctx: EffectContextSequence, points: LedPoint1D[]): RgbFloat[] {
     // 1. Move existing particles based on velocity and time passed
     this.particles.forEach((p) => {

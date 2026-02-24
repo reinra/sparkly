@@ -1,7 +1,6 @@
 import { type RgbFloat, BLACK, WHITE } from '../../color/ColorFloat';
 import { AnimationMode, type EffectSequence, LedPoint2D, EffectLogic, type EffectContextSequence } from '../Effect';
 
-
 export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
   pointType: '2D' = '2D';
@@ -12,7 +11,7 @@ export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   createLogic: () => EffectLogic<AnimationMode.Sequence, LedPoint2D> = () => new GravityFountainLogic();
 }
 class GravityFountainLogic implements EffectLogic<AnimationMode.Sequence, LedPoint2D> {
-  private particles: { x: number; y: number; vy: number; }[] = [];
+  private particles: { x: number; y: number; vy: number }[] = [];
   private lastTime = 0;
 
   renderGlobal(ctx: EffectContextSequence, points: LedPoint2D[]): RgbFloat[] {
