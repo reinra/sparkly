@@ -1,5 +1,5 @@
 import { createPresetFactoryForSingleParameter } from '../../EffectWrapper';
-import { ParameterType } from '../../ParameterTypes';
+import { ColorMode, ParameterType } from '../../ParameterTypes';
 import { BLACK, lerp, WHITE, RED, type RgbFloat } from '../../color/ColorFloat';
 import {
   BLACK_HSL_COLOR,
@@ -458,6 +458,23 @@ export class TestRgbPickerEffect extends BaseSameColorEffect<AnimationMode.Stati
     description: 'RGB color value',
     type: ParameterType.RGB,
     value: RED,
+  });
+  renderColor(ctx: EffectContextStatic): RgbFloat {
+    return this.color.color.asRgb();
+  }
+}
+
+export class TestColorPickerEffect extends BaseSameColorEffect<AnimationMode.Static> {
+  readonly animationMode = AnimationMode.Static;
+  readonly effectId = 'test_color_picker';
+  readonly effectName = 'Test Color Picker';
+  readonly parameters = new EffectParameterStorage();
+  private readonly color = this.parameters.register({
+    id: 'color',
+    name: 'Color',
+    description: 'Color value (switch between HSL and RGB)',
+    type: ParameterType.COLOR,
+    value: { mode: ColorMode.HSL, hsl: DEFAULT_HSL_COLOR },
   });
   renderColor(ctx: EffectContextStatic): RgbFloat {
     return this.color.color.asRgb();

@@ -4,15 +4,18 @@
   import { deviceStore } from '../stores/DeviceStore.svelte';
   import {
     ParameterType,
+    ColorMode,
     type EffectParameter,
     type Hsl,
     type RgbFloat,
+    type ColorValue,
     type RangeEffectParameter,
     type BooleanEffectParameter,
     type HslEffectParameter,
     type OptionEffectParameter,
     type MultiHslEffectParameter,
     type RgbEffectParameter,
+    type ColorEffectParameter,
   } from '@twinkly-ts/common';
   import RangeParameter from './params/RangeParameter.svelte';
   import BooleanParameter from './params/BooleanParameter.svelte';
@@ -20,6 +23,7 @@
   import OptionParameter from './params/OptionParameter.svelte';
   import MultiHslParameter from './params/MultiHslParameter.svelte';
   import RgbParameter from './params/RgbParameter.svelte';
+  import ColorParameter from './params/ColorParameter.svelte';
 
   interface Props {
     deviceId: string;
@@ -29,7 +33,7 @@
 
   let { deviceId, parameters, updating = $bindable() }: Props = $props();
 
-  type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat;
+  type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat | ColorValue;
 
   let parameterElements: (HTMLElement | null)[] = [];
   const optimisticValues = new Map<string, ParameterValue>();
@@ -118,7 +122,20 @@
 
   function cloneValue(value: ParameterValue): ParameterValue {
     if (Array.isArray(value)) return value.map((v) => ({ ...v }));
-    if (typeof value === 'object') return { ...value };
+    if (typeof value === 'object') {
+      // Deep-clone ColorValue (has nested hsl/rgb object)
+      const cv = value as Record<string, unknown>;
+      if ('mode' in cv) {
+        const mode = cv.mode as string;
+        if (mode === ColorMode.HSL && 'hsl' in cv) {
+          return { mode, hsl: { ...(cv.hsl as Hsl) } };
+        }
+        if (mode === ColorMode.RGB && 'rgb' in cv) {
+          return { mode, rgb: { ...(cv.rgb as RgbFloat) } };
+        }
+      }
+      return { ...value };
+    }
     return value;
   }
 
@@ -148,6 +165,18 @@
     }
     if (type === ParameterType.RGB) {
       return typeof a === 'object' && typeof b === 'object' && areRgbEqual(a as RgbFloat, b as RgbFloat);
+    }
+    if (type === ParameterType.COLOR) {
+      const ca = a as ColorValue;
+      const cb = b as ColorValue;
+      if (ca.mode !== cb.mode) return false;
+      if (ca.mode === ColorMode.HSL && cb.mode === ColorMode.HSL) {
+        return areHslEqual(ca.hsl, cb.hsl);
+      }
+      if (ca.mode === ColorMode.RGB && cb.mode === ColorMode.RGB) {
+        return areRgbEqual(ca.rgb, cb.rgb);
+      }
+      return false;
     }
     return a === b;
   }
@@ -269,6 +298,14 @@
           <RgbParameter
             param={typedParam}
             value={getEffectiveValue(param) as RgbFloat}
+            onchange={(v) => updateParameter(param, v)}
+            onregister={(el) => (parameterElements[index] = el)}
+          />
+        {:else if param.type === ParameterType.COLOR}
+          {@const typedParam = param as ColorEffectParameter}
+          <ColorParameter
+            param={typedParam}
+            value={getEffectiveValue(param) as ColorValue}
             onchange={(v) => updateParameter(param, v)}
             onregister={(el) => (parameterElements[index] = el)}
           />

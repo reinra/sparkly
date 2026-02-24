@@ -5,7 +5,17 @@ export enum ParameterType {
   OPTION = 'option',
   MULTI_HSL = 'multi_hsl',
   RGB = 'rgb',
+  COLOR = 'color',
 }
+
+export enum ColorMode {
+  HSL = 'hsl',
+  RGB = 'rgb',
+}
+
+export type ColorValueHsl = { mode: ColorMode.HSL; hsl: Hsl };
+export type ColorValueRgb = { mode: ColorMode.RGB; rgb: RgbFloat };
+export type ColorValue = ColorValueHsl | ColorValueRgb;
 
 export enum ParameterGroup {
   DEVICE = 'device',
@@ -74,10 +84,18 @@ export interface RgbEffectParameter extends BaseEffectParameter {
   color: Color;
 }
 
+export interface ColorEffectParameter extends BaseEffectParameter {
+  type: ParameterType.COLOR;
+  value: ColorValue;
+  /** Backend-only: the current value as a Color object, kept in sync with `value` */
+  color: Color;
+}
+
 export type EffectParameter =
   | RangeEffectParameter
   | BooleanEffectParameter
   | HslEffectParameter
   | OptionEffectParameter
   | MultiHslEffectParameter
-  | RgbEffectParameter;
+  | RgbEffectParameter
+  | ColorEffectParameter;

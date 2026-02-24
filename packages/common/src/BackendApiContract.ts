@@ -9,6 +9,7 @@ export const ParameterType = {
   OPTION: 'option',
   MULTI_HSL: 'multi_hsl',
   RGB: 'rgb',
+  COLOR: 'color',
 } as const;
 
 export const ParameterGroup = {
@@ -49,6 +50,7 @@ const EffectParameterBaseSchema = z.object({
     ParameterType.OPTION,
     ParameterType.MULTI_HSL,
     ParameterType.RGB,
+    ParameterType.COLOR,
   ]),
   group: z.enum([ParameterGroup.DEVICE, ParameterGroup.EFFECT]),
 });
@@ -94,6 +96,31 @@ const RgbEffectParameterSchema = EffectParameterBaseSchema.extend({
   value: RgbFloatValueSchema,
 });
 
+export const ColorMode = {
+  HSL: 'hsl',
+  RGB: 'rgb',
+} as const;
+
+const ColorValueHslSchema = z.object({
+  mode: z.literal(ColorMode.HSL),
+  hsl: HslValueSchema,
+});
+
+const ColorValueRgbSchema = z.object({
+  mode: z.literal(ColorMode.RGB),
+  rgb: RgbFloatValueSchema,
+});
+
+const ColorValueSchema = z.discriminatedUnion('mode', [
+  ColorValueHslSchema,
+  ColorValueRgbSchema,
+]);
+
+const ColorEffectParameterSchema = EffectParameterBaseSchema.extend({
+  type: z.literal(ParameterType.COLOR),
+  value: ColorValueSchema,
+});
+
 const EffectParameterSchema = z.discriminatedUnion('type', [
   RangeEffectParameterSchema,
   BooleanEffectParameterSchema,
@@ -101,6 +128,7 @@ const EffectParameterSchema = z.discriminatedUnion('type', [
   OptionEffectParameterSchema,
   MultiHslEffectParameterSchema,
   RgbEffectParameterSchema,
+  ColorEffectParameterSchema,
 ]);
 
 const EffectInfoSchema = z.object({
@@ -234,6 +262,7 @@ const ParameterValueSchema = z.union([
   HslValueSchema,
   z.array(HslValueSchema),
   RgbFloatValueSchema,
+  ColorValueSchema,
 ]);
 
 const SetParametersRequestSchema = DeviceRequestBaseSchema.extend({
@@ -296,6 +325,8 @@ export type HslEffectParameter = z.infer<typeof HslEffectParameterSchema>;
 export type OptionEffectParameter = z.infer<typeof OptionEffectParameterSchema>;
 export type MultiHslEffectParameter = z.infer<typeof MultiHslEffectParameterSchema>;
 export type RgbEffectParameter = z.infer<typeof RgbEffectParameterSchema>;
+export type ColorValue = z.infer<typeof ColorValueSchema>;
+export type ColorEffectParameter = z.infer<typeof ColorEffectParameterSchema>;
 
 // Backend API contract
 const DeviceModeSchema = z.object({

@@ -2,6 +2,7 @@ import type { TypedHandlers } from './TypedHandler';
 import { backendApiContract } from '@twinkly-ts/common';
 import { deviceService } from './DeviceService';
 import { isMovieTaskActive } from './MovieTaskTracker';
+import type { ParameterValue } from './EffectParameters';
 
 /**
  * Controller layer. Receives HTTP requests, validates required params,
@@ -72,7 +73,10 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
   },
 
   setParameters: async (req, res) => {
-    await deviceService.setParameters(req.body.device_id, req.body.parameters);
+    await deviceService.setParameters(
+      req.body.device_id,
+      req.body.parameters as { id: string; value: ParameterValue }[]
+    );
     res.json({ success: true });
   },
 

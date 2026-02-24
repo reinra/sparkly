@@ -6,9 +6,11 @@ import type {
   OptionEffectParameter,
   MultiHslEffectParameter,
   RgbEffectParameter,
+  ColorEffectParameter,
+  ColorValue,
   Hsl,
 } from './ParameterTypes';
-import { ParameterType } from './ParameterTypes';
+import { ParameterType, ColorMode } from './ParameterTypes';
 import type { RgbFloat } from './color/ColorFloat';
 import { HslColor, RgbColor } from './color/Color';
 
@@ -24,7 +26,9 @@ type ParameterValueType<T extends EffectParameter> = T extends RangeEffectParame
           ? Hsl[]
           : T extends RgbEffectParameter
             ? RgbFloat
-            : never;
+            : T extends ColorEffectParameter
+              ? ColorValue
+              : never;
 
 export type ParameterChangeListener<T extends EffectParameter = EffectParameter> = (
   parameter: T,
@@ -32,7 +36,7 @@ export type ParameterChangeListener<T extends EffectParameter = EffectParameter>
   newValue: ParameterValueType<T>
 ) => void | Promise<void>;
 
-export type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat;
+export type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat | ColorValue;
 
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
 const RGB_RANGE_ERROR = `RGB components must be between 0 and 1 inclusive`;
@@ -115,6 +119,17 @@ function initColorFields(parameter: EffectParameter): void {
       enumerable: false,
       configurable: true,
     });
+  } else if (parameter.type === ParameterType.COLOR) {
+    const colorValue = parameter.value;
+    Object.defineProperty(parameter, 'color', {
+      value:
+        colorValue.mode === ColorMode.HSL
+          ? new HslColor(colorValue.hsl)
+          : new RgbColor(colorValue.rgb),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
   }
 }
 
@@ -128,6 +143,12 @@ function updateColorField(parameter: EffectParameter): void {
     parameter.colors = parameter.value.map((hsl) => new HslColor(hsl));
   } else if (parameter.type === ParameterType.RGB) {
     parameter.color = new RgbColor(parameter.value);
+  } else if (parameter.type === ParameterType.COLOR) {
+    const colorValue = parameter.value;
+    parameter.color =
+      colorValue.mode === ColorMode.HSL
+        ? new HslColor(colorValue.hsl)
+        : new RgbColor(colorValue.rgb);
   }
 }
 
@@ -139,9 +160,22 @@ export class EffectParameterStorage implements EffectParameterView {
    * Register a new parameter in the storage.
    * For HSL, RGB, and MULTI_HSL parameters, the `color`/`colors` field is populated automatically.
    */
-  register(parameter: Omit<HslEffectParameter, 'color'>, listener?: ParameterChangeListener<HslEffectParameter>): HslEffectParameter;
-  register(parameter: Omit<RgbEffectParameter, 'color'>, listener?: ParameterChangeListener<RgbEffectParameter>): RgbEffectParameter;
-  register(parameter: Omit<MultiHslEffectParameter, 'colors'>, listener?: ParameterChangeListener<MultiHslEffectParameter>): MultiHslEffectParameter;
+  register(
+    parameter: Omit<HslEffectParameter, 'color'>,
+    listener?: ParameterChangeListener<HslEffectParameter>
+  ): HslEffectParameter;
+  register(
+    parameter: Omit<RgbEffectParameter, 'color'>,
+    listener?: ParameterChangeListener<RgbEffectParameter>
+  ): RgbEffectParameter;
+  register(
+    parameter: Omit<ColorEffectParameter, 'color'>,
+    listener?: ParameterChangeListener<ColorEffectParameter>
+  ): ColorEffectParameter;
+  register(
+    parameter: Omit<MultiHslEffectParameter, 'colors'>,
+    listener?: ParameterChangeListener<MultiHslEffectParameter>
+  ): MultiHslEffectParameter;
   register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): T;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register(parameter: any, listener?: any): any {
@@ -248,6 +282,21 @@ export class EffectParameterStorage implements EffectParameterView {
       const rgbValue = value as RgbFloat;
       validateRgbFloatValue(id, rgbValue);
       parameter.value = { red: rgbValue.red, green: rgbValue.green, blue: rgbValue.blue };
+      updateColorField(parameter);
+    } else if (parameter.type === ParameterType.COLOR) {
+      if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error(`Parameter '${id}' expects a ColorValue object`);
+      }
+      const colorValue = value as ColorValue;
+      if (colorValue.mode === ColorMode.HSL) {
+        validateHslValue(id, colorValue.hsl);
+        parameter.value = { mode: ColorMode.HSL, hsl: { ...colorValue.hsl } };
+      } else if (colorValue.mode === ColorMode.RGB) {
+        validateRgbFloatValue(id, colorValue.rgb);
+        parameter.value = { mode: ColorMode.RGB, rgb: { red: colorValue.rgb.red, green: colorValue.rgb.green, blue: colorValue.rgb.blue } };
+      } else {
+        throw new Error(`Parameter '${id}': unknown color mode`);
+      }
       updateColorField(parameter);
     }
 
