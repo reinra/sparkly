@@ -16,7 +16,6 @@ import {
 import { EffectParameterStorage, type EffectParameterView, MultiParameterStorageView } from '../../effectParameters';
 import {
   AnimationMode,
-  type StatelessEffect,
   type EffectContextStatic,
   type EffectContextLoop,
   type EffectContextSequence,
@@ -26,7 +25,7 @@ import {
   LedPointType,
   EffectPreset,
 } from '../Effect';
-import { BaseSameColorEffect, PerPixelEffect } from '../BaseEffects';
+import { BaseSameColorEffect, PerPixelEffect, type StatelessEffect } from '../BaseEffects';
 import { backAndForthPhaseWithPause } from '../util/PhaseUtis';
 import { PaletteParameters } from '../util/Palette';
 

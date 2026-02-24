@@ -6,11 +6,10 @@ import {
   LedPoint2D,
   type EffectContextLoop,
   type EffectContextSequence,
-  type StatelessEffect,
   EffectLogic,
   AnimationMode,
 } from '../Effect';
-import { PerPixelEffect } from '../BaseEffects';
+import { PerPixelEffect, type StatelessEffect } from '../BaseEffects';
 import { NoiseGenerator } from '../util/NoiseUtils';
 
 export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, LedPoint2D> {

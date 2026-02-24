@@ -119,10 +119,6 @@ export interface EffectLogic<A extends AnimationMode, P extends LedPoint> {
   renderGlobal(ctx: EffectContextGeneric<A>, points: P[]): RgbFloat[];
 }
 
-export interface StatelessEffect<A extends AnimationMode, P extends LedPoint> extends Effect<A, P>, EffectLogic<A, P> {
-  readonly isStateful: false;
-}
-
 export function is1DEffect<A extends AnimationMode>(effect: Effect<A, LedPoint>): effect is Effect<A, LedPoint1D> {
   return effect.pointType === '1D';
 }

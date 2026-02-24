@@ -10,6 +10,10 @@ import {
   type LedPointType,
 } from './Effect';
 
+export interface StatelessEffect<A extends AnimationMode, P extends LedPoint> extends Effect<A, P>, EffectLogic<A, P> {
+  readonly isStateful: false;
+}
+
 export abstract class PerPixelEffectLogic<A extends AnimationMode, P extends LedPoint> implements EffectLogic<A, P> {
   renderGlobal(ctx: EffectContextGeneric<A>, points: P[]): RgbFloat[] {
     const result: RgbFloat[] = new Array(points.length);
