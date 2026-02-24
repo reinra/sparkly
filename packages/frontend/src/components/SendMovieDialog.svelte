@@ -181,7 +181,9 @@
       {#if frameInfo || durationInfo}
         <div class="frame-info">
           {#if frameInfo}{frameInfo}{/if}
-          {#if frameInfo && durationInfo} &middot; {/if}
+          {#if frameInfo && durationInfo}
+            &middot;
+          {/if}
           {#if durationInfo}{durationInfo}{/if}
         </div>
       {/if}
