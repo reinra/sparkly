@@ -36,9 +36,7 @@
   function areRgbEqual(a: RgbFloat, b: RgbFloat) {
     const EPSILON = 0.0001;
     return (
-      Math.abs(a.red - b.red) < EPSILON &&
-      Math.abs(a.green - b.green) < EPSILON &&
-      Math.abs(a.blue - b.blue) < EPSILON
+      Math.abs(a.red - b.red) < EPSILON && Math.abs(a.green - b.green) < EPSILON && Math.abs(a.blue - b.blue) < EPSILON
     );
   }
 
