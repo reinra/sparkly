@@ -22,6 +22,37 @@ export class StaticPalette implements Palette {
   }
 }
 
+export enum MultipleMode {
+  Random = 'random',
+  RoundRobin = 'round_robin',
+}
+
+export class RandomMultiplePalette implements Palette {
+  constructor(private colors: Hsl[]) {
+    if (colors.length === 0) {
+      throw new Error('RandomMultiplePalette requires at least one color');
+    }
+  }
+  nextColor(): Color {
+    const index = Math.floor(Math.random() * this.colors.length);
+    return new HslColor(this.colors[index]);
+  }
+}
+
+export class RoundRobinPalette implements Palette {
+  private index = 0;
+  constructor(private colors: Hsl[]) {
+    if (colors.length === 0) {
+      throw new Error('RoundRobinPalette requires at least one color');
+    }
+  }
+  nextColor(): Color {
+    const color = new HslColor(this.colors[this.index]);
+    this.index = (this.index + 1) % this.colors.length;
+    return color;
+  }
+}
+
 export class RandomSaturatedHslPalette implements Palette {
   nextColor(): Color {
     const hsl: Hsl = {
@@ -40,18 +71,6 @@ export class RandomColorPalette implements Palette {
       green_f: Math.random(),
       blue_f: Math.random(),
     });
-  }
-}
-
-export class MultiplePalette implements Palette {
-  constructor(private colors: Hsl[]) {
-    if (colors.length === 0) {
-      throw new Error('MultiplePalette requires at least one color');
-    }
-  }
-  nextColor(): Color {
-    const index = Math.floor(Math.random() * this.colors.length);
-    return new HslColor(this.colors[index]);
   }
 }
 
@@ -92,9 +111,24 @@ export class PaletteParameters {
     {
       id: 'colors',
       name: 'Colors',
-      description: 'List of HSL colors to pick from randomly',
+      description: 'List of HSL colors to pick from',
       type: ParameterType.MULTI_HSL,
       value: [RED_HSL_COLOR, GREEN_HSL_COLOR, BLUE_HSL_COLOR],
+      hidden: this.shouldHideColorsParameter(),
+    },
+    () => this.onUpdate()
+  );
+  private readonly multipleOrder: OptionEffectParameter = this.parameters.register(
+    {
+      id: 'multipleOrder',
+      name: 'Order',
+      description: 'How to pick the next color from the list',
+      type: ParameterType.OPTION,
+      value: MultipleMode.RoundRobin,
+      options: [
+        { value: MultipleMode.RoundRobin, label: 'Round-robin', description: 'Cycle through colors in order' },
+        { value: MultipleMode.Random, label: 'Random', description: 'Pick a random color from the list' },
+      ],
       hidden: this.shouldHideColorsParameter(),
     },
     () => this.onUpdate()
@@ -103,6 +137,7 @@ export class PaletteParameters {
   onUpdate(): void {
     this.color.hidden = this.shouldHideColorParameter();
     this.colors.hidden = this.shouldHideColorsParameter();
+    this.multipleOrder.hidden = this.shouldHideColorsParameter();
     this.palette = this.newPalette();
   }
   private shouldHideColorParameter(): boolean {
@@ -115,12 +150,14 @@ export class PaletteParameters {
     switch (this.type.value) {
       case PaletteType.Static:
         return new StaticPalette(new HslColor(this.color.value));
+      case PaletteType.Multiple:
+        return this.multipleOrder.value === MultipleMode.RoundRobin
+          ? new RoundRobinPalette(this.colors.value)
+          : new RandomMultiplePalette(this.colors.value);
       case PaletteType.RandomSaturatedHsl:
         return new RandomSaturatedHslPalette();
       case PaletteType.RandomColorRgb:
         return new RandomColorPalette();
-      case PaletteType.Multiple:
-        return new MultiplePalette(this.colors.value);
       default:
         throw new Error(`Unsupported palette type: ${this.type.value}`);
     }
