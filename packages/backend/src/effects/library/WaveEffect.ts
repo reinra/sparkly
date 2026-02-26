@@ -101,39 +101,57 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
 }
 
 class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
-  private waveColors: RgbFloat[];
+  /** Rolling buffer of colors, indexed by (waveInstanceId - baseWaveId) */
+  private colorHistory: RgbFloat[] = [];
+  /** The waveInstanceId corresponding to colorHistory[0] */
+  private baseWaveId: number = 0;
+  private previousPhase: number = 0;
+  private cycleCount: number = 0;
 
-  constructor(private readonly config: WaveEffect) {
-    const n = config.numWaves.value;
-    this.waveColors = [];
-    for (let i = 0; i < n; i++) {
-      this.waveColors.push(config.palette.palette.nextColor().asRgb());
+  constructor(private readonly config: WaveEffect) {}
+
+  private ensureColor(waveId: number): RgbFloat {
+    const index = waveId - this.baseWaveId;
+    while (index >= this.colorHistory.length) {
+      this.colorHistory.push(this.config.palette.palette.nextColor().asRgb());
     }
+    return this.colorHistory[index];
   }
 
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     const n = this.config.numWaves.value;
     const easingFn = this.config.easing.getEasingFunction();
 
-    // Resize color array if numWaves parameter changed at runtime
-    while (this.waveColors.length < n) {
-      this.waveColors.push(this.config.palette.palette.nextColor().asRgb());
+    // Track phase wrap-arounds to build an unwrapped total phase
+    if (ctx.phase < this.previousPhase) {
+      this.cycleCount++;
     }
-    while (this.waveColors.length > n) {
-      this.waveColors.pop();
+    this.previousPhase = ctx.phase;
+    const totalPhase = ctx.phase + this.cycleCount;
+
+    // Compute the range of visible wave instance IDs and pre-generate colors
+    const minWaveId = Math.floor(totalPhase * n);
+    const maxWaveId = Math.floor((1 + totalPhase) * n);
+    this.ensureColor(maxWaveId);
+
+    // Trim colors for waves that have fully scrolled off the strip
+    const trimCount = minWaveId - this.baseWaveId;
+    if (trimCount > 0) {
+      this.colorHistory.splice(0, trimCount);
+      this.baseWaveId += trimCount;
     }
 
     const result: RgbFloat[] = new Array(points.length);
     for (const point of points) {
-      // Scroll waves along the strip based on phase
-      const scrolledPos = (((point.distance + ctx.phase) % 1.0) + 1.0) % 1.0;
-      const scaledPos = scrolledPos * n;
-      const waveIndex = Math.floor(scaledPos) % n;
-      const localPhase = scaledPos - Math.floor(scaledPos);
+      // Use unwrapped position so each wave instance gets a unique ID
+      // that transitions at the dark boundary (localPhase = 0)
+      const scaledPos = (point.distance + totalPhase) * n;
+      const waveInstanceId = Math.floor(scaledPos);
+      const localPhase = scaledPos - waveInstanceId;
 
       // Easing shapes the brightness envelope of each wave
       const brightness = easingFn(localPhase);
-      const color = this.waveColors[waveIndex];
+      const color = this.colorHistory[waveInstanceId - this.baseWaveId];
 
       result[point.id] = {
         red: color.red * brightness,
