@@ -1,5 +1,5 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
-import { abortTask, startAndAbortPreviousTask } from './BackendLoops';
+import { TaskExecutor } from './TaskExecutor';
 import { devices, type Device } from './DeviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
@@ -78,6 +78,8 @@ export class EffectNotFoundError extends Error {
 
 /** Business-logic layer. Agnostic of HTTP / TS-Rest. Trusts input types. */
 export class DeviceService {
+  private taskExecutor = new TaskExecutor();
+
   getDevice(deviceId: string): Device {
     const device = devices[deviceId];
     if (!device) {
@@ -213,7 +215,7 @@ export class DeviceService {
     const validMode = DeviceModeSchema.parse(mode);
 
     if (validMode !== DeviceModeSchema.Values.rt) {
-      abortTask(deviceId);
+      this.taskExecutor.abortTask(deviceId);
     }
 
     await device.api_client.setMode(validMode);
@@ -235,14 +237,14 @@ export class DeviceService {
 
       device.helper.setCurrentEffect(effect);
       const renderCtx = new RenderContextImpl(device.helper, effect);
-      startAndAbortPreviousTask(deviceId, {
+      this.taskExecutor.startAndAbortPreviousTask(deviceId, {
         run: async (signal) => {
           await startEffect(device, renderCtx, signal);
         },
       });
     } else {
       device.helper.setCurrentEffect(null);
-      abortTask(deviceId);
+      this.taskExecutor.abortTask(deviceId);
     }
   }
 
@@ -269,7 +271,7 @@ export class DeviceService {
       throw new EffectNotFoundError(effectId);
     }
 
-    abortTask(deviceId);
+    this.taskExecutor.abortTask(deviceId);
 
     const taskProgress = startMovieTask(deviceId, effect.getName());
 
@@ -307,7 +309,7 @@ export class DeviceService {
     };
 
     // Fire-and-forget — run in the background
-    startAndAbortPreviousTask(deviceId, {
+    this.taskExecutor.startAndAbortPreviousTask(deviceId, {
       run: async (signal) => {
         try {
           await sendEffectAsMovie(device, renderCtx, signal, progressCb);
@@ -355,7 +357,7 @@ export class DeviceService {
       const currentEffect = device.helper.getCurrentEffect();
       if (currentEffect && currentEffect.id === effectId) {
         device.helper.setCurrentEffect(null);
-        abortTask(device.id);
+        this.taskExecutor.abortTask(device.id);
       }
     }
     deleteEffect(effectId);
