@@ -79,6 +79,65 @@ export class EffectNotFoundError extends Error {
 /** Business-logic layer. Agnostic of HTTP / TS-Rest. Trusts input types. */
 export class DeviceService {
   private taskExecutor = new TaskExecutor();
+  private autoRotateTimers = new Map<string, ReturnType<typeof setInterval>>();
+
+  /**
+   * Initialize auto-rotate callbacks for all devices.
+   * Should be called once at startup after devices are loaded.
+   */
+  initAutoRotateCallbacks(): void {
+    for (const device of Object.values(devices)) {
+      device.helper.setAutoRotateCallback((enabled, intervalSeconds) => {
+        if (enabled) {
+          this.startAutoRotate(device.id, intervalSeconds);
+        } else {
+          this.stopAutoRotate(device.id);
+        }
+      });
+    }
+  }
+
+  private startAutoRotate(deviceId: string, intervalSeconds: number): void {
+    this.stopAutoRotate(deviceId);
+    logger.withMetadata({ deviceId, intervalSeconds }).info('Auto-rotate started');
+
+    const timer = setInterval(async () => {
+      try {
+        const nextEffectId = this.getNextEffectId(deviceId);
+        if (nextEffectId) {
+          await this.chooseEffect(deviceId, nextEffectId);
+          logger.withMetadata({ deviceId, effectId: nextEffectId }).info('Auto-rotate switched effect');
+        }
+      } catch (error) {
+        logError(error).error(`Auto-rotate failed for device ${deviceId}`);
+      }
+    }, intervalSeconds * 1000);
+
+    this.autoRotateTimers.set(deviceId, timer);
+  }
+
+  private stopAutoRotate(deviceId: string): void {
+    const timer = this.autoRotateTimers.get(deviceId);
+    if (timer) {
+      clearInterval(timer);
+      this.autoRotateTimers.delete(deviceId);
+      logger.withMetadata({ deviceId }).info('Auto-rotate stopped');
+    }
+  }
+
+  private getNextEffectId(deviceId: string): string | null {
+    const effectIds = Object.keys(effects);
+    if (effectIds.length === 0) return null;
+
+    const device = this.getDevice(deviceId);
+    const currentEffect = device.helper.getCurrentEffect();
+    if (!currentEffect) {
+      return effectIds[0];
+    }
+
+    const currentIndex = effectIds.indexOf(currentEffect.id);
+    return effectIds[(currentIndex + 1) % effectIds.length];
+  }
 
   getDevice(deviceId: string): Device {
     const device = devices[deviceId];
@@ -367,3 +426,6 @@ export class DeviceService {
 
 /** Global singleton instance */
 export const deviceService = new DeviceService();
+
+// Initialize auto-rotate callbacks for all configured devices
+deviceService.initAutoRotateCallbacks();

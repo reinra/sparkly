@@ -8,6 +8,45 @@ let deviceModes = $state<DeviceMode[]>([]);
 let loading = $state(false);
 let error = $state('');
 
+// Auto-rotate polling
+let autoRotatePollTimer: ReturnType<typeof setInterval> | null = null;
+const AUTO_ROTATE_POLL_INTERVAL_MS = 1000;
+
+function hasAutoRotateActive(): boolean {
+  return devices.some((d) =>
+    d.parameters.some((p) => p.id === 'device.autoRotate' && p.type === 'boolean' && p.value === true)
+  );
+}
+
+function updateAutoRotatePolling(): void {
+  const shouldPoll = hasAutoRotateActive();
+  if (shouldPoll && !autoRotatePollTimer) {
+    autoRotatePollTimer = setInterval(async () => {
+      try {
+        const response = await backendClient.getInfo();
+        if (response.status === 200) {
+          devices = response.body.devices;
+          effects = response.body.effects;
+          // Stop polling if no longer needed
+          if (!hasAutoRotateActive()) {
+            stopAutoRotatePolling();
+          }
+        }
+      } catch (e) {
+        console.error('Auto-rotate poll failed:', e);
+      }
+    }, AUTO_ROTATE_POLL_INTERVAL_MS);
+  } else if (!shouldPoll && autoRotatePollTimer) {
+    stopAutoRotatePolling();
+  }
+}
+
+function stopAutoRotatePolling(): void {
+  if (autoRotatePollTimer) {
+    clearInterval(autoRotatePollTimer);
+    autoRotatePollTimer = null;
+  }
+}
 export const deviceStore = {
   get devices() {
     return devices;
@@ -48,6 +87,7 @@ export const deviceStore = {
       if (response.status === 200) {
         devices = response.body.devices;
         effects = response.body.effects;
+        updateAutoRotatePolling();
       } else {
         error = 'Failed to get info. Make sure config.toml is properly configured.';
       }
@@ -75,6 +115,7 @@ export const deviceStore = {
         if (response.body.effects.length > 0) {
           effects = response.body.effects;
         }
+        updateAutoRotatePolling();
       }
     } catch (e) {
       console.error('Failed to refresh device:', e);

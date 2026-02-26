@@ -136,8 +136,40 @@ export class DeviceHelper {
     unit: '%',
     step: 1,
   };
+  private readonly autoRotate: BooleanEffectParameter = {
+    id: 'autoRotate',
+    name: 'Auto-rotate effects',
+    description: 'Automatically cycle through all effects on a timer',
+    type: ParameterType.BOOLEAN,
+    value: false,
+  };
+  private readonly autoRotateInterval: RangeEffectParameter = {
+    id: 'autoRotateInterval',
+    name: 'Auto-rotate interval',
+    description: 'Seconds between automatic effect switches',
+    type: ParameterType.RANGE,
+    value: 30,
+    min: 5,
+    max: 600,
+    step: 5,
+    unit: 's',
+  };
+
+  private onAutoRotateChanged?: (enabled: boolean, intervalSeconds: number) => void;
 
   public constructor(public readonly apiClient: TwinklyApiClient) {}
+
+  public setAutoRotateCallback(callback: (enabled: boolean, intervalSeconds: number) => void): void {
+    this.onAutoRotateChanged = callback;
+  }
+
+  public isAutoRotateEnabled(): boolean {
+    return this.autoRotate.value;
+  }
+
+  public getAutoRotateIntervalSeconds(): number {
+    return this.autoRotateInterval.value;
+  }
 
   public async refreshFromDevice(): Promise<void> {
     await this.ensureParams();
@@ -199,6 +231,15 @@ export class DeviceHelper {
     this.deviceParams.register(this.gainRed);
     this.deviceParams.register(this.gainGreen);
     this.deviceParams.register(this.gainBlue);
+
+    this.deviceParams.register(this.autoRotate, () => {
+      this.onAutoRotateChanged?.(this.autoRotate.value, this.autoRotateInterval.value);
+    });
+    this.deviceParams.register(this.autoRotateInterval, () => {
+      if (this.autoRotate.value) {
+        this.onAutoRotateChanged?.(true, this.autoRotateInterval.value);
+      }
+    });
 
     this.deviceParamsInitialized = true;
   }
