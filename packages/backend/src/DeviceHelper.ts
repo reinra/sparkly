@@ -25,6 +25,7 @@ import { type AnyEffect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
 import { DeviceModeSchema, EnabledDisabledSchema } from './deviceClient/ApiContract';
 import { EffectWrapper } from './EffectWrapper';
+import type { FrameBuffer } from './render/FrameOutputStream';
 
 export interface LedMapping {
   coordinates: LedCoordinates[];
@@ -49,6 +50,8 @@ export function getEffectGroup(parameter: EffectParameter): ParameterGroup {
 }
 
 export class DeviceHelper {
+  public readonly buffer: FrameBuffer = { base64_encoded: null, phase: null };
+
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
   private deviceParams = new EffectParameterStorage();
@@ -182,7 +185,11 @@ export class DeviceHelper {
 
   private onAutoRotateChanged?: (enabled: boolean, intervalSeconds: number) => void;
 
-  public constructor(public readonly apiClient: TwinklyApiClient) {}
+  public constructor(
+    public readonly id: string,
+    public readonly apiClient: TwinklyApiClient,
+    public alias: string,
+  ) {}
 
   public setAutoRotateCallback(callback: (enabled: boolean, intervalSeconds: number) => void): void {
     this.onAutoRotateChanged = callback;

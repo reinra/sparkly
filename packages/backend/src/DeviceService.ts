@@ -1,16 +1,15 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { TaskExecutor } from './TaskExecutor';
-import { devices, type Device } from './DeviceList';
+import { devices } from './DeviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
 import { DeviceModeSchema } from './deviceClient/ApiContract';
 import { DEVICE_MODES } from './deviceClient/DeviceModes';
-import { getEffectGroup } from './DeviceHelper';
+import { getEffectGroup, type DeviceHelper, type LedMapping } from './DeviceHelper';
 import { AnimationMode, type EffectLoop, type EffectSequence, type LedPoint } from './effects/Effect';
 import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
-import type { LedMapping } from './DeviceHelper';
 import type { DeviceInfo } from '@twinkly-ts/common';
 import type { ParameterValue } from './EffectParameters';
 import {
@@ -87,7 +86,7 @@ export class DeviceService {
    */
   initAutoRotateCallbacks(): void {
     for (const device of Object.values(devices)) {
-      device.helper.setAutoRotateCallback((enabled, intervalSeconds) => {
+      device.setAutoRotateCallback((enabled, intervalSeconds) => {
         if (enabled) {
           this.startAutoRotate(device.id, intervalSeconds);
         } else {
@@ -130,7 +129,7 @@ export class DeviceService {
     if (effectIds.length === 0) return null;
 
     const device = this.getDevice(deviceId);
-    const currentEffect = device.helper.getCurrentEffect();
+    const currentEffect = device.getCurrentEffect();
     if (!currentEffect) {
       return effectIds[0];
     }
@@ -139,7 +138,7 @@ export class DeviceService {
     return effectIds[(currentIndex + 1) % effectIds.length];
   }
 
-  getDevice(deviceId: string): Device {
+  getDevice(deviceId: string): DeviceHelper {
     const device = devices[deviceId];
     if (!device) {
       throw new DeviceNotFoundError(deviceId);
@@ -164,13 +163,13 @@ export class DeviceService {
     for (const device of devicesToQuery) {
       // Periodically refresh state from device to stay in sync with external changes
       try {
-        await device.helper.refreshStateFromDeviceIfStale();
+        await device.refreshStateFromDeviceIfStale();
       } catch (error) {
         logError(error).error(`Error refreshing state for device ${device.id}`);
       }
 
-      const currentEffect = device.helper.getCurrentEffect();
-      const ledCount = await device.helper.getLedCount();
+      const currentEffect = device.getCurrentEffect();
+      const ledCount = await device.getLedCount();
 
       // Compute loop duration for loop effects when LED count is known
       let loopDurationSeconds: number | undefined;
@@ -181,11 +180,11 @@ export class DeviceService {
       deviceList.push({
         id: device.id,
         alias: device.alias,
-        ip: device.api_client.getIp(),
-        name: await device.helper.getDeviceName(),
+        ip: device.apiClient.getIp(),
+        name: await device.getDeviceName(),
         led_count: ledCount,
-        brightness: device.helper.getBrightness(),
-        mode: device.helper.getMode(),
+        brightness: device.getBrightness(),
+        mode: device.getMode(),
         effect: currentEffect
           ? {
               id: currentEffect.id,
@@ -196,7 +195,7 @@ export class DeviceService {
               ...(loopDurationSeconds !== undefined && { loop_duration_seconds: loopDurationSeconds }),
             }
           : null,
-        parameters: (await device.helper.getParameters())
+        parameters: (await device.getParameters())
           .list()
           .filter((p) => !p.hidden)
           .map((p) => ({
@@ -251,7 +250,7 @@ export class DeviceService {
 
   async debugDevice(deviceId: string): Promise<DebugSection[]> {
     const device = this.getDevice(deviceId);
-    const debugInfo = await device.helper.getDebugInfo();
+    const debugInfo = await device.getDebugInfo();
     return debugInfo.map((section) => ({
       title: section.title,
       content: JSON.stringify(section.content, null, 2),
@@ -266,12 +265,12 @@ export class DeviceService {
       this.taskExecutor.abortTask(deviceId);
     }
 
-    await device.helper.setMode(validMode);
+    await device.setMode(validMode);
   }
 
   async setBrightness(deviceId: string, brightness: number): Promise<void> {
     const device = this.getDevice(deviceId);
-    const params = await device.helper.getParameters();
+    const params = await device.getParameters();
     params.setValue('device.brightness', brightness);
   }
 
@@ -284,15 +283,15 @@ export class DeviceService {
         throw new EffectNotFoundError(effectId);
       }
 
-      device.helper.setCurrentEffect(effect);
-      const renderCtx = new RenderContextImpl(device.helper, effect);
+      device.setCurrentEffect(effect);
+      const renderCtx = new RenderContextImpl(device, effect);
       this.taskExecutor.startAndAbortPreviousTask(deviceId, {
         run: async (signal) => {
           await startEffect(device, renderCtx, signal);
         },
       });
     } else {
-      device.helper.setCurrentEffect(null);
+      device.setCurrentEffect(null);
       this.taskExecutor.abortTask(deviceId);
     }
   }
@@ -304,7 +303,7 @@ export class DeviceService {
 
   async getLedMapping(deviceId: string): Promise<LedMapping> {
     const device = this.getDevice(deviceId);
-    return device.helper.getLedMapping();
+    return device.getLedMapping();
   }
 
   /**
@@ -324,7 +323,7 @@ export class DeviceService {
 
     const taskProgress = startMovieTask(deviceId, effect.getName());
 
-    const renderCtx = new RenderContextImpl(device.helper, effect);
+    const renderCtx = new RenderContextImpl(device, effect);
     const progressCb: MovieProgressCallback = {
       onRenderStart(totalFrames, effectDurationMs) {
         updateMovieTask(deviceId, { totalFrames, effectDurationMs });
@@ -388,7 +387,7 @@ export class DeviceService {
     const device = this.getDevice(deviceId);
 
     logger.withMetadata({ device_id: deviceId, parameters }).trace(`setParameters called`);
-    const params = await device.helper.getParameters();
+    const params = await device.getParameters();
     for (const param of parameters) {
       params.setValue(param.id, param.value);
     }
@@ -403,9 +402,9 @@ export class DeviceService {
   deleteEffect(effectId: string): void {
     // If any device is currently running this effect, stop it
     for (const device of Object.values(devices)) {
-      const currentEffect = device.helper.getCurrentEffect();
+      const currentEffect = device.getCurrentEffect();
       if (currentEffect && currentEffect.id === effectId) {
-        device.helper.setCurrentEffect(null);
+        device.setCurrentEffect(null);
         this.taskExecutor.abortTask(device.id);
       }
     }

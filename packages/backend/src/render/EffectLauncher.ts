@@ -1,4 +1,4 @@
-import type { Device } from '../DeviceList';
+import type { DeviceHelper } from '../DeviceHelper';
 import {
   MultipleFrameOutputStream,
   BufferReplacingFrameOutputStream,
@@ -44,13 +44,13 @@ async function buildFrameFormat(renderCtx: RenderContext): Promise<FrameFormat> 
   };
 }
 
-export async function startEffect(device: Device, renderCtx: RenderContext, signal: AbortSignal) {
+export async function startEffect(device: DeviceHelper, renderCtx: RenderContext, signal: AbortSignal) {
   const basicLedMapper = await renderCtx.getLedMapper(false);
   const fixedLedMapper = await renderCtx.getLedMapper(true);
   const frameFormat = await buildFrameFormat(renderCtx);
   const output = new MultipleFrameOutputStream([
     new MappedFrameOutputStream(new BufferReplacingFrameOutputStream(device.buffer), basicLedMapper),
-    new MappedFrameOutputStream(new ApiClientFrameOutputStream(device.api_client, frameFormat), fixedLedMapper),
+    new MappedFrameOutputStream(new ApiClientFrameOutputStream(device.apiClient, frameFormat), fixedLedMapper),
   ]);
   await prepareForSendingLedValues(device);
 
@@ -84,12 +84,12 @@ export async function startEffect(device: Device, renderCtx: RenderContext, sign
   }
 }
 
-async function prepareForSendingLedValues(device: Device) {
-  await device.helper.setMode(DeviceModeSchema.Values.rt);
+async function prepareForSendingLedValues(device: DeviceHelper) {
+  await device.setMode(DeviceModeSchema.Values.rt);
 }
 
 export async function sendEffectAsMovie(
-  device: Device,
+  device: DeviceHelper,
   renderCtx: RenderContext,
   signal: AbortSignal,
   progressCb?: MovieProgressCallback
@@ -122,7 +122,7 @@ export async function sendEffectAsMovie(
   progressCb?.onUploadStart(movieBuffer.getFrameCount(), movieData.byteLength, effectDurationMs);
 
   const postStart = Date.now();
-  const movieResult = await device.api_client.postMovieFull(movieData, (bytesSent, bytesTotal) => {
+  const movieResult = await device.apiClient.postMovieFull(movieData, (bytesSent, bytesTotal) => {
     progressCb?.onUploadProgress(bytesSent, bytesTotal);
   });
   const postDuration = Date.now() - postStart;
@@ -130,13 +130,13 @@ export async function sendEffectAsMovie(
 
   progressCb?.onConfiguring();
 
-  await device.api_client.setLedMovieConfig({
+  await device.apiClient.setLedMovieConfig({
     frame_delay: frameMs,
     leds_number: frameFormat.led_count,
     frames_number: movieBuffer.getFrameCount(),
   });
 
-  await device.helper.setMode(DeviceModeSchema.Values.movie);
+  await device.setMode(DeviceModeSchema.Values.movie);
   progressCb?.onComplete(movieBuffer.getFrameCount(), effectDurationMs);
 }
 
