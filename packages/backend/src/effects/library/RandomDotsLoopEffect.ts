@@ -163,7 +163,7 @@ class RandomDotsLoopLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D>
         const t = easingIn(ledProgress);
         buffer[idx] = lerp(BLACK, toColor, t);
       } else if (toColor === BLACK) {
-        const brightness = easingOut(1 - ledProgress);
+        const brightness = easingOut(ledProgress);
         buffer[idx] = brightness > 0 ? lerp(BLACK, fromColor, brightness) : BLACK;
       } else {
         const t = easingIn(ledProgress);
