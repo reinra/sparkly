@@ -102,7 +102,6 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
 
 class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   private waveColors: RgbFloat[];
-  private previousPhase: number = -1;
 
   constructor(private readonly config: WaveEffect) {
     const n = config.numWaves.value;
@@ -115,13 +114,6 @@ class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     const n = this.config.numWaves.value;
     const easingFn = this.config.easing.getEasingFunction();
-
-    // Detect phase wrap-around to advance palette colors
-    if (this.previousPhase >= 0 && ctx.phase < this.previousPhase) {
-      this.waveColors.shift();
-      this.waveColors.push(this.config.palette.palette.nextColor().asRgb());
-    }
-    this.previousPhase = ctx.phase;
 
     // Resize color array if numWaves parameter changed at runtime
     while (this.waveColors.length < n) {
