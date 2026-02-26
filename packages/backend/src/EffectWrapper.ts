@@ -125,6 +125,16 @@ export class EffectWrapper {
     type: ParameterType.BOOLEAN,
     value: false,
   });
+  private readonly loopCycles: RangeEffectParameter = this.parameters.register({
+    id: 'loopCycles',
+    name: 'Loop cycles for movie',
+    description: 'Number of loop cycles to include when sending effect as a movie',
+    type: ParameterType.RANGE,
+    value: 3,
+    min: 1,
+    max: 20,
+    step: 1,
+  });
   private readonly mappingModeChangeListeners = new Set<() => void>();
 
   constructor(
@@ -139,6 +149,7 @@ export class EffectWrapper {
     this.rotation.hidden = effect.pointType !== '2D';
     this.mirror.hidden = sameColorEffect;
     this.ledsPerPixel.hidden = effect.pointType === '2D' || sameColorEffect;
+    this.loopCycles.hidden = effect.animationMode !== AnimationMode.Loop;
   }
 
   public getName(): string {
@@ -197,6 +208,9 @@ export class EffectWrapper {
   }
   public getInvertColors(): boolean {
     return this.invertColors.value;
+  }
+  public getLoopCycles(): number {
+    return this.loopCycles.value;
   }
   public getRotation(): Rotation {
     return this.rotation.value as Rotation;

@@ -37,6 +37,9 @@ export interface RenderContext {
   /** Current speed multiplier for the effect. */
   getCurrentSpeedMultiplier(): number;
 
+  /** Number of loop cycles to render when sending effect as a movie. */
+  getLoopCycles(): number;
+
   /** Get LED mapper that compensates for physical wiring order. */
   getLedMapper(fixStringsIfNeeded: boolean): Promise<LedMapper>;
 }
@@ -94,6 +97,10 @@ export class RenderContextImpl implements RenderContext {
 
   getCurrentSpeedMultiplier(): number {
     return this.effectWrapper.getCurrentSpeedMultiplier();
+  }
+
+  getLoopCycles(): number {
+    return this.effectWrapper.getLoopCycles();
   }
 
   async getLedMapper(fixStringsIfNeeded: boolean): Promise<LedMapper> {

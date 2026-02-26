@@ -99,7 +99,8 @@ export async function sendEffectAsMovie(
   const movieBuffer = new MovieBufferOutputStream(frameFormat);
 
   // Estimate total frame count and duration before rendering
-  const totalFrames = estimateTotalFrames(renderCtx, frameFormat.led_count);
+  const loopCycles = renderCtx.getLoopCycles();
+  const totalFrames = estimateTotalFrames(renderCtx, frameFormat.led_count, loopCycles);
   const estimatedDurationMs = estimateEffectDurationMs(renderCtx, frameFormat.led_count);
   progressCb?.onRenderStart(totalFrames, estimatedDurationMs);
 
@@ -154,7 +155,8 @@ function estimateEffectDurationMs(renderCtx: RenderContext, ledCount: number): n
     case AnimationMode.Loop: {
       const loopEffect = effect as EffectLoop<any>;
       const loopDurationMs = loopEffect.getLoopDurationSeconds(ledCount) * 1000;
-      return loopDurationMs > 0 ? Math.round(loopDurationMs) : null;
+      const loopCycles = renderCtx.getLoopCycles();
+      return loopDurationMs > 0 ? Math.round(loopDurationMs * loopCycles) : null;
     }
     case AnimationMode.Sequence: {
       const seqEffect = effect as EffectSequence<any>;
@@ -170,7 +172,7 @@ function estimateEffectDurationMs(renderCtx: RenderContext, ledCount: number): n
  * Estimate the total number of frames that renderAsap will produce,
  * based on the effect's animation mode and timing parameters.
  */
-function estimateTotalFrames(renderCtx: RenderContext, ledCount: number): number | null {
+function estimateTotalFrames(renderCtx: RenderContext, ledCount: number, loopCycles: number): number | null {
   const effect = renderCtx.effect;
   const frameTimeMs = renderCtx.getMinFrameTimeMs() * renderCtx.getCurrentSpeedMultiplier();
 
@@ -181,7 +183,7 @@ function estimateTotalFrames(renderCtx: RenderContext, ledCount: number): number
       const loopEffect = effect as EffectLoop<any>;
       const loopDurationMs = loopEffect.getLoopDurationSeconds(ledCount) * 1000;
       if (loopDurationMs <= 0) return null;
-      return Math.ceil(loopDurationMs / frameTimeMs);
+      return Math.ceil((loopDurationMs * loopCycles) / frameTimeMs);
     }
     case AnimationMode.Sequence: {
       const seqEffect = effect as EffectSequence<any>;

@@ -133,20 +133,22 @@ export class EffectRenderer implements Renderer {
       }
 
       case AnimationMode.Loop: {
-        // Render exactly one loop — no warmup needed
+        // Render the configured number of loop cycles
         const loopEffect = effect as EffectLoop<any>;
         const loopDurationMs = loopEffect.getLoopDurationSeconds(numberOfLeds) * 1000;
         if (loopDurationMs <= 0) {
           throw new Error(`Loop effect ${renderCtx.effectName} has invalid loop duration`);
         }
+        const loopCycles = renderCtx.getLoopCycles();
+        const totalDurationMs = loopDurationMs * loopCycles;
         let virtualTime = 0;
         let frameIndex = 0;
-        while (virtualTime < loopDurationMs) {
+        while (virtualTime < totalDurationMs) {
           signal.throwIfAborted();
           const ctx: EffectContextLoop = {
             total_leds: numberOfLeds,
             led_type: ledProfile,
-            phase: virtualTime / loopDurationMs,
+            phase: (virtualTime % loopDurationMs) / loopDurationMs,
           };
           const ledValues = logic.renderGlobal(ctx as any, points);
           await output.writeFrame(renderCtx.floatTo8bitColor(ledValues));
