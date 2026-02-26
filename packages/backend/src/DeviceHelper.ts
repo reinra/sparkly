@@ -5,7 +5,7 @@ import {
   ParameterType,
   RangeEffectParameter,
 } from './ParameterTypes';
-import { GestaltResponseType, TwinklyApiClient } from './deviceClient/ApiClient';
+import { GestaltResponseType, TwinklyApiClient, type DeviceModeType } from './deviceClient/ApiClient';
 import {
   DynamicParameterStorageView,
   EffectParameterStorage,
@@ -23,7 +23,7 @@ import {
 import { Rgb24 } from './color/Color8bit';
 import { type AnyEffect, LedPoint1D, LedPoint2D } from './effects/Effect';
 import { IdentityLedMapper, LedMapper, ReverseLedMapper, SegmentedLedMapper } from './render/LedMapper';
-import { EnabledDisabledSchema } from './deviceClient/ApiContract';
+import { DeviceModeSchema, EnabledDisabledSchema } from './deviceClient/ApiContract';
 import { EffectWrapper } from './EffectWrapper';
 
 export interface LedMapping {
@@ -55,6 +55,9 @@ export class DeviceHelper {
   private deviceParamsInitialized = false;
   private currentEffect: EffectWrapper | null = null;
   private points1DCache: LedPoint1D[] | null = null;
+  private currentMode: DeviceModeType = DeviceModeSchema.Values.off;
+  private lastDeviceRefreshTime = 0;
+  private static readonly DEVICE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
 
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
@@ -136,6 +139,28 @@ export class DeviceHelper {
     unit: '%',
     step: 1,
   };
+  private readonly brightness: RangeEffectParameter = {
+    id: 'brightness',
+    name: 'Brightness',
+    description: 'Current brightness of LEDs regardless of mode, not shown in previews',
+    type: ParameterType.RANGE,
+    value: 100,
+    min: 0,
+    max: 100,
+    unit: '%',
+    step: 1,
+  };
+  private readonly saturation: RangeEffectParameter = {
+    id: 'saturation',
+    name: 'Saturation',
+    description: 'Current saturation of LEDs regardless of mode, not shown in previews',
+    type: ParameterType.RANGE,
+    value: 100,
+    min: 0,
+    max: 100,
+    unit: '%',
+    step: 1,
+  };
   private readonly autoRotate: BooleanEffectParameter = {
     id: 'autoRotate',
     name: 'Auto-rotate effects',
@@ -173,6 +198,49 @@ export class DeviceHelper {
 
   public async refreshFromDevice(): Promise<void> {
     await this.ensureParams();
+    await this.loadStateFromDevice();
+  }
+
+  /**
+   * Load latest state from device and update local state.
+   * Called periodically to stay in sync with external changes.
+   */
+  private async loadStateFromDevice(): Promise<void> {
+    const summary = await this.apiClient.getSummary();
+    this.currentMode = summary.led_mode.mode;
+    const brightness = summary.filters?.find(
+      (f) => f.filter === 'brightness' && f.config.mode === EnabledDisabledSchema.Values.enabled
+    )?.config?.value;
+    if (brightness !== undefined) {
+      this.brightness.value = brightness;
+    }
+    this.lastDeviceRefreshTime = Date.now();
+  }
+
+  /**
+   * Refresh state from device if enough time has passed since last refresh.
+   * Returns true if a refresh was performed.
+   */
+  public async refreshStateFromDeviceIfStale(): Promise<boolean> {
+    await this.ensureParams();
+    if (Date.now() - this.lastDeviceRefreshTime >= DeviceHelper.DEVICE_REFRESH_INTERVAL_MS) {
+      await this.loadStateFromDevice();
+      return true;
+    }
+    return false;
+  }
+
+  public getMode(): DeviceModeType {
+    return this.currentMode;
+  }
+
+  public async setMode(mode: DeviceModeType): Promise<void> {
+    await this.apiClient.setMode(mode);
+    this.currentMode = mode;
+  }
+
+  public getBrightness(): number {
+    return this.brightness.value;
   }
 
   private initPromise: Promise<void> | null = null;
@@ -188,39 +256,15 @@ export class DeviceHelper {
   }
 
   private async initParams(): Promise<void> {
-    this.deviceParams.register(
-      {
-        id: 'brightness',
-        name: 'Brightness',
-        description: 'Current brightness of LEDs regardless of mode, not shown in previews',
-        type: ParameterType.RANGE,
-        value: (await this.getFilterValue('brightness')) ?? 100,
-        min: 0,
-        max: 100,
-        unit: '%',
-        step: 1,
-      },
-      async (_parameter, _oldValue, newValue) => {
-        await this.apiClient.setBrightnessAbsolute(newValue);
-      }
-    );
+    this.brightness.value = (await this.getFilterValue('brightness')) ?? 100;
+    this.deviceParams.register(this.brightness, async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setBrightnessAbsolute(newValue);
+    });
 
-    this.deviceParams.register(
-      {
-        id: 'saturation',
-        name: 'Saturation',
-        description: 'Current saturation of LEDs regardless of mode, not shown in previews',
-        type: ParameterType.RANGE,
-        value: (await this.getFilterValue('saturation')) ?? 100,
-        min: 0,
-        max: 100,
-        unit: '%',
-        step: 1,
-      },
-      async (_parameter, _oldValue, newValue) => {
-        await this.apiClient.setSaturationAbsolute(newValue);
-      }
-    );
+    this.saturation.value = (await this.getFilterValue('saturation')) ?? 100;
+    this.deviceParams.register(this.saturation, async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setSaturationAbsolute(newValue);
+    });
 
     this.maxFps.value = (await this.getGestalt()).frame_rate;
 
@@ -240,6 +284,11 @@ export class DeviceHelper {
         this.onAutoRotateChanged?.(true, this.autoRotateInterval.value);
       }
     });
+
+    // Initialize mode from device
+    const summary = await this.apiClient.getSummary();
+    this.currentMode = summary.led_mode.mode;
+    this.lastDeviceRefreshTime = Date.now();
 
     this.deviceParamsInitialized = true;
   }

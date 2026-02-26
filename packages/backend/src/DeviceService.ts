@@ -162,11 +162,11 @@ export class DeviceService {
     const deviceList: DeviceInfo[] = [];
 
     for (const device of devicesToQuery) {
-      let summary = null;
+      // Periodically refresh state from device to stay in sync with external changes
       try {
-        summary = await device.api_client.getSummary();
+        await device.helper.refreshStateFromDeviceIfStale();
       } catch (error) {
-        logError(error).error(`Error fetching summary for device ${device.id}`);
+        logError(error).error(`Error refreshing state for device ${device.id}`);
       }
 
       const currentEffect = device.helper.getCurrentEffect();
@@ -184,8 +184,8 @@ export class DeviceService {
         ip: device.api_client.getIp(),
         name: await device.helper.getDeviceName(),
         led_count: ledCount,
-        brightness: summary?.filters?.find((f) => f.filter === 'brightness')?.config?.value,
-        mode: summary?.led_mode?.mode,
+        brightness: device.helper.getBrightness(),
+        mode: device.helper.getMode(),
         effect: currentEffect
           ? {
               id: currentEffect.id,
@@ -204,10 +204,6 @@ export class DeviceService {
             group: getEffectGroup(p),
           })),
       });
-
-      logger
-        .withMetadata({ deviceId: device.id, paramCount: deviceList[deviceList.length - 1].parameters.length })
-        .info('Device parameters loaded');
     }
 
     logger
@@ -270,12 +266,13 @@ export class DeviceService {
       this.taskExecutor.abortTask(deviceId);
     }
 
-    await device.api_client.setMode(validMode);
+    await device.helper.setMode(validMode);
   }
 
   async setBrightness(deviceId: string, brightness: number): Promise<void> {
     const device = this.getDevice(deviceId);
-    await device.api_client.setBrightnessAbsolute(brightness);
+    const params = await device.helper.getParameters();
+    params.setValue('device.brightness', brightness);
   }
 
   async chooseEffect(deviceId: string, effectId: string | null): Promise<void> {

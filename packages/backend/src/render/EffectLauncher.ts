@@ -85,7 +85,7 @@ export async function startEffect(device: Device, renderCtx: RenderContext, sign
 }
 
 async function prepareForSendingLedValues(device: Device) {
-  await device.api_client.setMode(DeviceModeSchema.Values.rt);
+  await device.helper.setMode(DeviceModeSchema.Values.rt);
 }
 
 export async function sendEffectAsMovie(
@@ -136,7 +136,7 @@ export async function sendEffectAsMovie(
     frames_number: movieBuffer.getFrameCount(),
   });
 
-  await device.api_client.setMode(DeviceModeSchema.Values.movie);
+  await device.helper.setMode(DeviceModeSchema.Values.movie);
   progressCb?.onComplete(movieBuffer.getFrameCount(), effectDurationMs);
 }
 
