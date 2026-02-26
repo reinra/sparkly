@@ -162,13 +162,6 @@ export class DeviceService {
     const deviceList: DeviceInfo[] = [];
 
     for (const device of devicesToQuery) {
-      let gestalt = null;
-      try {
-        gestalt = await device.api_client.gestalt();
-      } catch (error) {
-        logError(error).error(`Error fetching gestalt for device ${device.id}`);
-      }
-
       let summary = null;
       try {
         summary = await device.api_client.getSummary();
@@ -177,7 +170,7 @@ export class DeviceService {
       }
 
       const currentEffect = device.helper.getCurrentEffect();
-      const ledCount = gestalt?.number_of_led;
+      const ledCount = await device.helper.getLedCount();
 
       // Compute loop duration for loop effects when LED count is known
       let loopDurationSeconds: number | undefined;
@@ -189,7 +182,7 @@ export class DeviceService {
         id: device.id,
         alias: device.alias,
         ip: device.api_client.getIp(),
-        name: gestalt?.device_name,
+        name: await device.helper.getDeviceName(),
         led_count: ledCount,
         brightness: summary?.filters?.find((f) => f.filter === 'brightness')?.config?.value,
         mode: summary?.led_mode?.mode,

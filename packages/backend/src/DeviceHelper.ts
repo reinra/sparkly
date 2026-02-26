@@ -270,8 +270,17 @@ export class DeviceHelper {
     return this.gestaltCache;
   }
 
+  public async getLedCount(): Promise<number> {
+    return (await this.getGestalt()).number_of_led;
+  }
+
+  public async getDeviceName(): Promise<string> {
+    const gestalt = await this.getGestalt();
+    return gestalt.device_name || 'Unknown Device';
+  }
+
   public async getPoints(effect: AnyEffect): Promise<LedPoint1D[] | LedPoint2D[]> {
-    const ledCount = (await this.getGestalt()).number_of_led;
+    const ledCount = await this.getLedCount();
     if (effect.pointType === '1D') {
       if (!this.currentEffect) {
         throw new Error('No current effect set');
