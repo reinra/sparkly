@@ -127,7 +127,7 @@ export class PaletteParameters {
       name: 'Mode',
       description: 'How to generate rainbow colors',
       type: ParameterType.OPTION,
-      value: RainbowMode.Rotate,
+      value: RainbowMode.Random,
       options: [
         { value: RainbowMode.Rotate, label: 'Rotate', description: 'Smoothly rotate through the color wheel' },
         { value: RainbowMode.Random, label: 'Random', description: 'Pick random saturated colors' },
