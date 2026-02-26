@@ -140,7 +140,7 @@
       <select value={effect?.id} onchange={updateEffect} disabled={updating}>
         <option value={null}>(None)</option>
         {#each effects as eff}
-          <option value={eff.id}>{eff.id}</option>
+          <option value={eff.id}>{eff.name}</option>
         {/each}
       </select>
     </p>
