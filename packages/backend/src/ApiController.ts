@@ -90,6 +90,11 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     res.json({ success: true });
   },
 
+  discoverDevices: async (_req, res) => {
+    const result = await deviceService.discoverDevices();
+    res.json(result);
+  },
+
   addDevice: async (req, res) => {
     const result = await deviceService.addDevice(req.body.ip);
     res.json(result);

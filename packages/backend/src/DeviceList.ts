@@ -2,6 +2,8 @@ import { TwinklyApiClient, DeviceUnreachableError } from './deviceClient/ApiClie
 import { loadConfig, addDeviceToConfig, removeDeviceFromConfig } from './config';
 import { logger, logError } from './logger';
 import { DeviceHelper } from './DeviceHelper';
+import { discoverDevicesOnNetwork } from './deviceClient/Discovery';
+import type { DiscoveredDevice } from '@twinkly-ts/common';
 
 const config = loadConfig();
 
@@ -138,4 +140,39 @@ export class RemoveDeviceError extends Error {
     super(message);
     this.name = 'RemoveDeviceError';
   }
+}
+
+/**
+ * Broadcast UDP discovery, enrich each result with gestalt() for the device name,
+ * and mark which devices are already configured.
+ */
+export async function discoverDevices(): Promise<DiscoveredDevice[]> {
+  const rawResults = await discoverDevicesOnNetwork();
+
+  const configuredIps = new Set(Object.values(devices).map((d) => d.apiClient.getIp()));
+
+  const enriched: DiscoveredDevice[] = [];
+
+  for (const raw of rawResults) {
+    let deviceName = 'Twinkly Device';
+    let ledCount: number | undefined;
+    try {
+      const probeClient = new TwinklyApiClient(raw.ip);
+      const gestalt = await probeClient.gestalt();
+      deviceName = gestalt.device_name || deviceName;
+      ledCount = gestalt.number_of_led;
+    } catch (error) {
+      logError(error).debug(`Could not fetch gestalt for discovered device at ${raw.ip}`);
+    }
+
+    enriched.push({
+      ip: raw.ip,
+      deviceId: raw.deviceId,
+      deviceName,
+      ledCount,
+      alreadyAdded: configuredIps.has(raw.ip),
+    });
+  }
+
+  return enriched;
 }

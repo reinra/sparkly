@@ -332,6 +332,22 @@ const RemoveDeviceResponseSchema = z.discriminatedUnion('success', [
 ]);
 
 export type RemoveDeviceResponse = z.infer<typeof RemoveDeviceResponseSchema>;
+
+const DiscoveredDeviceSchema = z.object({
+  ip: z.string(),
+  deviceId: z.string(),
+  deviceName: z.string(),
+  ledCount: z.number().optional(),
+  alreadyAdded: z.boolean(),
+});
+
+const DiscoverDevicesResponseSchema = z.object({
+  devices: z.array(DiscoveredDeviceSchema),
+});
+
+export type DiscoveredDevice = z.infer<typeof DiscoveredDeviceSchema>;
+export type DiscoverDevicesResponse = z.infer<typeof DiscoverDevicesResponseSchema>;
+
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type DeviceInfo = z.infer<typeof DeviceInfoResponseSchema>;
@@ -515,6 +531,14 @@ export const backendApiContract = c.router({
     path: '/api/system-info',
     responses: {
       200: SystemInfoResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  discoverDevices: {
+    method: 'GET',
+    path: '/api/device/discover',
+    responses: {
+      200: DiscoverDevicesResponseSchema,
       500: ErrorResponseSchema,
     },
   },

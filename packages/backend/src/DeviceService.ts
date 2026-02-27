@@ -1,6 +1,14 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { TaskExecutor } from './TaskExecutor';
-import { devices, probeAndAddDevice, AddDeviceError, removeDevice, RemoveDeviceError } from './DeviceList';
+import {
+  devices,
+  probeAndAddDevice,
+  AddDeviceError,
+  removeDevice,
+  RemoveDeviceError,
+  discoverDevices,
+} from './DeviceList';
+import type { DiscoveredDevice } from '@twinkly-ts/common';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
@@ -437,6 +445,15 @@ export class DeviceService {
       }
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
+  }
+
+  /**
+   * Discover Twinkly devices on the local network via UDP broadcast.
+   * Returns enriched results with device names and already-added status.
+   */
+  async discoverDevices(): Promise<{ devices: DiscoveredDevice[] }> {
+    const found = await discoverDevices();
+    return { devices: found };
   }
 
   /**
