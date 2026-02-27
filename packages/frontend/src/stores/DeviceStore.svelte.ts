@@ -6,6 +6,7 @@ let devices = $state<GetInfoResponse['devices']>([]);
 let effects = $state<GetInfoResponse['effects']>([]);
 let deviceModes = $state<DeviceMode[]>([]);
 let loading = $state(false);
+let initialLoadDone = $state(false);
 let error = $state('');
 
 // Auto-rotate polling
@@ -57,6 +58,9 @@ export const deviceStore = {
   get loading() {
     return loading;
   },
+  get initialLoadDone() {
+    return initialLoadDone;
+  },
   get error() {
     return error;
   },
@@ -95,6 +99,7 @@ export const deviceStore = {
       error = (e as Error).message;
     } finally {
       loading = false;
+      initialLoadDone = true;
     }
   },
 

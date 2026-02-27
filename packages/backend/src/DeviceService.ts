@@ -160,7 +160,7 @@ export class DeviceService {
   }
 
   async getInfo(deviceId?: string): Promise<InfoResult> {
-    const devicesToQuery = deviceId ? [this.getDevice(deviceId)] : Object.values(devices);
+    const devicesToQuery = deviceId ? (devices[deviceId] ? [devices[deviceId]] : []) : Object.values(devices);
 
     const deviceList: DeviceInfo[] = [];
 
@@ -382,8 +382,7 @@ export class DeviceService {
 
   /** Get current movie-send progress for a device, or null if none. */
   getMovieStatus(deviceId: string): MovieTaskProgress | null {
-    // Validate device exists
-    this.getDevice(deviceId);
+    if (!devices[deviceId]) return null;
     return getMovieTaskProgress(deviceId);
   }
 

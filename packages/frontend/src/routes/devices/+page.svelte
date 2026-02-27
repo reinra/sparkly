@@ -7,7 +7,7 @@
 
   $effect(() => {
     // Fetch devices on mount if not already loaded
-    if (deviceStore.devices.length === 0 && !deviceStore.loading) {
+    if (!deviceStore.initialLoadDone && !deviceStore.loading) {
       deviceStore.fetchAllDevices();
     }
   });

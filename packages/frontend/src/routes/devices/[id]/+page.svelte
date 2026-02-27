@@ -25,7 +25,9 @@
 
   // Check for active movie task on mount / device change
   $effect(() => {
-    checkActiveMovieTask(deviceId);
+    if (device) {
+      checkActiveMovieTask(deviceId);
+    }
   });
 
   async function checkActiveMovieTask(devId: string) {
@@ -43,9 +45,9 @@
 
   // Fetch devices on mount or when device ID changes
   $effect(() => {
-    if (deviceStore.devices.length === 0) {
+    if (!deviceStore.initialLoadDone && !deviceStore.loading) {
       deviceStore.fetchAllDevices();
-    } else {
+    } else if (device) {
       // Only fetch when deviceId changes, not when devices array updates
       deviceStore.fetchDevice(deviceId);
     }
