@@ -3,6 +3,8 @@ import { logger } from '../logger';
 
 const DISCOVERY_PORT = 5555;
 const DISCOVERY_TIMEOUT_MS = 3000;
+const DISCOVERY_BROADCAST_COUNT = 3;
+const DISCOVERY_BROADCAST_INTERVAL_MS = 800;
 
 /** Raw result from UDP discovery before gestalt enrichment. */
 export interface DiscoveryRawResult {
@@ -96,15 +98,25 @@ export function discoverDevicesOnNetwork(timeoutMs: number = DISCOVERY_TIMEOUT_M
       socket.setBroadcast(true);
       const message = buildDiscoveryMessage();
 
-      socket.send(message, 0, message.length, DISCOVERY_PORT, '255.255.255.255', (err) => {
-        if (err) {
-          logger.error(`Failed to send discovery broadcast: ${err.message}`);
-          cleanup();
-          reject(err);
-          return;
-        }
-        logger.debug('Discovery broadcast sent');
-      });
+      // Send multiple broadcasts to improve reliability (UDP is unreliable)
+      let sent = 0;
+      const sendBroadcast = () => {
+        socket.send(message, 0, message.length, DISCOVERY_PORT, '255.255.255.255', (err) => {
+          if (err) {
+            logger.error(`Failed to send discovery broadcast: ${err.message}`);
+            cleanup();
+            reject(err);
+            return;
+          }
+          sent++;
+          logger.debug(`Discovery broadcast sent (${sent}/${DISCOVERY_BROADCAST_COUNT})`);
+        });
+      };
+
+      sendBroadcast();
+      for (let i = 1; i < DISCOVERY_BROADCAST_COUNT; i++) {
+        setTimeout(sendBroadcast, DISCOVERY_BROADCAST_INTERVAL_MS * i);
+      }
 
       // Collect responses for the timeout duration, then resolve
       setTimeout(() => {
