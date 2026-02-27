@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction, Express } from 'express';
 import { z } from 'zod';
-import { logError } from './logger';
+import { logger, logError } from './logger';
 import { DeviceUnreachableError } from './deviceClient/ApiClient';
 import { DeviceNotFoundError, EffectNotFoundError } from './DeviceService';
 
@@ -104,24 +104,28 @@ export function createTypedHandler<T extends EndpointDefinition>(endpoint: T, ha
 
       await handler(typedReq, res as TypedResponse<T>);
     } catch (error) {
-      logError(error).error('Handler error');
-
+      // Client errors (404, 400) are expected and logged at WARN level;
+      // only true server errors are logged at ERROR level.
       if (error instanceof z.ZodError) {
+        logger.warn('Handler validation error: ' + error.errors.map((e) => e.message).join(', '));
         const errorResponse = endpoint.responses[500].parse({
           error: 'Invalid request: ' + error.errors.map((e) => e.message).join(', '),
         });
         return res.status(400).json(errorResponse);
       } else if (error instanceof DeviceNotFoundError || error instanceof EffectNotFoundError) {
+        logger.warn(error.message);
         const errorResponse = endpoint.responses[500]?.parse({
           error: error.message,
         });
         return res.status(404).json(errorResponse);
       } else if (error instanceof DeviceUnreachableError) {
+        logger.warn('Device unreachable: ' + error.message);
         const errorResponse = endpoint.responses[500]?.parse({
           error: error.message,
         });
         return res.status(503).json(errorResponse);
       } else {
+        logError(error).error('Handler error');
         const errorResponse = endpoint.responses[500]?.parse({
           error: 'Internal server error',
         });

@@ -149,6 +149,15 @@
         bufferData = null;
         phase = null;
         colors = [];
+
+        // Stop live polling on error (e.g. device was removed → 404)
+        if (isLiveEnabled) {
+          isLiveEnabled = false;
+          if (liveIntervalId !== null) {
+            clearTimeout(liveIntervalId);
+            liveIntervalId = null;
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching buffer:', error);
