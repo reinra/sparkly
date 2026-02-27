@@ -31,12 +31,9 @@ export function loadConfig(): Config {
   const configPath = getConfigPath();
 
   if (!existsSync(configPath)) {
-    throw new Error(
-      `Configuration file not found: ${configPath}\n\n` +
-        `Please create a config.toml file by copying config.toml.example:\n` +
-        `  cp config.toml.example config.toml\n\n` +
-        `Then update it with your Twinkly device's IP address.`
-    );
+    // No config file yet — start with an empty device list.
+    // Devices can be added at runtime via the UI.
+    return { device: [] };
   }
 
   const configContent = readFileSync(configPath, 'utf-8');
@@ -50,8 +47,9 @@ export function loadConfig(): Config {
  */
 export function addDeviceToConfig(ip: string): void {
   const configPath = getConfigPath();
-  const configContent = readFileSync(configPath, 'utf-8');
-  const parsed = parseToml(configContent) as Record<string, unknown>;
+  const parsed: Record<string, unknown> = existsSync(configPath)
+    ? (parseToml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>)
+    : {};
 
   const devices = (parsed.device ?? []) as Array<{ ip: string }>;
   devices.push({ ip });
@@ -66,8 +64,8 @@ export function addDeviceToConfig(ip: string): void {
  */
 export function removeDeviceFromConfig(ip: string): void {
   const configPath = getConfigPath();
-  const configContent = readFileSync(configPath, 'utf-8');
-  const parsed = parseToml(configContent) as Record<string, unknown>;
+  if (!existsSync(configPath)) return;
+  const parsed = parseToml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 
   const devices = (parsed.device ?? []) as Array<{ ip: string }>;
   parsed.device = devices.filter((d) => d.ip !== ip);
