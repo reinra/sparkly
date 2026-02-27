@@ -421,7 +421,9 @@ export class DeviceService {
    * Probes the device, adds to in-memory list, persists to config.toml.
    * Returns success result or error result with descriptive message.
    */
-  async addDevice(ip: string): Promise<{ success: true; deviceId: string; deviceName: string } | { success: false; error: string }> {
+  async addDevice(
+    ip: string
+  ): Promise<{ success: true; deviceId: string; deviceName: string } | { success: false; error: string }> {
     try {
       const result = await probeAndAddDevice(ip);
       // Initialize auto-rotate callback for the new device

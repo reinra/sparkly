@@ -8,7 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Detect if running in Bun bundled executable
-const isBundledExecutable = typeof process !== 'undefined' && 
+const isBundledExecutable =
+  typeof process !== 'undefined' &&
   (process.execPath?.includes('twinkly-server') || process.argv[0]?.includes('twinkly-server'));
 
 // Define config schema with Zod
@@ -23,9 +24,7 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function getConfigPath(): string {
-  return isBundledExecutable
-    ? join(process.cwd(), 'config.toml')
-    : join(__dirname, '..', 'config.toml');
+  return isBundledExecutable ? join(process.cwd(), 'config.toml') : join(__dirname, '..', 'config.toml');
 }
 
 export function loadConfig(): Config {
