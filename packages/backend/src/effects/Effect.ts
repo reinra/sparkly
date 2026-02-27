@@ -96,6 +96,9 @@ export interface Effect<A extends AnimationMode, P extends LedPoint> {
   readonly effectName?: string;
   getPresets?(): EffectPreset[];
 
+  // If true, this effect is excluded from auto-rotate cycling
+  readonly skipInAutoRotate?: boolean;
+
   // Factory function to create a new instance of the effect logic, for stateless effects this can just return 'this'
   createLogic: () => EffectLogic<A, P>;
 }

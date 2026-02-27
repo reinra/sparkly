@@ -137,17 +137,19 @@ export class DeviceService {
   }
 
   private getNextEffectId(deviceId: string): string | null {
-    const effectIds = Object.keys(effects);
-    if (effectIds.length === 0) return null;
+    const rotatableIds = Object.keys(effects).filter((id) => !effects[id].effect.skipInAutoRotate);
+    if (rotatableIds.length === 0) return null;
 
     const device = this.getDevice(deviceId);
     const currentEffect = device.getCurrentEffect();
     if (!currentEffect) {
-      return effectIds[0];
+      return rotatableIds[0];
     }
 
-    const currentIndex = effectIds.indexOf(currentEffect.id);
-    return effectIds[(currentIndex + 1) % effectIds.length];
+    const currentIndex = rotatableIds.indexOf(currentEffect.id);
+    // If current effect is not in the rotatable list (e.g. a test effect), start from the beginning
+    if (currentIndex === -1) return rotatableIds[0];
+    return rotatableIds[(currentIndex + 1) % rotatableIds.length];
   }
 
   getDevice(deviceId: string): DeviceHelper {

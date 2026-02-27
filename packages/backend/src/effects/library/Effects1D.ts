@@ -292,6 +292,7 @@ export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, Led
   isStateful: false = false;
   readonly effectId = 'test_per_led';
   readonly effectName = 'Test Per-Led 1D';
+  readonly skipInAutoRotate = true;
   getLoopDurationSeconds(ledCount: number): number {
     return ledCount / 2;
   }
@@ -311,6 +312,7 @@ export class TestAllLedsFlash implements EffectLoop<LedPoint1D> {
   isStateful: boolean = true;
   readonly effectId = 'test_all_leds_flash';
   readonly effectName = 'Test All LEDs Flash';
+  readonly skipInAutoRotate = true;
   getLoopDurationSeconds(ledCount: number): number {
     return 1;
   }
@@ -500,6 +502,7 @@ export class TestRgbPickerEffect extends BaseSameColorEffect<AnimationMode.Stati
   readonly animationMode = AnimationMode.Static;
   readonly effectId = 'test_rgb_picker';
   readonly effectName = 'Test RGB Picker';
+  readonly skipInAutoRotate = true;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -517,6 +520,7 @@ export class TestColorPickerEffect extends BaseSameColorEffect<AnimationMode.Sta
   readonly animationMode = AnimationMode.Static;
   readonly effectId = 'test_color_picker';
   readonly effectName = 'Test Color Picker';
+  readonly skipInAutoRotate = true;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
