@@ -325,6 +325,13 @@ const AddDeviceResponseSchema = z.discriminatedUnion('success', [
 // Export types
 export type AddDeviceRequest = z.infer<typeof AddDeviceRequestSchema>;
 export type AddDeviceResponse = z.infer<typeof AddDeviceResponseSchema>;
+
+const RemoveDeviceResponseSchema = z.discriminatedUnion('success', [
+  z.object({ success: z.literal(true) }),
+  z.object({ success: z.literal(false), error: z.string() }),
+]);
+
+export type RemoveDeviceResponse = z.infer<typeof RemoveDeviceResponseSchema>;
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type DeviceInfo = z.infer<typeof DeviceInfoResponseSchema>;
@@ -517,6 +524,15 @@ export const backendApiContract = c.router({
     body: AddDeviceRequestSchema,
     responses: {
       200: AddDeviceResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  removeDevice: {
+    method: 'POST',
+    path: '/api/device/remove',
+    body: DeviceRequestBaseSchema,
+    responses: {
+      200: RemoveDeviceResponseSchema,
       500: ErrorResponseSchema,
     },
   },

@@ -94,4 +94,9 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     const result = await deviceService.addDevice(req.body.ip);
     res.json(result);
   },
+
+  removeDevice: (req, res) => {
+    const result = deviceService.removeDevice(req.body.device_id);
+    res.json(result);
+  },
 };

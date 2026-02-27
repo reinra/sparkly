@@ -59,3 +59,18 @@ export function addDeviceToConfig(ip: string): void {
 
   writeFileSync(configPath, stringifyToml(parsed), 'utf-8');
 }
+
+/**
+ * Remove a device entry from config.toml by IP address.
+ * Reads the current config, filters out the matching device, and writes back.
+ */
+export function removeDeviceFromConfig(ip: string): void {
+  const configPath = getConfigPath();
+  const configContent = readFileSync(configPath, 'utf-8');
+  const parsed = parseToml(configContent) as Record<string, unknown>;
+
+  const devices = (parsed.device ?? []) as Array<{ ip: string }>;
+  parsed.device = devices.filter((d) => d.ip !== ip);
+
+  writeFileSync(configPath, stringifyToml(parsed), 'utf-8');
+}

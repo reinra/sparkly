@@ -1,5 +1,5 @@
 import { TwinklyApiClient, DeviceUnreachableError } from './deviceClient/ApiClient';
-import { loadConfig, addDeviceToConfig } from './config';
+import { loadConfig, addDeviceToConfig, removeDeviceFromConfig } from './config';
 import { logger, logError } from './logger';
 import { DeviceHelper } from './DeviceHelper';
 
@@ -76,9 +76,7 @@ export async function probeAndAddDevice(ip: string): Promise<AddDeviceResult> {
         'Connection timed out. Verify the device is powered on and reachable from this network.'
       );
     }
-    throw new AddDeviceError(
-      `Failed to connect: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    throw new AddDeviceError(`Failed to connect: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
   // 4. Assign next ID and register the device
@@ -109,5 +107,35 @@ export class AddDeviceError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AddDeviceError';
+  }
+}
+
+/**
+ * Remove a device from the in-memory device list and persist the change to config.toml.
+ * Throws RemoveDeviceError if the device is not found.
+ */
+export function removeDevice(deviceId: string): void {
+  const device = devices[deviceId];
+  if (!device) {
+    throw new RemoveDeviceError(`Device with ID ${deviceId} not found.`);
+  }
+
+  const ip = device.apiClient.getIp();
+  delete devices[deviceId];
+
+  try {
+    removeDeviceFromConfig(ip);
+    logger.info(`Removed device ${deviceId} (${ip}) from config.toml`);
+  } catch (err) {
+    logError(err).error('Failed to remove device from config.toml (device removed in-memory only)');
+  }
+
+  logger.info(`Removed device ${deviceId}`);
+}
+
+export class RemoveDeviceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RemoveDeviceError';
   }
 }

@@ -3,6 +3,7 @@
   import { handleApiUpdate } from '../utils/ApiHelper';
   import DeviceBufferViewer from './DeviceBufferViewer.svelte';
   import SendMovieDialog from './SendMovieDialog.svelte';
+  import RemoveDeviceDialog from './RemoveDeviceDialog.svelte';
   import { deviceStore } from '../stores/DeviceStore.svelte';
 
   interface Props {
@@ -17,6 +18,7 @@
   let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
   let showMovieDialog = $state(false);
+  let showRemoveDialog = $state(false);
 
   async function updateBrightness(event: Event & { currentTarget: HTMLInputElement }) {
     const value = Number(event.currentTarget.value);
@@ -111,12 +113,22 @@
     showMovieDialog = false;
     deviceStore.fetchDevice(device.id);
   }
+
+  function handleRemoveDialogClose(removed: boolean) {
+    showRemoveDialog = false;
+    if (removed) {
+      deviceStore.fetchAllDevices();
+    }
+  }
 </script>
 
 <div class="device-card">
   <div class="device-header">
     <h3 class="device-title"><a href="/devices/{device.id}">{device.alias}</a></h3>
     <a href="/devices/{device.id}" class="details-button">Details</a>
+    <button class="remove-icon-button" onclick={() => (showRemoveDialog = true)} title="Remove device">
+      &#10005;
+    </button>
   </div>
   <div class="device-info">
     <p><strong>IP:</strong> {device.ip}</p>
@@ -163,6 +175,15 @@
 
 {#if showMovieDialog}
   <SendMovieDialog deviceId={device.id} onclose={closeMovieDialog} />
+{/if}
+
+{#if showRemoveDialog}
+  <RemoveDeviceDialog
+    deviceId={device.id}
+    deviceAlias={device.alias}
+    deviceIp={device.ip}
+    onclose={handleRemoveDialogClose}
+  />
 {/if}
 
 <style>
@@ -218,6 +239,28 @@
 
   .details-button:hover {
     background: #0a7d45;
+  }
+
+  .remove-icon-button {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin: 0;
+    margin-left: 0.5rem;
+    line-height: 1;
+    font-weight: normal;
+  }
+
+  .remove-icon-button:hover {
+    color: #d32f2f;
+    background: #ffebee;
+    transform: none;
+    box-shadow: none;
   }
 
   .device-title:hover {

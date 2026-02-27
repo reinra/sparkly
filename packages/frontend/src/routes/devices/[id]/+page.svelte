@@ -4,8 +4,10 @@
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
   import EffectParameters from '../../../components/EffectParameters.svelte';
   import SendMovieDialog from '../../../components/SendMovieDialog.svelte';
+  import RemoveDeviceDialog from '../../../components/RemoveDeviceDialog.svelte';
   import { deviceStore } from '../../../stores/DeviceStore.svelte';
   import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { ParameterGroup } from '@twinkly-ts/common';
 
   let deviceId = $derived(page.params.id);
@@ -16,6 +18,7 @@
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
   let showMovieDialog = $state(false);
+  let showRemoveDialog = $state(false);
 
   let deviceParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.DEVICE));
   let effectParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.EFFECT));
@@ -141,6 +144,14 @@
     deviceStore.fetchDevice(deviceId);
   }
 
+  async function handleRemoveDialogClose(removed: boolean) {
+    showRemoveDialog = false;
+    if (removed) {
+      await deviceStore.fetchAllDevices();
+      goto('/devices');
+    }
+  }
+
   async function cloneEffect() {
     if (!device || updating || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
     const sourceEffect = effects[selectedEffectIndex];
@@ -256,6 +267,9 @@
         {/if}
 
         <button onclick={sendMovie} disabled={updating || !device.effect}> Send Movie </button>
+        <button class="remove-device-button" onclick={() => (showRemoveDialog = true)} disabled={updating}>
+          Remove Device
+        </button>
       </div>
 
       <div class="effect-info-section">
@@ -330,6 +344,15 @@
 
     {#if showMovieDialog}
       <SendMovieDialog {deviceId} onclose={closeMovieDialog} />
+    {/if}
+
+    {#if showRemoveDialog}
+      <RemoveDeviceDialog
+        {deviceId}
+        deviceAlias={device.alias}
+        deviceIp={device.ip}
+        onclose={handleRemoveDialogClose}
+      />
     {/if}
   {:else}
     <p class="error">Device not found</p>
@@ -448,6 +471,17 @@
   }
 
   .delete-button:hover:not(:disabled) {
+    background: #b71c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+  }
+
+  .remove-device-button {
+    background: #d32f2f;
+    margin-top: 0.5rem;
+  }
+
+  .remove-device-button:hover:not(:disabled) {
     background: #b71c1c;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);

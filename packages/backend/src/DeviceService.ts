@@ -1,6 +1,6 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { TaskExecutor } from './TaskExecutor';
-import { devices, probeAndAddDevice, AddDeviceError } from './DeviceList';
+import { devices, probeAndAddDevice, AddDeviceError, removeDevice, RemoveDeviceError } from './DeviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
@@ -414,6 +414,30 @@ export class DeviceService {
     }
     deleteEffect(effectId);
     logger.withMetadata({ effectId }).info('Effect deleted');
+  }
+
+  /**
+   * Remove a device by ID.
+   * Stops running tasks, clears state, removes from in-memory list and config.toml.
+   */
+  removeDevice(deviceId: string): { success: true } | { success: false; error: string } {
+    try {
+      this.taskExecutor.abortTask(deviceId);
+      this.stopAutoRotate(deviceId);
+
+      const device = devices[deviceId];
+      if (device) {
+        device.setCurrentEffect(null);
+      }
+
+      removeDevice(deviceId);
+      return { success: true };
+    } catch (error) {
+      if (error instanceof RemoveDeviceError) {
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
   }
 
   /**
