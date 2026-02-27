@@ -1,6 +1,9 @@
 <script lang="ts">
   import DeviceCard from '../../components/DeviceCard.svelte';
+  import AddDeviceDialog from '../../components/AddDeviceDialog.svelte';
   import { deviceStore } from '../../stores/DeviceStore.svelte';
+
+  let showAddDialog = $state(false);
 
   $effect(() => {
     // Fetch devices on mount if not already loaded
@@ -8,6 +11,13 @@
       deviceStore.fetchAllDevices();
     }
   });
+
+  function handleAddDialogClose(added: boolean) {
+    showAddDialog = false;
+    if (added) {
+      deviceStore.fetchAllDevices();
+    }
+  }
 </script>
 
 <div class="devices-page">
@@ -27,8 +37,15 @@
     <p class="no-devices">No devices configured</p>
   {/if}
 
-  <button onclick={() => deviceStore.fetchAllDevices()} disabled={deviceStore.loading}> Refresh Devices </button>
+  <div class="actions">
+    <button onclick={() => deviceStore.fetchAllDevices()} disabled={deviceStore.loading}> Refresh Devices </button>
+    <button class="add-button" onclick={() => (showAddDialog = true)}> + Add Device </button>
+  </div>
 </div>
+
+{#if showAddDialog}
+  <AddDeviceDialog onclose={handleAddDialogClose} />
+{/if}
 
 <style>
   .devices-page {
@@ -46,6 +63,12 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
   button {
@@ -66,6 +89,14 @@
   button:disabled {
     background: #ccc;
     cursor: not-allowed;
+  }
+
+  .add-button {
+    background: #0f9d58;
+  }
+
+  .add-button:hover {
+    background: #0a7d45;
   }
 
   .loading {

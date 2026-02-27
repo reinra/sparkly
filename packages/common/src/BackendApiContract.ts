@@ -306,7 +306,25 @@ const ErrorResponseSchema = z.object({
   error: z.string(),
 });
 
+const AddDeviceRequestSchema = z.object({
+  ip: z.string(),
+});
+
+const AddDeviceResponseSchema = z.discriminatedUnion('success', [
+  z.object({
+    success: z.literal(true),
+    deviceId: z.string(),
+    deviceName: z.string(),
+  }),
+  z.object({
+    success: z.literal(false),
+    error: z.string(),
+  }),
+]);
+
 // Export types
+export type AddDeviceRequest = z.infer<typeof AddDeviceRequestSchema>;
+export type AddDeviceResponse = z.infer<typeof AddDeviceResponseSchema>;
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type DeviceInfo = z.infer<typeof DeviceInfoResponseSchema>;
@@ -490,6 +508,15 @@ export const backendApiContract = c.router({
     path: '/api/system-info',
     responses: {
       200: SystemInfoResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  addDevice: {
+    method: 'POST',
+    path: '/api/device/add',
+    body: AddDeviceRequestSchema,
+    responses: {
+      200: AddDeviceResponseSchema,
       500: ErrorResponseSchema,
     },
   },

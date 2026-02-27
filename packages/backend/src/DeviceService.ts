@@ -1,6 +1,6 @@
 import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
 import { TaskExecutor } from './TaskExecutor';
-import { devices } from './DeviceList';
+import { devices, probeAndAddDevice, AddDeviceError } from './DeviceList';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
@@ -86,14 +86,18 @@ export class DeviceService {
    */
   initAutoRotateCallbacks(): void {
     for (const device of Object.values(devices)) {
-      device.setAutoRotateCallback((enabled, intervalSeconds) => {
-        if (enabled) {
-          this.startAutoRotate(device.id, intervalSeconds);
-        } else {
-          this.stopAutoRotate(device.id);
-        }
-      });
+      this.initAutoRotateForDevice(device);
     }
+  }
+
+  private initAutoRotateForDevice(device: DeviceHelper): void {
+    device.setAutoRotateCallback((enabled, intervalSeconds) => {
+      if (enabled) {
+        this.startAutoRotate(device.id, intervalSeconds);
+      } else {
+        this.stopAutoRotate(device.id);
+      }
+    });
   }
 
   private startAutoRotate(deviceId: string, intervalSeconds: number): void {
@@ -410,6 +414,28 @@ export class DeviceService {
     }
     deleteEffect(effectId);
     logger.withMetadata({ effectId }).info('Effect deleted');
+  }
+
+  /**
+   * Add a new device by IP address.
+   * Probes the device, adds to in-memory list, persists to config.toml.
+   * Returns success result or error result with descriptive message.
+   */
+  async addDevice(ip: string): Promise<{ success: true; deviceId: string; deviceName: string } | { success: false; error: string }> {
+    try {
+      const result = await probeAndAddDevice(ip);
+      // Initialize auto-rotate callback for the new device
+      const device = devices[result.deviceId];
+      if (device) {
+        this.initAutoRotateForDevice(device);
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof AddDeviceError) {
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { readFileSync, existsSync } from 'fs';
-import { parse as parseToml } from 'smol-toml';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -22,12 +22,14 @@ const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 
-export function loadConfig(): Config {
-  // In bundled executable, look for config.toml in the current working directory
-  // In development, look relative to the compiled output directory
-  const configPath = isBundledExecutable 
+export function getConfigPath(): string {
+  return isBundledExecutable
     ? join(process.cwd(), 'config.toml')
     : join(__dirname, '..', 'config.toml');
+}
+
+export function loadConfig(): Config {
+  const configPath = getConfigPath();
 
   if (!existsSync(configPath)) {
     throw new Error(
@@ -41,4 +43,20 @@ export function loadConfig(): Config {
   const configContent = readFileSync(configPath, 'utf-8');
   const parsedToml = parseToml(configContent);
   return ConfigSchema.parse(parsedToml);
+}
+
+/**
+ * Add a device entry to config.toml.
+ * Reads the current config, appends the new device, and writes back using smol-toml.
+ */
+export function addDeviceToConfig(ip: string): void {
+  const configPath = getConfigPath();
+  const configContent = readFileSync(configPath, 'utf-8');
+  const parsed = parseToml(configContent) as Record<string, unknown>;
+
+  const devices = (parsed.device ?? []) as Array<{ ip: string }>;
+  devices.push({ ip });
+  parsed.device = devices;
+
+  writeFileSync(configPath, stringifyToml(parsed), 'utf-8');
 }

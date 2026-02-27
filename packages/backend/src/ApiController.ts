@@ -89,4 +89,9 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     deviceService.deleteEffect(req.body.effect_id);
     res.json({ success: true });
   },
+
+  addDevice: async (req, res) => {
+    const result = await deviceService.addDevice(req.body.ip);
+    res.json(result);
+  },
 };
