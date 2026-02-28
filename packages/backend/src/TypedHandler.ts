@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction, Express } from 'express';
 import { z } from 'zod';
 import { logger, logError } from './logger';
 import { DeviceUnreachableError } from './deviceClient/ApiClient';
-import { DeviceNotFoundError, EffectNotFoundError } from './DeviceService';
+import { DeviceNotFoundError, DeviceOfflineError, EffectNotFoundError } from './DeviceService';
 
 interface EndpointDefinition {
   method?: string;
@@ -118,8 +118,8 @@ export function createTypedHandler<T extends EndpointDefinition>(endpoint: T, ha
           error: error.message,
         });
         return res.status(404).json(errorResponse);
-      } else if (error instanceof DeviceUnreachableError) {
-        logger.warn('Device unreachable: ' + error.message);
+      } else if (error instanceof DeviceUnreachableError || error instanceof DeviceOfflineError) {
+        logger.warn(error.message);
         const errorResponse = endpoint.responses[500]?.parse({
           error: error.message,
         });
