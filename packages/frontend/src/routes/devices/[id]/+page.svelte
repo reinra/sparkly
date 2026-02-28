@@ -4,6 +4,7 @@
   import DeviceBufferViewer from '../../../components/DeviceBufferViewer.svelte';
   import EffectParameters from '../../../components/EffectParameters.svelte';
   import SendMovieDialog from '../../../components/SendMovieDialog.svelte';
+  import DeleteEffectDialog from '../../../components/DeleteEffectDialog.svelte';
   import RemoveDeviceDialog from '../../../components/RemoveDeviceDialog.svelte';
   import { deviceStore } from '../../../stores/DeviceStore.svelte';
   import { page } from '$app/state';
@@ -20,6 +21,7 @@
   let effectElements: HTMLButtonElement[] = [];
   let showMovieDialog = $state(false);
   let showRemoveDialog = $state(false);
+  let showDeleteEffectDialog = $state(false);
   let editingEffectName = $state(false);
   let editEffectNameValue = $state('');
   let renameTextarea: HTMLTextAreaElement | undefined = $state();
@@ -103,6 +105,8 @@
   async function selectEffect(index: number) {
     if (!device || index < 0 || index >= effects.length) return;
     const effect = effects[index];
+
+    // Reset delete dialog when switching effects
 
     // Update visual selection immediately
     selectedEffectIndex = index;
@@ -189,10 +193,18 @@
     updating = false;
   }
 
-  async function deleteSelectedEffect() {
+  function deleteSelectedEffect() {
     if (!device || updating || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
     const targetEffect = effects[selectedEffectIndex];
     if (!targetEffect.canDelete) return;
+    showDeleteEffectDialog = true;
+  }
+
+  async function handleDeleteEffectDialogClose(deleted: boolean) {
+    showDeleteEffectDialog = false;
+    if (!deleted) return;
+    if (!device || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
+    const targetEffect = effects[selectedEffectIndex];
 
     updating = true;
     try {
@@ -488,6 +500,10 @@
         deviceIp={device.ip}
         onclose={handleRemoveDialogClose}
       />
+    {/if}
+
+    {#if showDeleteEffectDialog && selectedEffectIndex >= 0 && selectedEffectIndex < effects.length}
+      <DeleteEffectDialog effectName={effects[selectedEffectIndex].name} onclose={handleDeleteEffectDialogClose} />
     {/if}
   {:else}
     <p class="error">Device not found</p>
