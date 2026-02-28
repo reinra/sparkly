@@ -34,6 +34,7 @@ export interface BaseEffectParameter {
   description: string;
   type: ParameterType;
   hidden?: boolean; // If true, this parameter should not be exposed in the UI
+  transient?: boolean; // If true, this parameter is excluded from state persistence
 }
 
 export interface RangeEffectParameter extends BaseEffectParameter {

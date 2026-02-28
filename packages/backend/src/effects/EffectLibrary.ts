@@ -30,8 +30,8 @@ import { StarsEffect } from './library/StarsEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
-/** Tracks registered effectClassIds to detect duplicates at startup. */
-const registeredClassIds = new Set<string>();
+/** Maps effectClassId → constructor, used to reconstruct cloned effects from persisted state. */
+const effectClassRegistry = new Map<string, new () => AnyEffect>();
 
 function register<T extends AnyEffect>(EffectClass: new () => T): void {
   const template = new EffectClass();
@@ -41,12 +41,12 @@ function register<T extends AnyEffect>(EffectClass: new () => T): void {
   if (!classId) {
     throw new Error(`Effect ${EffectClass.name} must define a non-empty effectClassId`);
   }
-  if (registeredClassIds.has(classId)) {
+  if (effectClassRegistry.has(classId)) {
     throw new Error(
       `Duplicate effectClassId '${classId}' in ${EffectClass.name} — effectClassId must be unique across all effect classes`
     );
   }
-  registeredClassIds.add(classId);
+  effectClassRegistry.set(classId, EffectClass as new () => AnyEffect);
 
   const presets = template.getPresets?.();
 
@@ -226,4 +226,4 @@ function copyEffectOwnParameters(source: EffectWrapper, target: EffectWrapper): 
   }
 }
 
-export { effects };
+export { effects, effectClassRegistry };

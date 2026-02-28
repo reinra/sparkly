@@ -1,4 +1,5 @@
 import { effects, cloneEffect, deleteEffect, resetEffect } from './effects/EffectLibrary';
+import { markDirty } from './StateManager';
 import { TaskExecutor } from './TaskExecutor';
 import {
   devices,
@@ -114,6 +115,10 @@ export class DeviceService {
         this.stopAutoRotate(device.id);
       }
     });
+    // Start timer if already enabled (e.g. from restored state)
+    if (device.isAutoRotateEnabled()) {
+      this.startAutoRotate(device.id, device.getAutoRotateIntervalSeconds());
+    }
   }
 
   private startAutoRotate(deviceId: string, intervalSeconds: number): void {
@@ -339,6 +344,7 @@ export class DeviceService {
       device.setCurrentEffect(null);
       this.taskExecutor.abortTask(deviceId);
     }
+    markDirty();
   }
 
   getBuffer(deviceId: string): FrameBuffer {
@@ -435,11 +441,13 @@ export class DeviceService {
     for (const param of parameters) {
       params.setValue(param.id, param.value);
     }
+    markDirty();
   }
 
   cloneEffect(effectId: string): { id: string; name: string } {
     const result = cloneEffect(effectId);
     logger.withMetadata({ sourceId: effectId, newId: result.id, newName: result.name }).info('Effect cloned');
+    markDirty();
     return result;
   }
 
@@ -450,6 +458,7 @@ export class DeviceService {
     }
     effect.setName(name);
     logger.withMetadata({ effectId, newName: effect.getName() }).info('Effect renamed');
+    markDirty();
     return { id: effectId, name: effect.getName() };
   }
 
@@ -464,6 +473,7 @@ export class DeviceService {
     }
     deleteEffect(effectId);
     logger.withMetadata({ effectId }).info('Effect deleted');
+    markDirty();
   }
 
   /**
@@ -473,6 +483,7 @@ export class DeviceService {
   async resetEffect(effectId: string): Promise<void> {
     const newWrapper = resetEffect(effectId);
     logger.withMetadata({ effectId }).info('Effect reset to defaults');
+    markDirty();
 
     // Re-attach any devices that were running this effect
     for (const device of Object.values(devices)) {
@@ -570,6 +581,3 @@ export class DeviceService {
 
 /** Global singleton instance */
 export const deviceService = new DeviceService();
-
-// Initialize auto-rotate callbacks for all configured devices
-deviceService.initAutoRotateCallbacks();

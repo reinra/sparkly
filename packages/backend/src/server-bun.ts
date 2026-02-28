@@ -6,6 +6,7 @@ import { registerRoutes } from './TypedHandler';
 import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';
 import { openBrowser } from './utils/BrowserUtils';
+import { initializeState } from './StateManager';
 
 // @ts-ignore
 import { handler } from '../../frontend/build/handler.js';
@@ -21,6 +22,8 @@ app.use(express.json());
 
 // Register all API routes
 registerRoutes(app, backendApiContract, apiRoutes);
+
+initializeState();
 
 // Serve Static Assets from Embedded Bun Bundle
 app.use(async (req, res, next) => {

@@ -61,7 +61,7 @@ export class DeviceHelper {
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
   private deviceParams = new EffectParameterStorage();
-  private deviceParamsInitialized = false;
+  private deviceConnected = false;
   private currentEffect: EffectWrapper | null = null;
   private points1DCache: LedPoint1D[] | null = null;
   private currentMode: DeviceModeType = DeviceModeSchema.Values.off;
@@ -79,17 +79,19 @@ export class DeviceHelper {
     ])
   );
 
-  private readonly maxFps: RangeEffectParameter = {
+  private static readonly DEFAULT_MAX_FPS = 60;
+
+  private readonly maxFps: RangeEffectParameter = this.deviceParams.register({
     id: 'fps',
     name: 'Max rendering frequency',
     description: 'Maximum frames per second for effect rendering',
     type: ParameterType.RANGE,
-    value: 60,
+    value: DeviceHelper.DEFAULT_MAX_FPS,
     min: 1,
     max: 60,
     unit: 'fps',
-  };
-  private readonly gamma: RangeEffectParameter = {
+  });
+  private readonly gamma: RangeEffectParameter = this.deviceParams.register({
     id: 'gamma',
     name: 'Gamma correction',
     description: 'Gamma correction value for brightness adjustment',
@@ -98,8 +100,8 @@ export class DeviceHelper {
     min: 0.1,
     max: 4.0,
     step: 0.1,
-  };
-  private readonly temperature: RangeEffectParameter = {
+  });
+  private readonly temperature: RangeEffectParameter = this.deviceParams.register({
     id: 'temperature',
     name: 'Color Temperature',
     description: 'Color temperature adjustment for effects, where -1 is cool/blue, 0 is neutral, and 1 is warm/orange',
@@ -108,15 +110,15 @@ export class DeviceHelper {
     min: -1,
     max: 1,
     step: 0.1,
-  };
-  private readonly mirror: BooleanEffectParameter = {
+  });
+  private readonly mirror: BooleanEffectParameter = this.deviceParams.register({
     id: 'mirror',
     name: 'Mirror LEDs',
     description: 'Reverse LED order for the entire device (e.g. for strips mounted in opposite orientation)',
     type: ParameterType.BOOLEAN,
     value: false,
-  };
-  private readonly gainRed: RangeEffectParameter = {
+  });
+  private readonly gainRed: RangeEffectParameter = this.deviceParams.register({
     id: 'gainRed',
     name: 'Gain Red',
     description: 'Red channel gain adjustment',
@@ -126,8 +128,8 @@ export class DeviceHelper {
     max: 100,
     unit: '%',
     step: 1,
-  };
-  private readonly gainGreen: RangeEffectParameter = {
+  });
+  private readonly gainGreen: RangeEffectParameter = this.deviceParams.register({
     id: 'gainGreen',
     name: 'Gain Green',
     description: 'Green channel gain adjustment',
@@ -137,8 +139,8 @@ export class DeviceHelper {
     max: 100,
     unit: '%',
     step: 1,
-  };
-  private readonly gainBlue: RangeEffectParameter = {
+  });
+  private readonly gainBlue: RangeEffectParameter = this.deviceParams.register({
     id: 'gainBlue',
     name: 'Gain Blue',
     description: 'Blue channel gain adjustment',
@@ -148,47 +150,71 @@ export class DeviceHelper {
     max: 100,
     unit: '%',
     step: 1,
-  };
-  private readonly brightness: RangeEffectParameter = {
-    id: 'brightness',
-    name: 'Brightness',
-    description: 'Current brightness of LEDs regardless of mode, not shown in previews',
-    type: ParameterType.RANGE,
-    value: 100,
-    min: 0,
-    max: 100,
-    unit: '%',
-    step: 1,
-  };
-  private readonly saturation: RangeEffectParameter = {
-    id: 'saturation',
-    name: 'Saturation',
-    description: 'Current saturation of LEDs regardless of mode, not shown in previews',
-    type: ParameterType.RANGE,
-    value: 100,
-    min: 0,
-    max: 100,
-    unit: '%',
-    step: 1,
-  };
-  private readonly autoRotate: BooleanEffectParameter = {
-    id: 'autoRotate',
-    name: 'Auto-rotate effects',
-    description: 'Automatically cycle through all effects on a timer',
-    type: ParameterType.BOOLEAN,
-    value: false,
-  };
-  private readonly autoRotateInterval: RangeEffectParameter = {
-    id: 'autoRotateInterval',
-    name: 'Auto-rotate interval',
-    description: 'Seconds between automatic effect switches',
-    type: ParameterType.RANGE,
-    value: 30,
-    min: 5,
-    max: 600,
-    step: 5,
-    unit: 's',
-  };
+  });
+  private readonly brightness: RangeEffectParameter = this.deviceParams.register(
+    {
+      id: 'brightness',
+      name: 'Brightness',
+      description: 'Current brightness of LEDs regardless of mode, not shown in previews',
+      type: ParameterType.RANGE,
+      value: 100,
+      min: 0,
+      max: 100,
+      unit: '%',
+      step: 1,
+      transient: true,
+    },
+    async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setBrightnessAbsolute(newValue);
+    }
+  );
+  private readonly saturation: RangeEffectParameter = this.deviceParams.register(
+    {
+      id: 'saturation',
+      name: 'Saturation',
+      description: 'Current saturation of LEDs regardless of mode, not shown in previews',
+      type: ParameterType.RANGE,
+      value: 100,
+      min: 0,
+      max: 100,
+      unit: '%',
+      step: 1,
+      transient: true,
+    },
+    async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setSaturationAbsolute(newValue);
+    }
+  );
+  private readonly autoRotate: BooleanEffectParameter = this.deviceParams.register(
+    {
+      id: 'autoRotate',
+      name: 'Auto-rotate effects',
+      description: 'Automatically cycle through all effects on a timer',
+      type: ParameterType.BOOLEAN,
+      value: false,
+    },
+    () => {
+      this.onAutoRotateChanged?.(this.autoRotate.value, this.autoRotateInterval.value);
+    }
+  );
+  private readonly autoRotateInterval: RangeEffectParameter = this.deviceParams.register(
+    {
+      id: 'autoRotateInterval',
+      name: 'Auto-rotate interval',
+      description: 'Seconds between automatic effect switches',
+      type: ParameterType.RANGE,
+      value: 30,
+      min: 5,
+      max: 600,
+      step: 5,
+      unit: 's',
+    },
+    () => {
+      if (this.autoRotate.value) {
+        this.onAutoRotateChanged?.(true, this.autoRotateInterval.value);
+      }
+    }
+  );
 
   private onAutoRotateChanged?: (enabled: boolean, intervalSeconds: number) => void;
 
@@ -214,8 +240,13 @@ export class DeviceHelper {
     return this.autoRotateInterval.value;
   }
 
+  /** Expose device parameters as an EffectParameterView for callers to read/filter. */
+  public getDeviceParams(): EffectParameterView {
+    return this.deviceParams;
+  }
+
   public async refreshFromDevice(): Promise<void> {
-    await this.ensureParams();
+    await this.ensureConnected();
     await this.loadStateFromDevice();
   }
 
@@ -240,7 +271,7 @@ export class DeviceHelper {
    * Returns true if a refresh was performed.
    */
   public async refreshStateFromDeviceIfStale(): Promise<boolean> {
-    await this.ensureParams();
+    await this.ensureConnected();
     if (Date.now() - this.lastDeviceRefreshTime >= DeviceHelper.DEVICE_REFRESH_INTERVAL_MS) {
       await this.loadStateFromDevice();
       return true;
@@ -261,58 +292,37 @@ export class DeviceHelper {
     return this.brightness.value;
   }
 
-  private initPromise: Promise<void> | null = null;
+  private connectPromise: Promise<void> | null = null;
 
-  private async ensureParams(): Promise<void> {
-    if (this.deviceParamsInitialized) {
+  private async ensureConnected(): Promise<void> {
+    if (this.deviceConnected) {
       return;
     }
-    if (!this.initPromise) {
-      this.initPromise = this.initParams();
+    if (!this.connectPromise) {
+      this.connectPromise = this.connectToDevice();
     }
-    await this.initPromise;
+    await this.connectPromise;
   }
 
-  private async initParams(): Promise<void> {
+  private async connectToDevice(): Promise<void> {
     this.brightness.value = (await this.getFilterValue('brightness')) ?? 100;
-    this.deviceParams.register(this.brightness, async (_parameter, _oldValue, newValue) => {
-      await this.apiClient.setBrightnessAbsolute(newValue);
-    });
-
     this.saturation.value = (await this.getFilterValue('saturation')) ?? 100;
-    this.deviceParams.register(this.saturation, async (_parameter, _oldValue, newValue) => {
-      await this.apiClient.setSaturationAbsolute(newValue);
-    });
 
-    this.maxFps.value = (await this.getGestalt()).frame_rate;
-
-    this.deviceParams.register(this.maxFps);
-    this.deviceParams.register(this.mirror);
-    this.deviceParams.register(this.gamma);
-    this.deviceParams.register(this.temperature);
-    this.deviceParams.register(this.gainRed);
-    this.deviceParams.register(this.gainGreen);
-    this.deviceParams.register(this.gainBlue);
-
-    this.deviceParams.register(this.autoRotate, () => {
-      this.onAutoRotateChanged?.(this.autoRotate.value, this.autoRotateInterval.value);
-    });
-    this.deviceParams.register(this.autoRotateInterval, () => {
-      if (this.autoRotate.value) {
-        this.onAutoRotateChanged?.(true, this.autoRotateInterval.value);
-      }
-    });
+    // Only use device frame rate as initial default; keep persisted value if restored
+    if (this.maxFps.value === DeviceHelper.DEFAULT_MAX_FPS) {
+      this.maxFps.value = (await this.getGestalt()).frame_rate;
+    }
 
     // Initialize mode from device
     const summary = await this.apiClient.getSummary();
     this.currentMode = summary.led_mode.mode;
     this.lastDeviceRefreshTime = Date.now();
 
-    this.deviceParamsInitialized = true;
+    this.deviceConnected = true;
   }
 
   public async getParameters(): Promise<EffectParameterView> {
-    await this.ensureParams();
+    await this.ensureConnected();
     return this.allParams;
   }
 

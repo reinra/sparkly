@@ -9,6 +9,7 @@ import { backendApiContract } from '@twinkly-ts/common';
 import { registerRoutes } from './TypedHandler';
 import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';
+import { initializeState } from './StateManager';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,8 @@ app.use(express.json());
 
 // Register all API routes (shared with development server)
 registerRoutes(app, backendApiContract, apiRoutes);
+
+initializeState();
 
 // Path to frontend build relative to dist/server-production.js
 const frontendPath = path.join(__dirname, '../../frontend/build');

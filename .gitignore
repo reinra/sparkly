@@ -11,3 +11,5 @@ build/
 .vscode/settings.json
 .vscode\settings.json
 packages/backend/src/generated/
+packages/backend/state.backup.json
+packages/backend/state.json

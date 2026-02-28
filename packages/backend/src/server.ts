@@ -5,6 +5,7 @@ import { backendApiContract } from '@twinkly-ts/common';
 import { registerRoutes } from './TypedHandler';
 import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';
+import { initializeState } from './StateManager';
 
 const app = express();
 const PORT = 3001;
@@ -15,6 +16,8 @@ app.use(express.json());
 
 // Register all API routes (shared with production server)
 registerRoutes(app, backendApiContract, apiRoutes);
+
+initializeState();
 
 app.listen(PORT, () => {
   logger.info(`Backend server running on http://localhost:${PORT}`);
