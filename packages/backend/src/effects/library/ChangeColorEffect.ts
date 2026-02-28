@@ -22,6 +22,7 @@ const DARK_RED_HSL: Hsl = { hue: 0, saturation: 1, lightness: 0.25 };
 
 export class ChangeColorEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'change_color';
   readonly palette = new PaletteParameters();
   readonly easing = new EasingParameters();
   public readonly parameters: EffectParameterView = new MultiParameterStorageView(

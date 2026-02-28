@@ -9,6 +9,7 @@ import { NoiseGenerator } from '../util/NoiseUtils';
 
 export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'rainbow_gradient_2d';
   pointType: '2D' = '2D';
   readonly effectId = 'rainbow_2d';
   readonly effectName = 'Rainbow Gradient 2D';
@@ -24,6 +25,7 @@ export class RainbowGradientEffect2D extends PerPixelEffect<AnimationMode.Loop, 
 
 export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'pulse_scanner';
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly effectId = 'pulse_scanner';
@@ -67,6 +69,7 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
 
 export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'slime';
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly effectId = 'slime';
@@ -107,6 +110,7 @@ export class Slime implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
 
 export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
+  readonly effectClassId = 'clouds';
   pointType: '2D' = '2D';
   readonly effectId = 'clouds';
   readonly effectName = 'Clouds';
@@ -140,6 +144,7 @@ export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, Led
 
 export class PlasmaEffect implements StatelessEffect<AnimationMode.Loop, LedPoint2D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'plasma';
   pointType: '2D' = '2D';
   readonly isStateful: false = false;
   readonly effectId = 'plasma';

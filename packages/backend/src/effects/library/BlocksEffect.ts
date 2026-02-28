@@ -19,6 +19,7 @@ import { PaletteParameters } from '../util/Palette';
 /** 1D Tetris — blocks drop through empty space and stack, flash-and-clear when full. */
 export class BlocksEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
+  readonly effectClassId = 'blocks';
   readonly pointType: '1D' = '1D';
   readonly isStateful: boolean = true;
   readonly hasCycleReset = true;

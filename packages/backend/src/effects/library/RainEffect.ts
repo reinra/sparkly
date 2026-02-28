@@ -13,6 +13,7 @@ import { createBlackBuffer } from '../util/ArrayUtils';
 
 abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
+  abstract readonly effectClassId: string;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly parameters = new EffectParameterStorage();
@@ -31,6 +32,7 @@ abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
 }
 
 export class SingleColorRainEffect extends BaseRainEffect {
+  readonly effectClassId = 'rain_single_color';
   readonly effectId = 'rain_single_color';
   readonly effectName = 'Single-Color Rain';
   readonly color = this.parameters.register({
@@ -46,6 +48,7 @@ export class SingleColorRainEffect extends BaseRainEffect {
 }
 
 export class MultiColorRainEffect extends BaseRainEffect {
+  readonly effectClassId = 'rain_multi_color';
   readonly effectId = 'rain_multi_color';
   readonly effectName = 'Multi-Color Rain';
   nextColor(): RgbFloat {

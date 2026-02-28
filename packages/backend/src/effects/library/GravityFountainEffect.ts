@@ -4,6 +4,7 @@ import { createBlackBuffer } from '../util/ArrayUtils';
 
 export class GravityFountainEffect implements EffectSequence<LedPoint2D> {
   readonly animationMode = AnimationMode.Sequence;
+  readonly effectClassId = 'gravity_fountain';
   pointType: '2D' = '2D';
   readonly isStateful: true = true;
   readonly effectId = 'gravity_fountain';

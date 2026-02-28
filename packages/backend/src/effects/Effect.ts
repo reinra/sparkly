@@ -88,6 +88,9 @@ export interface Effect<A extends AnimationMode, P extends LedPoint> {
   // If true, the effect maintains internal state across frames (and should also not be reused concurrently between devices)
   readonly isStateful: boolean;
 
+  // Stable unique identifier for the effect class (used for persistence; must not change when renaming classes)
+  readonly effectClassId: string;
+
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;
 

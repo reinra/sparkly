@@ -24,6 +24,7 @@ import { createBlackBuffer, pickRandomFreeIndex } from '../util/ArrayUtils';
  */
 export class RandomDotsClearEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
+  readonly effectClassId = 'random_dots_clear';
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly hasCycleReset = true;

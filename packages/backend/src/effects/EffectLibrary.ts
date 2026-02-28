@@ -30,8 +30,24 @@ import { StarsEffect } from './library/StarsEffect';
 
 const effects: Record<string, EffectWrapper> = {};
 
+/** Tracks registered effectClassIds to detect duplicates at startup. */
+const registeredClassIds = new Set<string>();
+
 function register<T extends AnyEffect>(EffectClass: new () => T): void {
   const template = new EffectClass();
+
+  // Validate effectClassId uniqueness
+  const classId = template.effectClassId;
+  if (!classId) {
+    throw new Error(`Effect ${EffectClass.name} must define a non-empty effectClassId`);
+  }
+  if (registeredClassIds.has(classId)) {
+    throw new Error(
+      `Duplicate effectClassId '${classId}' in ${EffectClass.name} — effectClassId must be unique across all effect classes`
+    );
+  }
+  registeredClassIds.add(classId);
+
   const presets = template.getPresets?.();
 
   if (presets && presets.length > 0) {

@@ -21,6 +21,7 @@ import { type Hsl, hslColorValue } from '../../ParameterTypes';
 
 export class WaveEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
+  readonly effectClassId = 'wave';
   readonly customParams = new EffectParameterStorage();
   readonly numWaves = this.customParams.register({
     id: 'num_waves',

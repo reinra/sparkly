@@ -38,6 +38,7 @@ export abstract class BaseSameColorEffect<A extends AnimationMode>
   implements Effect<A, LedPoint1D>
 {
   abstract readonly animationMode: A;
+  abstract readonly effectClassId: string;
   pointType: '1D' = '1D';
   isStateful: boolean = false;
   parameters?: EffectParameterView;
@@ -51,6 +52,7 @@ export abstract class PerPixelEffect<A extends AnimationMode, P extends LedPoint
   implements Effect<A, P>
 {
   abstract readonly animationMode: A;
+  abstract readonly effectClassId: string;
   abstract readonly pointType: LedPointType;
   isStateful: boolean = false;
   parameters?: EffectParameterView;
