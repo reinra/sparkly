@@ -416,13 +416,13 @@
               ></textarea>
             {:else}
               <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <span
-                class="effect-name-editable"
-                ondblclick={startEditEffectName}
-                title="Double-click to rename"
-              >{device.effect?.name ?? '—'}</span>
+              <span class="effect-name-editable" ondblclick={startEditEffectName} title="Double-click to rename"
+                >{device.effect?.name ?? '—'}</span
+              >
               {#if device.effect}
-                <button class="rename-button" onclick={startEditEffectName} disabled={updating} title="Rename effect">✏️</button>
+                <button class="rename-button" onclick={startEditEffectName} disabled={updating} title="Rename effect"
+                  >✏️</button
+                >
               {/if}
             {/if}
           </div>
