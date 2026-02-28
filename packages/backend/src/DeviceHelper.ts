@@ -60,6 +60,7 @@ export class DeviceHelper {
 
   private ledMappingCache: LedMapping | null = null;
   private gestaltCache: GestaltResponseType | null = null;
+  private summaryCache: Awaited<ReturnType<TwinklyApiClient['getSummary']>> | null = null;
   private deviceParams = new EffectParameterStorage();
   private deviceConnected = false;
   private currentEffect: EffectWrapper | null = null;
@@ -251,19 +252,24 @@ export class DeviceHelper {
   }
 
   /**
-   * Load latest state from device and update local state.
-   * Called periodically to stay in sync with external changes.
+   * Get a cached summary, fetching fresh data only if the cache is stale.
+   * This avoids redundant HTTP requests when multiple callers need the summary in quick succession.
    */
-  private async loadStateFromDevice(): Promise<void> {
-    const summary = await this.apiClient.getSummary();
-    this.currentMode = summary.led_mode.mode;
-    const brightness = summary.filters?.find(
-      (f) => f.filter === 'brightness' && f.config.mode === EnabledDisabledSchema.Values.enabled
-    )?.config?.value;
-    if (brightness !== undefined) {
-      this.brightness.value = brightness;
+  private async getCachedSummary(forceRefresh = false): Promise<NonNullable<typeof this.summaryCache>> {
+    if (!forceRefresh && this.summaryCache && Date.now() - this.lastDeviceRefreshTime < DeviceHelper.DEVICE_REFRESH_INTERVAL_MS) {
+      return this.summaryCache;
     }
+    this.summaryCache = await this.apiClient.getSummary();
     this.lastDeviceRefreshTime = Date.now();
+    return this.summaryCache;
+  }
+
+  /** Load latest state from device and update local state. */
+  private async loadStateFromDevice(): Promise<void> {
+    const summary = await this.getCachedSummary();
+    this.currentMode = summary.led_mode.mode;
+    this.brightness.value = this.getFilterFromSummary(summary, 'brightness') ?? this.brightness.value;
+    this.saturation.value = this.getFilterFromSummary(summary, 'saturation') ?? this.saturation.value;
   }
 
   /**
@@ -272,11 +278,15 @@ export class DeviceHelper {
    */
   public async refreshStateFromDeviceIfStale(): Promise<boolean> {
     await this.ensureConnected();
-    if (Date.now() - this.lastDeviceRefreshTime >= DeviceHelper.DEVICE_REFRESH_INTERVAL_MS) {
-      await this.loadStateFromDevice();
-      return true;
-    }
-    return false;
+    const lastRefresh = this.lastDeviceRefreshTime;
+    await this.loadStateFromDevice();
+    return this.lastDeviceRefreshTime !== lastRefresh;
+  }
+
+  private getFilterFromSummary(summary: NonNullable<typeof this.summaryCache>, name: string): number | undefined {
+    return summary.filters?.find(
+      (f) => f.filter === name && f.config.mode === EnabledDisabledSchema.Values.enabled
+    )?.config?.value;
   }
 
   public getMode(): DeviceModeType {
@@ -305,18 +315,12 @@ export class DeviceHelper {
   }
 
   private async connectToDevice(): Promise<void> {
-    this.brightness.value = (await this.getFilterValue('brightness')) ?? 100;
-    this.saturation.value = (await this.getFilterValue('saturation')) ?? 100;
+    await this.loadStateFromDevice();
 
     // Only use device frame rate as initial default; keep persisted value if restored
     if (this.maxFps.value === DeviceHelper.DEFAULT_MAX_FPS) {
       this.maxFps.value = (await this.getGestalt()).frame_rate;
     }
-
-    // Initialize mode from device
-    const summary = await this.apiClient.getSummary();
-    this.currentMode = summary.led_mode.mode;
-    this.lastDeviceRefreshTime = Date.now();
 
     this.deviceConnected = true;
   }
@@ -327,9 +331,7 @@ export class DeviceHelper {
   }
 
   public async getFilterValue(name: string): Promise<number | undefined> {
-    return (await this.apiClient.getSummary()).filters?.find(
-      (filter) => filter.filter == name && filter.config.mode === EnabledDisabledSchema.Values.enabled
-    )?.config?.value;
+    return this.getFilterFromSummary(await this.getCachedSummary(), name);
   }
 
   public getMaxFps(): number {
