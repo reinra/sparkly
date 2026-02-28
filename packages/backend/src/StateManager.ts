@@ -116,8 +116,8 @@ function buildState(): PersistedState {
 
   // Only persist effectOrder if it differs from the default registration order
   const defaultOrder = getDefaultEffectOrder();
-  const orderChanged = effectOrder.length !== defaultOrder.length ||
-    effectOrder.some((id, i) => id !== defaultOrder[i]);
+  const orderChanged =
+    effectOrder.length !== defaultOrder.length || effectOrder.some((id, i) => id !== defaultOrder[i]);
 
   return {
     version: STATE_VERSION,
