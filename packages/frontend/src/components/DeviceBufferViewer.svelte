@@ -14,7 +14,8 @@
   let displayMode = $state<DisplayMode>('sequence');
   let bufferData = $state<string | null>(null);
   let phase = $state<number | null>(null);
-  let colors = $state<Array<{ r: number; g: number; b: number }>>([]);
+  let colors: Array<{ r: number; g: number; b: number }> = [];
+  let colorCount = $state(0);
   let ledMapping = $state<Array<{ id: number; x: number; y: number }> | null>(null);
   let fetchingBuffer = $state(false);
   let fetchingMapping = $state(false);
@@ -27,7 +28,7 @@
   const FPS_WINDOW_MS = 5000;
   let frameTimestamps: number[] = [];
 
-  function parseBase64ToColors(base64: string): Array<{ r: number; g: number; b: number }> {
+  function parseBase64ToColors(base64: string): number {
     try {
       // Decode base64 to binary string
       const binaryString = atob(base64);
@@ -37,22 +38,26 @@
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Parse RGB tuples (3 bytes per color)
-      const colorArray: Array<{ r: number; g: number; b: number }> = [];
-      for (let i = 0; i < bytes.length; i += 3) {
-        if (i + 2 < bytes.length) {
-          colorArray.push({
-            r: bytes[i],
-            g: bytes[i + 1],
-            b: bytes[i + 2],
-          });
+      // Parse RGB tuples (3 bytes per color) — reuse existing array entries
+      const count = Math.floor(bytes.length / 3);
+      for (let i = 0; i < count; i++) {
+        const bi = i * 3;
+        if (i < colors.length) {
+          colors[i].r = bytes[bi];
+          colors[i].g = bytes[bi + 1];
+          colors[i].b = bytes[bi + 2];
+        } else {
+          colors.push({ r: bytes[bi], g: bytes[bi + 1], b: bytes[bi + 2] });
         }
       }
+      // Trim if shorter than before
+      colors.length = count;
 
-      return colorArray;
+      return count;
     } catch (error) {
       console.error('Error parsing base64 to colors:', error);
-      return [];
+      colors.length = 0;
+      return 0;
     }
   }
 
@@ -88,6 +93,9 @@
   const SEQ_PAD = 8; // canvas internal padding
   const SEQ_RADIUS = 3;
 
+  let lastSeqCols = 0;
+  let lastSeqRows = 0;
+
   function renderSequenceCanvas() {
     if (!sequenceCanvas || colors.length === 0) return;
 
@@ -97,16 +105,20 @@
     const cols = Math.max(1, Math.floor((availableWidth + SEQ_GAP) / (SEQ_BOX + SEQ_GAP)));
     const rows = Math.ceil(colors.length / cols);
 
-    const canvasW = SEQ_PAD * 2 + cols * SEQ_BOX + (cols - 1) * SEQ_GAP;
-    const canvasH = SEQ_PAD * 2 + rows * SEQ_BOX + (rows - 1) * SEQ_GAP;
-
-    sequenceCanvas.width = canvasW;
-    sequenceCanvas.height = canvasH;
+    // Only resize canvas when grid dimensions change (resizing resets GPU state)
+    if (cols !== lastSeqCols || rows !== lastSeqRows) {
+      const canvasW = SEQ_PAD * 2 + cols * SEQ_BOX + (cols - 1) * SEQ_GAP;
+      const canvasH = SEQ_PAD * 2 + rows * SEQ_BOX + (rows - 1) * SEQ_GAP;
+      sequenceCanvas.width = canvasW;
+      sequenceCanvas.height = canvasH;
+      lastSeqCols = cols;
+      lastSeqRows = rows;
+    }
 
     const ctx = sequenceCanvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvasW, canvasH);
+    ctx.clearRect(0, 0, sequenceCanvas.width, sequenceCanvas.height);
 
     for (let i = 0; i < colors.length; i++) {
       const col = i % cols;
@@ -190,7 +202,7 @@
         phase = result.body.phase ?? null;
         bufferData = result.body.base64_encoded;
         if (bufferData) {
-          colors = parseBase64ToColors(bufferData);
+          colorCount = parseBase64ToColors(bufferData);
 
           // Render on canvas
           if (displayMode === '2d-mapping') {
@@ -199,13 +211,15 @@
             renderSequenceCanvas();
           }
         } else {
-          colors = [];
+          colors.length = 0;
+          colorCount = 0;
         }
       } else {
         console.error('Failed to fetch buffer:', result);
         bufferData = null;
         phase = null;
-        colors = [];
+        colors.length = 0;
+        colorCount = 0;
 
         // Stop live polling on error (e.g. device was removed → 404)
         if (isLiveEnabled) {
@@ -220,7 +234,8 @@
       console.error('Error fetching buffer:', error);
       bufferData = null;
       phase = null;
-      colors = [];
+      colors.length = 0;
+      colorCount = 0;
     } finally {
       fetchingBuffer = false;
 
@@ -291,12 +306,16 @@
     prevDisableLive = disableLive;
   });
 
-  // Re-render canvas when colors update
+  // Re-render canvas when display mode or mapping changes (not on every color update —
+  // fetchBuffer already calls the render functions directly)
   $effect(() => {
+    // Track displayMode and ledMapping — re-render when they change
+    const _mode = displayMode;
+    const _mapping = ledMapping;
     if (colors.length > 0) {
-      if (displayMode === '2d-mapping' && ledMapping !== null) {
+      if (_mode === '2d-mapping' && _mapping !== null) {
         render2DCanvas();
-      } else if (displayMode === 'sequence') {
+      } else if (_mode === 'sequence') {
         renderSequenceCanvas();
       }
     }
@@ -340,9 +359,9 @@
     </div>
   {/if}
 
-  {#if colors.length > 0}
+  {#if colorCount > 0}
     <div class="buffer-data">
-      <strong>Buffer Colors ({colors.length} LEDs):</strong>
+      <strong>Buffer Colors ({colorCount} LEDs):</strong>
 
       {#if displayMode === 'sequence'}
         <div class="canvas-container" bind:this={canvasContainerEl}>

@@ -53,11 +53,13 @@
   }
 
   // Fetch devices on mount or when device ID changes
+  let lastFetchedDeviceId: string | null = null;
   $effect(() => {
     if (!deviceStore.initialLoadDone && !deviceStore.loading) {
       deviceStore.fetchAllDevices();
-    } else if (device) {
-      // Only fetch when deviceId changes, not when devices array updates
+    } else if (deviceId !== lastFetchedDeviceId) {
+      // Only fetch when deviceId actually changes, not on every poll update
+      lastFetchedDeviceId = deviceId;
       deviceStore.fetchDevice(deviceId);
     }
   });
