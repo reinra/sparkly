@@ -59,19 +59,6 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
 export class StaticAlternatingColorEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   pointType: LedPointType = '1D';
-  readonly effectName = 'Static Alternating Color';
-  constructor(private readonly colors: RgbFloat[]) {
-    super();
-  }
-  renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
-    const index = point.position % this.colors.length;
-    return this.colors[index];
-  }
-}
-
-export class StaticAlternatingColorCustomEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
-  readonly animationMode = AnimationMode.Static;
-  pointType: LedPointType = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
     id: 'colors',
@@ -234,7 +221,7 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
   }
 }
 
-export class AlternatingCustomColorFadingEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
+export class AlternatingColorFadingEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();

@@ -10,10 +10,10 @@ import {
   StaticColorGradientEffect,
   TestPerLedEffect,
   TwinkleEffect,
-  AlternatingCustomColorFadingEffect,
+  AlternatingColorFadingEffect,
   StaticCustomColorGradientEffect,
   TestAllLedsFlash,
-  StaticAlternatingColorCustomEffect,
+  StaticAlternatingColorEffect,
   TestRgbPickerEffect,
   TestColorPickerEffect,
 } from './library/Effects1D';
@@ -54,7 +54,7 @@ function register<T extends AnyEffect>(EffectClass: new () => T): void {
 
 register(BlocksEffect);
 register(StarsEffect);
-register(AlternatingCustomColorFadingEffect);
+register(AlternatingColorFadingEffect);
 register(RandomDotsClearEffect);
 register(RandomDotsLoopEffect);
 register(RandomDotsStaticEffect);
@@ -80,7 +80,7 @@ register(ChangeColorEffect);
 
 // Static effects
 register(StaticSingleColorEffect);
-register(StaticAlternatingColorCustomEffect);
+register(StaticAlternatingColorEffect);
 register(StaticColorGradientEffect);
 register(StaticCustomColorGradientEffect);
 
