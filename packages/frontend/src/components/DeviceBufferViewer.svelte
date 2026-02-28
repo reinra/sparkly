@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { backendClient } from '../FrontendApiClient';
 
   interface Props {
@@ -204,6 +205,10 @@
         if (bufferData) {
           colorCount = parseBase64ToColors(bufferData);
 
+          // Wait for DOM to update — the canvas may have just been mounted
+          // (e.g. colorCount went from 0 → N, showing the {#if} block)
+          await tick();
+
           // Render on canvas
           if (displayMode === '2d-mapping') {
             render2DCanvas();
@@ -278,6 +283,9 @@
     if (mode === '2d-mapping' && ledMapping === null) {
       await fetchLedMapping();
     }
+
+    // Wait for DOM to update — the canvas element for the new mode may not be mounted yet
+    await tick();
 
     // Re-render if we have colors
     if (colors.length > 0) {
