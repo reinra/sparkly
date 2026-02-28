@@ -22,6 +22,9 @@
   let isRendering = $state(false);
   let liveIntervalId: number | null = null;
   let canvas = $state<HTMLCanvasElement | null>(null);
+  let liveFps = $state<number | null>(null);
+  const FPS_WINDOW_MS = 5000;
+  let frameTimestamps: number[] = [];
 
   function parseBase64ToColors(base64: string): Array<{ r: number; g: number; b: number }> {
     try {
@@ -117,6 +120,7 @@
 
     fetchingBuffer = true;
     const fetchStartTime = performance.now();
+    const frameNow = fetchStartTime;
 
     try {
       const result = await backendClient.getBuffer({
@@ -126,6 +130,17 @@
       });
 
       if (result.status === 200) {
+        // Update FPS measurement (sliding average over last 5 seconds)
+        if (isLiveEnabled) {
+          frameTimestamps.push(frameNow);
+          const cutoff = frameNow - FPS_WINDOW_MS;
+          frameTimestamps = frameTimestamps.filter((t) => t > cutoff);
+          if (frameTimestamps.length >= 2) {
+            const windowSpan = frameNow - frameTimestamps[0];
+            liveFps = ((frameTimestamps.length - 1) / windowSpan) * 1000;
+          }
+        }
+
         phase = result.body.phase ?? null;
         bufferData = result.body.base64_encoded;
         if (bufferData) {
@@ -185,6 +200,8 @@
 
     if (isLiveEnabled) {
       // Start live mode
+      frameTimestamps = [];
+      liveFps = null;
       fetchBuffer();
     } else {
       // Stop live mode
@@ -192,6 +209,8 @@
         clearTimeout(liveIntervalId);
         liveIntervalId = null;
       }
+      liveFps = null;
+      frameTimestamps = [];
     }
   }
 
@@ -243,6 +262,9 @@
     <button onclick={toggleLiveMode} class="live-toggle-btn" class:active={isLiveEnabled} disabled={disableLive}>
       {isLiveEnabled ? 'Disable Live' : 'Enable Live'}
     </button>
+    {#if isLiveEnabled && liveFps !== null}
+      <span class="fps-indicator">{liveFps.toFixed(1)} FPS</span>
+    {/if}
   </div>
 
   <div class="mode-toggle">
@@ -354,6 +376,14 @@
 
   .live-toggle-btn.active:hover {
     background-color: #da190b;
+  }
+
+  .fps-indicator {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: #666;
+    align-self: center;
+    padding: 0 0.25rem;
   }
 
   .buffer-data {
