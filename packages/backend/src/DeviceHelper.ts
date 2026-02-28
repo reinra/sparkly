@@ -466,6 +466,14 @@ export class DeviceHelper {
   public async getDebugInfo(): Promise<{ title: string; content: any }[]> {
     return [
       {
+        title: 'Local',
+        content: {
+          connectionStatus: this.connectionStatus,
+          currentMode: this.currentMode,
+          currentEffect: this.currentEffect?.id ?? null,
+        },
+      },
+      {
         title: 'Gestalt',
         content: await this.apiClient.gestalt(),
       },
