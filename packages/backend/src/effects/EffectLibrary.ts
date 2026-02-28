@@ -55,9 +55,12 @@ function register<T extends AnyEffect>(EffectClass: new () => T): void {
     for (const preset of presets) {
       const effect = new EffectClass();
       const wrapper = new EffectWrapper(preset.id, effect, preset.name);
+      const params = wrapper.getEffectParameters();
       for (const [paramId, value] of preset.config.entries()) {
-        wrapper.getEffectParameters().setValue(paramId, value);
+        params.setValue(paramId, value);
       }
+      // Re-capture defaults so preset values are treated as the baseline
+      params.snapshotDefaults();
       effects[preset.id] = wrapper;
     }
   } else if (template.effectId && template.effectName) {

@@ -139,6 +139,13 @@ export interface EffectParameterView {
    * @throws Error if parameter not found or validation fails
    */
   setValue(id: string, value: ParameterValue): void;
+
+  /**
+   * Re-capture the current value of every parameter as its new default.
+   * Call after applying preset configuration so that preset values
+   * are treated as defaults by `isDefault()`.
+   */
+  snapshotDefaults(): void;
 }
 
 /**
@@ -248,6 +255,16 @@ export class EffectParameterStorage implements EffectParameterView {
       this.listeners.set(parameter.id, listener as ParameterChangeListener);
     }
     return parameter;
+  }
+
+  /**
+   * Re-capture the current value of every parameter as its new default.
+   */
+  snapshotDefaults(): void {
+    for (const parameter of this.parameters.values()) {
+      const defaultValue = cloneParameterValue(parameter.value);
+      (parameter as RegisteredParameter).isDefault = () => deepEquals(parameter.value, defaultValue);
+    }
   }
 
   /**
@@ -421,6 +438,11 @@ export class MultiParameterStorageView implements EffectParameterView {
     }
     throw new Error(`Parameter with id '${id}' not found in any storage`);
   }
+  snapshotDefaults(): void {
+    for (const storage of this.prefixToStorageMap.values()) {
+      storage.snapshotDefaults();
+    }
+  }
 }
 
 export const emptyParameterStorageView: EffectParameterView = {
@@ -429,6 +451,9 @@ export const emptyParameterStorageView: EffectParameterView = {
   },
   setValue(id: string, value: ParameterValue): void {
     throw new Error(`No parameters available`);
+  },
+  snapshotDefaults(): void {
+    // No parameters to snapshot
   },
 };
 
@@ -439,5 +464,8 @@ export class DynamicParameterStorageView implements EffectParameterView {
   }
   setValue(id: string, value: ParameterValue): void {
     this.getCurrentStorage().setValue(id, value);
+  }
+  snapshotDefaults(): void {
+    this.getCurrentStorage().snapshotDefaults();
   }
 }
