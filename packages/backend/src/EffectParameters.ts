@@ -41,6 +41,12 @@ export type ParameterChangeListener<T extends EffectParameter = EffectParameter>
 
 export type ParameterValue = number | boolean | Hsl | string | Hsl[] | RgbFloat | ColorValue | ColorValue[];
 
+/** A parameter with default-tracking: knows whether its current value equals the initial default. */
+export type WithDefault<T extends EffectParameter> = T & { isDefault(): boolean };
+
+/** A registered parameter with default-tracking. */
+export type RegisteredParameter = WithDefault<EffectParameter>;
+
 const HSL_RANGE_ERROR = `HSL components must be between 0 and 1 inclusive`;
 const RGB_RANGE_ERROR = `RGB components must be between 0 and 1 inclusive`;
 
@@ -93,6 +99,28 @@ function cloneColorValue(cv: ColorValue): ColorValue {
   return { mode: ColorMode.RGB, rgb: { red: cv.rgb.red, green: cv.rgb.green, blue: cv.rgb.blue } };
 }
 
+/** Deep-clone a parameter value (primitives pass through, objects/arrays are structurally cloned). */
+function cloneParameterValue(value: unknown): unknown {
+  if (typeof value !== 'object' || value === null) return value;
+  return JSON.parse(JSON.stringify(value));
+}
+
+/** Structural deep equality for parameter values. */
+function deepEquals(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((val, i) => deepEquals(val, b[i]));
+  }
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  const keysA = Object.keys(aObj);
+  if (keysA.length !== Object.keys(bObj).length) return false;
+  return keysA.every((key) => key in bObj && deepEquals(aObj[key], bObj[key]));
+}
+
 /**
  * Interface for UI-focused parameter operations
  * Provides read and write access to parameter values without registration or listener management
@@ -100,9 +128,9 @@ function cloneColorValue(cv: ColorValue): ColorValue {
 export interface EffectParameterView {
   /**
    * Get all registered parameters
-   * @returns Array of all parameters
+   * @returns Array of all parameters with default-tracking
    */
-  list(): EffectParameter[];
+  list(): RegisteredParameter[];
 
   /**
    * Set a new value for a parameter with validation
@@ -188,29 +216,32 @@ export class EffectParameterStorage implements EffectParameterView {
   register(
     parameter: Omit<HslEffectParameter, 'color'>,
     listener?: ParameterChangeListener<HslEffectParameter>
-  ): HslEffectParameter;
+  ): WithDefault<HslEffectParameter>;
   register(
     parameter: Omit<RgbEffectParameter, 'color'>,
     listener?: ParameterChangeListener<RgbEffectParameter>
-  ): RgbEffectParameter;
+  ): WithDefault<RgbEffectParameter>;
   register(
     parameter: Omit<ColorEffectParameter, 'color'>,
     listener?: ParameterChangeListener<ColorEffectParameter>
-  ): ColorEffectParameter;
+  ): WithDefault<ColorEffectParameter>;
   register(
     parameter: Omit<MultiColorEffectParameter, 'colors'>,
     listener?: ParameterChangeListener<MultiColorEffectParameter>
-  ): MultiColorEffectParameter;
+  ): WithDefault<MultiColorEffectParameter>;
   register(
     parameter: Omit<MultiHslEffectParameter, 'colors'>,
     listener?: ParameterChangeListener<MultiHslEffectParameter>
-  ): MultiHslEffectParameter;
-  register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): T;
+  ): WithDefault<MultiHslEffectParameter>;
+  register<T extends EffectParameter>(parameter: T, listener?: ParameterChangeListener<T>): WithDefault<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register(parameter: any, listener?: any): any {
     if (this.parameters.has(parameter.id)) {
       throw new Error(`Parameter with id '${parameter.id}' is already registered`);
     }
+    // Capture default value before any mutations
+    const defaultValue = cloneParameterValue(parameter.value);
+    parameter.isDefault = () => deepEquals(parameter.value, defaultValue);
     initColorFields(parameter);
     this.parameters.set(parameter.id, parameter);
     if (listener) {
@@ -231,10 +262,10 @@ export class EffectParameterStorage implements EffectParameterView {
 
   /**
    * Get all registered parameters
-   * @returns Array of all parameters
+   * @returns Array of all parameters with default-tracking
    */
-  list(): EffectParameter[] {
-    return Array.from(this.parameters.values());
+  list(): RegisteredParameter[] {
+    return Array.from(this.parameters.values()) as RegisteredParameter[];
   }
 
   /**
@@ -373,8 +404,8 @@ export class EffectParameterStorage implements EffectParameterView {
 
 export class MultiParameterStorageView implements EffectParameterView {
   constructor(private prefixToStorageMap: Map<string, EffectParameterView>) {}
-  list(): EffectParameter[] {
-    const allParameters: EffectParameter[] = [];
+  list(): RegisteredParameter[] {
+    const allParameters: RegisteredParameter[] = [];
     for (const [prefix, storage] of this.prefixToStorageMap.entries()) {
       allParameters.push(...storage.list().map((param) => ({ ...param, id: `${prefix}${param.id}` })));
     }
@@ -393,7 +424,7 @@ export class MultiParameterStorageView implements EffectParameterView {
 }
 
 export const emptyParameterStorageView: EffectParameterView = {
-  list(): EffectParameter[] {
+  list(): RegisteredParameter[] {
     return [];
   },
   setValue(id: string, value: ParameterValue): void {
@@ -403,7 +434,7 @@ export const emptyParameterStorageView: EffectParameterView = {
 
 export class DynamicParameterStorageView implements EffectParameterView {
   constructor(private getCurrentStorage: () => EffectParameterView) {}
-  list(): EffectParameter[] {
+  list(): RegisteredParameter[] {
     return this.getCurrentStorage().list();
   }
   setValue(id: string, value: ParameterValue): void {

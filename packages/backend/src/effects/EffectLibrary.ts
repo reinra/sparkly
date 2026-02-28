@@ -106,6 +106,13 @@ register(TestAllLedsFlash);
 register(TestRgbPickerEffect);
 register(TestColorPickerEffect);
 
+/** The initial registration order of built-in effects, captured once at module load. */
+const defaultEffectOrder: readonly string[] = Object.freeze(Object.keys(effects));
+
+export function getDefaultEffectOrder(): readonly string[] {
+  return defaultEffectOrder;
+}
+
 export function deleteEffect(effectId: string): void {
   const effect = effects[effectId];
   if (!effect) {

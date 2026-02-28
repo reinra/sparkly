@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, renameSync } from 'fs';
 import { dirname, join } from 'path';
 import { getConfigPath } from './config';
-import { effects, effectClassRegistry } from './effects/EffectLibrary';
+import { effects, effectClassRegistry, getDefaultEffectOrder } from './effects/EffectLibrary';
 import { EffectWrapper } from './EffectWrapper';
 import type { EffectParameterView } from './EffectParameters';
 import { devices } from './DeviceList';
@@ -14,8 +14,8 @@ const AUTO_SAVE_INTERVAL_MS = 60_000; // 1 minute
 // ── Types ─────────────────────────────────────────────────────────────
 
 interface PersistedEffect {
-  name: string;
-  effectClassId: string;
+  name?: string;
+  effectClassId?: string;
   parameters: Record<string, unknown>;
 }
 
@@ -27,7 +27,7 @@ interface PersistedDevice {
 interface PersistedState {
   version: number;
   savedAt: string;
-  effectOrder: string[];
+  effectOrder?: string[];
   effects: Record<string, PersistedEffect>;
   devices: Record<string, PersistedDevice>;
 }
@@ -81,7 +81,9 @@ export function setupShutdownHooks(): void {
 function snapshotParams(view: EffectParameterView): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const p of view.list()) {
-    if (!p.transient) result[p.id] = p.value;
+    if (p.transient) continue;
+    if (p.isDefault()) continue;
+    result[p.id] = p.value;
   }
   return result;
 }
@@ -92,11 +94,15 @@ function buildState(): PersistedState {
 
   for (const [id, wrapper] of Object.entries(effects)) {
     effectOrder.push(id);
-    persistedEffects[id] = {
-      name: wrapper.getName(),
-      effectClassId: wrapper.effect.effectClassId,
-      parameters: snapshotParams(wrapper.getEffectParameters()),
-    };
+
+    const name = wrapper.isDefaultName() ? undefined : wrapper.getName();
+    const effectClassId = wrapper.canDelete ? wrapper.effect.effectClassId : undefined;
+    const parameters = snapshotParams(wrapper.getEffectParameters());
+
+    // Skip system effects that have no customizations at all
+    if (!name && !effectClassId && Object.keys(parameters).length === 0) continue;
+
+    persistedEffects[id] = { name, effectClassId, parameters };
   }
 
   const persistedDevices: Record<string, PersistedDevice> = {};
@@ -108,10 +114,15 @@ function buildState(): PersistedState {
     };
   }
 
+  // Only persist effectOrder if it differs from the default registration order
+  const defaultOrder = getDefaultEffectOrder();
+  const orderChanged = effectOrder.length !== defaultOrder.length ||
+    effectOrder.some((id, i) => id !== defaultOrder[i]);
+
   return {
     version: STATE_VERSION,
     savedAt: new Date().toISOString(),
-    effectOrder,
+    effectOrder: orderChanged ? effectOrder : undefined,
     effects: persistedEffects,
     devices: persistedDevices,
   };
@@ -150,7 +161,7 @@ function tryLoadFile(filePath: string): PersistedState | null {
   try {
     const json = readFileSync(filePath, 'utf-8');
     const data = JSON.parse(json) as PersistedState;
-    if (!data.effects || !data.effectOrder) {
+    if (!data.effects) {
       logger.warn(`State file is missing required fields: ${filePath}`);
       return null;
     }
@@ -200,6 +211,12 @@ function restoreEffects(state: PersistedState): void {
   }
 
   // Phase 2: Rebuild effects record in saved order, inserting clones
+  // If effectOrder is absent, the default code order is already correct
+  if (!state.effectOrder) {
+    logger.info(`Effects restored: ${restoredCount} updated (default order preserved)`);
+    return;
+  }
+
   const rebuilt: [string, EffectWrapper][] = [];
 
   for (const effectId of state.effectOrder) {
@@ -210,7 +227,7 @@ function restoreEffects(state: PersistedState): void {
 
     // Clone: reconstruct from effectClassId
     const saved = state.effects[effectId];
-    if (!saved) continue;
+    if (!saved?.effectClassId) continue;
 
     const EffectClass = effectClassRegistry.get(saved.effectClassId);
     if (!EffectClass) {

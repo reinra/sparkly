@@ -135,6 +135,7 @@ export class EffectWrapper {
     max: 20,
     step: 1,
   });
+  private readonly defaultName: string;
   private readonly mappingModeChangeListeners = new Set<() => void>();
 
   constructor(
@@ -143,6 +144,7 @@ export class EffectWrapper {
     private name: string,
     public readonly canDelete: boolean = false
   ) {
+    this.defaultName = name;
     const sameColorEffect = effect instanceof BaseSameColorEffect;
     this.speed.hidden = effect.animationMode === AnimationMode.Static;
     this.mappingMode.hidden = effect.pointType === '2D' || sameColorEffect;
@@ -165,6 +167,10 @@ export class EffectWrapper {
       throw new Error('Effect name cannot exceed 64 characters');
     }
     this.name = trimmed;
+  }
+
+  public isDefaultName(): boolean {
+    return this.name === this.defaultName;
   }
 
   public addMappingModeChangeListener(listener: () => void): void {
