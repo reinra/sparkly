@@ -7,6 +7,7 @@ import {
   removeDevice,
   RemoveDeviceError,
   discoverDevices,
+  reconnectDevice,
 } from './DeviceList';
 import type { DiscoveredDevice } from '@twinkly-ts/common';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
@@ -71,6 +72,13 @@ export class DeviceNotFoundError extends Error {
   constructor(deviceId: string) {
     super(`Device with ID ${deviceId} not found`);
     this.name = 'DeviceNotFoundError';
+  }
+}
+
+export class DeviceOfflineError extends Error {
+  constructor(deviceId: string) {
+    super(`Device ${deviceId} is currently offline`);
+    this.name = 'DeviceOfflineError';
   }
 }
 
@@ -160,6 +168,15 @@ export class DeviceService {
     return device;
   }
 
+  /** Get device and verify it's online. Throws DeviceOfflineError if not. */
+  getOnlineDevice(deviceId: string): DeviceHelper {
+    const device = this.getDevice(deviceId);
+    if (!device.isOnline()) {
+      throw new DeviceOfflineError(deviceId);
+    }
+    return device;
+  }
+
   getSystemInfo(): SystemInfo {
     return {
       // @ts-ignore – Injected by Bun at build time
@@ -175,6 +192,19 @@ export class DeviceService {
     const deviceList: DeviceInfo[] = [];
 
     for (const device of devicesToQuery) {
+      // For offline devices, return minimal info
+      if (!device.isOnline()) {
+        deviceList.push({
+          id: device.id,
+          alias: device.alias,
+          ip: device.apiClient.getIp(),
+          connectionStatus: device.connectionStatus,
+          effect: null,
+          parameters: [],
+        });
+        continue;
+      }
+
       // Periodically refresh state from device to stay in sync with external changes
       try {
         await device.refreshStateFromDeviceIfStale();
@@ -195,6 +225,7 @@ export class DeviceService {
         id: device.id,
         alias: device.alias,
         ip: device.apiClient.getIp(),
+        connectionStatus: device.connectionStatus,
         name: await device.getDeviceName(),
         led_count: ledCount,
         brightness: device.getBrightness(),
@@ -263,7 +294,7 @@ export class DeviceService {
   }
 
   async debugDevice(deviceId: string): Promise<DebugSection[]> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
     const debugInfo = await device.getDebugInfo();
     return debugInfo.map((section) => ({
       title: section.title,
@@ -272,7 +303,7 @@ export class DeviceService {
   }
 
   async setMode(deviceId: string, mode: string): Promise<void> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
     const validMode = DeviceModeSchema.parse(mode);
 
     if (validMode !== DeviceModeSchema.Values.rt) {
@@ -283,13 +314,13 @@ export class DeviceService {
   }
 
   async setBrightness(deviceId: string, brightness: number): Promise<void> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
     const params = await device.getParameters();
     params.setValue('device.brightness', brightness);
   }
 
   async chooseEffect(deviceId: string, effectId: string | null): Promise<void> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
 
     if (effectId) {
       const effect = effects[effectId];
@@ -311,12 +342,12 @@ export class DeviceService {
   }
 
   getBuffer(deviceId: string): FrameBuffer {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
     return device.buffer;
   }
 
   async getLedMapping(deviceId: string): Promise<LedMapping> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
     return device.getLedMapping();
   }
 
@@ -326,7 +357,7 @@ export class DeviceService {
    * Progress can be polled via getMovieStatus().
    */
   async sendMovie(deviceId: string, effectId: string): Promise<void> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
 
     const effect = effects[effectId];
     if (!effect) {
@@ -397,7 +428,7 @@ export class DeviceService {
   }
 
   async setParameters(deviceId: string, parameters: { id: string; value: ParameterValue }[]): Promise<void> {
-    const device = this.getDevice(deviceId);
+    const device = this.getOnlineDevice(deviceId);
 
     logger.withMetadata({ device_id: deviceId, parameters }).trace(`setParameters called`);
     const params = await device.getParameters();
@@ -447,6 +478,25 @@ export class DeviceService {
       }
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
+  }
+
+  /**
+   * Attempt to reconnect an offline device.
+   */
+  async reconnectDevice(deviceId: string): Promise<{ success: true } | { success: false; error: string }> {
+    const device = devices[deviceId];
+    if (!device) {
+      return { success: false, error: `Device with ID ${deviceId} not found.` };
+    }
+    if (device.isOnline()) {
+      return { success: true };
+    }
+    const reconnected = await reconnectDevice(deviceId);
+    if (reconnected) {
+      this.initAutoRotateForDevice(device);
+      return { success: true };
+    }
+    return { success: false, error: `Device ${deviceId} is still unreachable at ${device.apiClient.getIp()}.` };
   }
 
   /**

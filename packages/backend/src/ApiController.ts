@@ -104,4 +104,9 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     const result = deviceService.removeDevice(req.body.device_id);
     res.json(result);
   },
+
+  reconnectDevice: async (req, res) => {
+    const result = await deviceService.reconnectDevice(req.body.device_id);
+    res.json(result);
+  },
 };

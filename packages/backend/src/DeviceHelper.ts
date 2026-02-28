@@ -49,6 +49,12 @@ export function getEffectGroup(parameter: EffectParameter): ParameterGroup {
   throw new Error(`Unknown parameter group for parameter ID: ${parameter.id}`);
 }
 
+export enum ConnectionStatus {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  CONNECTING = 'connecting',
+}
+
 export class DeviceHelper {
   public readonly buffer: FrameBuffer = { base64_encoded: null, phase: null };
 
@@ -61,6 +67,7 @@ export class DeviceHelper {
   private currentMode: DeviceModeType = DeviceModeSchema.Values.off;
   private lastDeviceRefreshTime = 0;
   private static readonly DEVICE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
+  public connectionStatus = ConnectionStatus.CONNECTING;
 
   private allParams = new MultiParameterStorageView(
     new Map<string, EffectParameterView>([
@@ -188,8 +195,12 @@ export class DeviceHelper {
   public constructor(
     public readonly id: string,
     public readonly apiClient: TwinklyApiClient,
-    public alias: string,
+    public alias: string
   ) {}
+
+  public isOnline(): boolean {
+    return this.connectionStatus === ConnectionStatus.ONLINE;
+  }
 
   public setAutoRotateCallback(callback: (enabled: boolean, intervalSeconds: number) => void): void {
     this.onAutoRotateChanged = callback;

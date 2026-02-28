@@ -1,7 +1,7 @@
 import { TwinklyApiClient, DeviceUnreachableError } from './deviceClient/ApiClient';
 import { loadConfig, addDeviceToConfig, removeDeviceFromConfig } from './config';
 import { logger, logError } from './logger';
-import { DeviceHelper } from './DeviceHelper';
+import { DeviceHelper, ConnectionStatus } from './DeviceHelper';
 import { discoverDevicesOnNetwork } from './deviceClient/Discovery';
 import type { DiscoveredDevice } from '@twinkly-ts/common';
 
@@ -15,18 +15,61 @@ export const devices: Record<string, DeviceHelper> = Object.fromEntries(
   })
 );
 
+const RECONNECT_INTERVAL_MS = 30_000; // 30 seconds between reconnect attempts
+let reconnectTimer: ReturnType<typeof setInterval> | null = null;
+
 export async function tryToConnectAll(): Promise<void> {
   for (const device of Object.values(devices)) {
-    try {
-      const gestalt = await device.apiClient.gestalt();
-      device.alias = gestalt.device_name || device.alias;
-
-      await device.refreshFromDevice();
-    } catch (error) {
-      logError(error).withMetadata({ device_id: device.id }).error(`Failed to connect to device ${device.id}`);
-    }
+    await tryConnectDevice(device);
   }
-  logger.info('Device aliases refreshed');
+  const onlineCount = Object.values(devices).filter((d) => d.isOnline()).length;
+  const totalCount = Object.values(devices).length;
+  logger.info(`Device initialization complete: ${onlineCount}/${totalCount} online`);
+  startReconnectLoop();
+}
+
+async function tryConnectDevice(device: DeviceHelper): Promise<boolean> {
+  device.connectionStatus = ConnectionStatus.CONNECTING;
+  try {
+    const gestalt = await device.apiClient.gestalt();
+    device.alias = gestalt.device_name || device.alias;
+    await device.refreshFromDevice();
+    device.connectionStatus = ConnectionStatus.ONLINE;
+    return true;
+  } catch {
+    device.connectionStatus = ConnectionStatus.OFFLINE;
+    logger
+      .withMetadata({ device_id: device.id, ip: device.apiClient.getIp() })
+      .warn(`Device ${device.id} is unreachable at ${device.apiClient.getIp()}`);
+    return false;
+  }
+}
+
+/** Reconnect a specific device. Returns true if successfully reconnected. */
+export async function reconnectDevice(deviceId: string): Promise<boolean> {
+  const device = devices[deviceId];
+  if (!device) return false;
+  if (device.isOnline()) return true;
+  logger.withMetadata({ device_id: deviceId }).info(`Attempting manual reconnect for device ${deviceId}`);
+  return tryConnectDevice(device);
+}
+
+function startReconnectLoop(): void {
+  if (reconnectTimer) return;
+  reconnectTimer = setInterval(async () => {
+    const offlineDevices = Object.values(devices).filter((d) => d.connectionStatus === ConnectionStatus.OFFLINE);
+    if (offlineDevices.length === 0) return;
+
+    logger.debug(`Attempting reconnect for ${offlineDevices.length} offline device(s)`);
+    for (const device of offlineDevices) {
+      const reconnected = await tryConnectDevice(device);
+      if (reconnected) {
+        logger
+          .withMetadata({ device_id: device.id, ip: device.apiClient.getIp() })
+          .info(`Device ${device.id} reconnected successfully`);
+      }
+    }
+  }, RECONNECT_INTERVAL_MS);
 }
 
 export interface AddDeviceResult {

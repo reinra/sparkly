@@ -1,5 +1,5 @@
 import { backendClient, type GetInfoResponse } from '../FrontendApiClient';
-import type { DeviceMode } from '@twinkly-ts/common';
+import { ConnectionStatus, type DeviceMode } from '@twinkly-ts/common';
 
 // Shared device state
 let devices = $state<GetInfoResponse['devices']>([]);
@@ -9,9 +9,11 @@ let loading = $state(false);
 let initialLoadDone = $state(false);
 let error = $state('');
 
-// Auto-rotate polling
-let autoRotatePollTimer: ReturnType<typeof setInterval> | null = null;
-const AUTO_ROTATE_POLL_INTERVAL_MS = 1000;
+// Polling
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let currentPollInterval: number | null = null;
+const FAST_POLL_INTERVAL_MS = 1000;
+const STATUS_POLL_INTERVAL_MS = 5000;
 
 function hasAutoRotateActive(): boolean {
   return devices.some((d) =>
@@ -19,33 +21,48 @@ function hasAutoRotateActive(): boolean {
   );
 }
 
-function updateAutoRotatePolling(): void {
-  const shouldPoll = hasAutoRotateActive();
-  if (shouldPoll && !autoRotatePollTimer) {
-    autoRotatePollTimer = setInterval(async () => {
-      try {
-        const response = await backendClient.getInfo();
-        if (response.status === 200) {
-          devices = response.body.devices;
-          effects = response.body.effects;
-          // Stop polling if no longer needed
-          if (!hasAutoRotateActive()) {
-            stopAutoRotatePolling();
-          }
-        }
-      } catch (e) {
-        console.error('Auto-rotate poll failed:', e);
-      }
-    }, AUTO_ROTATE_POLL_INTERVAL_MS);
-  } else if (!shouldPoll && autoRotatePollTimer) {
-    stopAutoRotatePolling();
+function hasOfflineDevices(): boolean {
+  return devices.some((d) => d.connectionStatus !== ConnectionStatus.ONLINE);
+}
+
+async function pollDevices(): Promise<void> {
+  try {
+    const response = await backendClient.getInfo();
+    if (response.status === 200) {
+      devices = response.body.devices;
+      effects = response.body.effects;
+      updatePolling();
+    }
+  } catch (e) {
+    console.error('Poll failed:', e);
   }
 }
 
-function stopAutoRotatePolling(): void {
-  if (autoRotatePollTimer) {
-    clearInterval(autoRotatePollTimer);
-    autoRotatePollTimer = null;
+function updatePolling(): void {
+  const needsFastPoll = hasAutoRotateActive();
+  const needsStatusPoll = hasOfflineDevices();
+
+  if (needsFastPoll) {
+    startPolling(FAST_POLL_INTERVAL_MS);
+  } else if (needsStatusPoll) {
+    startPolling(STATUS_POLL_INTERVAL_MS);
+  } else {
+    stopPolling();
+  }
+}
+
+function startPolling(intervalMs: number): void {
+  if (currentPollInterval === intervalMs) return;
+  stopPolling();
+  pollTimer = setInterval(pollDevices, intervalMs);
+  currentPollInterval = intervalMs;
+}
+
+function stopPolling(): void {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    currentPollInterval = null;
   }
 }
 export const deviceStore = {
@@ -91,7 +108,7 @@ export const deviceStore = {
       if (response.status === 200) {
         devices = response.body.devices;
         effects = response.body.effects;
-        updateAutoRotatePolling();
+        updatePolling();
       } else {
         error = 'Failed to get info. Make sure config.toml is properly configured.';
       }
@@ -120,7 +137,7 @@ export const deviceStore = {
         if (response.body.effects.length > 0) {
           effects = response.body.effects;
         }
-        updateAutoRotatePolling();
+        updatePolling();
       }
     } catch (e) {
       console.error('Failed to refresh device:', e);
@@ -129,5 +146,30 @@ export const deviceStore = {
 
   getDevice(deviceId: string) {
     return devices.find((d) => d.id === deviceId) || null;
+  },
+
+  isOnline(device: GetInfoResponse['devices'][0] | null | undefined): boolean {
+    return device?.connectionStatus === ConnectionStatus.ONLINE;
+  },
+
+  isOffline(device: GetInfoResponse['devices'][0] | null | undefined): boolean {
+    return device?.connectionStatus === ConnectionStatus.OFFLINE;
+  },
+
+  isConnecting(device: GetInfoResponse['devices'][0] | null | undefined): boolean {
+    return device?.connectionStatus === ConnectionStatus.CONNECTING;
+  },
+
+  async reconnectDevice(deviceId: string): Promise<boolean> {
+    try {
+      const response = await backendClient.reconnectDevice({ body: { device_id: deviceId } });
+      if (response.status === 200 && response.body.success) {
+        await this.fetchDevice(deviceId);
+        return true;
+      }
+    } catch (e) {
+      console.error('Reconnect failed:', e);
+    }
+    return false;
   },
 };

@@ -15,10 +15,14 @@
   let effects = $derived(deviceStore.effects);
   let deviceModes = $derived(deviceStore.deviceModes);
   let updating = $state(false);
+  let reconnecting = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
   let showMovieDialog = $state(false);
   let showRemoveDialog = $state(false);
+  let isOnline = $derived(deviceStore.isOnline(device));
+  let isOffline = $derived(deviceStore.isOffline(device));
+  let isConnecting = $derived(deviceStore.isConnecting(device));
 
   let deviceParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.DEVICE));
   let effectParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.EFFECT));
@@ -224,6 +228,13 @@
       setTimeout(() => effectElements[newIndex]?.focus(), 0);
     }
   }
+
+  async function reconnect() {
+    if (reconnecting) return;
+    reconnecting = true;
+    await deviceStore.reconnectDevice(deviceId);
+    reconnecting = false;
+  }
 </script>
 
 <div class="device-detail">
@@ -232,10 +243,41 @@
   {:else if deviceStore.error}
     <p class="error">{deviceStore.error}</p>
   {:else if device}
-    <div class="device-content">
+    {#if !isOnline}
+      <div class="offline-detail-banner">
+        <span class="status-dot offline"></span>
+        <span
+          >{isConnecting
+            ? `Connecting to ${device.ip}...`
+            : `Device unreachable at ${device.ip}. The backend will retry automatically every 30 seconds.`}</span
+        >
+        {#if !isConnecting}
+          <button class="reconnect-button" onclick={reconnect} disabled={reconnecting}>
+            {reconnecting ? 'Reconnecting...' : 'Reconnect Now'}
+          </button>
+        {/if}
+      </div>
+    {/if}
+    <div class="device-content" class:content-offline={!isOnline}>
       <div class="device-info-section">
-        <h3>Device Information</h3>
+        <div class="section-header">
+          <h3>Device Information</h3>
+          <button class="remove-device-button" onclick={() => (showRemoveDialog = true)} disabled={updating}>
+            Remove Device
+          </button>
+        </div>
         <div class="info-list">
+          <div class="info-item">
+            <strong>Status:</strong>
+            <span
+              class="status-badge"
+              class:online={isOnline}
+              class:offline={isOffline}
+              class:connecting={isConnecting}
+            >
+              {isOnline ? 'Online' : isOffline ? 'Disconnected' : 'Connecting'}
+            </span>
+          </div>
           {#if device.name}
             <div class="info-item">
               <strong>Name:</strong>
@@ -255,7 +297,7 @@
           {#if device.mode}
             <div class="info-item">
               <strong>Mode:</strong>
-              <select id="mode" value={device.mode} onchange={updateMode} disabled={updating}>
+              <select id="mode" value={device.mode} onchange={updateMode} disabled={updating || !isOnline}>
                 {#each deviceModes as dm}
                   <option value={dm.key}>{dm.title}</option>
                 {/each}
@@ -268,10 +310,7 @@
           <EffectParameters deviceId={device.id} parameters={deviceParams} bind:updating />
         {/if}
 
-        <button onclick={sendMovie} disabled={updating || !device.effect}> Send Movie </button>
-        <button class="remove-device-button" onclick={() => (showRemoveDialog = true)} disabled={updating}>
-          Remove Device
-        </button>
+        <button onclick={sendMovie} disabled={updating || !device.effect || !isOnline}> Send Movie </button>
       </div>
 
       <div class="effect-info-section">
@@ -478,9 +517,23 @@
     box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
   }
 
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .section-header h3 {
+    margin: 0;
+  }
+
   .remove-device-button {
     background: #d32f2f;
-    margin-top: 0.5rem;
+    width: auto;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
+    margin: 0;
   }
 
   .remove-device-button:hover:not(:disabled) {
@@ -607,5 +660,80 @@
     .device-content {
       grid-template-columns: 1fr;
     }
+  }
+
+  .offline-detail-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #d32f2f;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .reconnect-button {
+    margin-left: auto;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .reconnect-button:hover:not(:disabled) {
+    background: #1565c0;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .reconnect-button:disabled {
+    background: #90caf9;
+    cursor: not-allowed;
+  }
+
+  .status-badge {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .status-badge.online {
+    color: #2e7d32;
+  }
+
+  .status-badge.offline,
+  .status-badge.connecting {
+    color: #d32f2f;
+  }
+
+  .content-offline {
+    opacity: 0.5;
+    pointer-events: none;
   }
 </style>

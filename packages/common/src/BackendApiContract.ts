@@ -145,10 +145,20 @@ const EffectInfoSchema = z.object({
   loop_duration_seconds: z.number().optional(),
 });
 
+const DeviceConnectionStatusSchema = z.enum(['online', 'offline', 'connecting']);
+
+/** Connection status values for the API contract. */
+export const ConnectionStatus = {
+  ONLINE: DeviceConnectionStatusSchema.Values.online,
+  OFFLINE: DeviceConnectionStatusSchema.Values.offline,
+  CONNECTING: DeviceConnectionStatusSchema.Values.connecting,
+} as const;
+
 const DeviceInfoResponseSchema = z.object({
   id: z.string(),
   alias: z.string(),
   ip: z.string().ip(),
+  connectionStatus: DeviceConnectionStatusSchema,
   name: z.string().optional(),
   led_count: z.number().optional(),
   brightness: z.number().min(0).max(100).optional(),
@@ -333,6 +343,13 @@ const RemoveDeviceResponseSchema = z.discriminatedUnion('success', [
 
 export type RemoveDeviceResponse = z.infer<typeof RemoveDeviceResponseSchema>;
 
+const ReconnectDeviceResponseSchema = z.discriminatedUnion('success', [
+  z.object({ success: z.literal(true) }),
+  z.object({ success: z.literal(false), error: z.string() }),
+]);
+
+export type ReconnectDeviceResponse = z.infer<typeof ReconnectDeviceResponseSchema>;
+
 const DiscoveredDeviceSchema = z.object({
   ip: z.string(),
   deviceId: z.string(),
@@ -351,6 +368,7 @@ export type DiscoverDevicesResponse = z.infer<typeof DiscoverDevicesResponseSche
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 export type GetInfoResponse = z.infer<typeof GetInfoResponseSchema>;
 export type DeviceInfo = z.infer<typeof DeviceInfoResponseSchema>;
+export type DeviceConnectionStatus = z.infer<typeof DeviceConnectionStatusSchema>;
 export type DeviceDebugResponse = z.infer<typeof DeviceDebugResponseSchema>;
 export type SetModeRequest = z.infer<typeof SetModeRequestSchema>;
 export type SetModeResponse = z.infer<typeof SetModeResponseSchema>;
@@ -557,6 +575,15 @@ export const backendApiContract = c.router({
     body: DeviceRequestBaseSchema,
     responses: {
       200: RemoveDeviceResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  reconnectDevice: {
+    method: 'POST',
+    path: '/api/device/reconnect',
+    body: DeviceRequestBaseSchema,
+    responses: {
+      200: ReconnectDeviceResponseSchema,
       500: ErrorResponseSchema,
     },
   },

@@ -9,7 +9,7 @@ export class FlashAnimation {
   private step: number = 0;
   private accumulatedMs: number = 0;
   private readonly savedBuffer: RgbFloat[];
-  private _finished: boolean = false;
+  public finished: boolean = false;
 
   /** Number of flash steps (on/off pairs). 10 steps = 5 flashes. */
   private readonly totalSteps: number;
@@ -22,10 +22,6 @@ export class FlashAnimation {
     this.msPerStep = msPerStep;
   }
 
-  get finished(): boolean {
-    return this._finished;
-  }
-
   /** Advances the flash animation by deltaMs and returns the frame to display. */
   advance(total: number, deltaMs: number): RgbFloat[] {
     const buffer = createBlackBuffer(total);
@@ -35,7 +31,7 @@ export class FlashAnimation {
       this.step++;
     }
     if (this.step >= this.totalSteps) {
-      this._finished = true;
+      this.finished = true;
       return buffer;
     }
     if (this.step % 2 === 1) {
