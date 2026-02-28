@@ -160,6 +160,23 @@ export const deviceStore = {
     return device?.connectionStatus === ConnectionStatus.CONNECTING;
   },
 
+  async renameEffect(effectId: string, name: string): Promise<{ id: string; name: string } | null> {
+    try {
+      const response = await backendClient.renameEffect({ body: { effect_id: effectId, name } });
+      if (response.status === 200) {
+        // Update local effects list reactively
+        const idx = effects.findIndex((e) => e.id === effectId);
+        if (idx >= 0) {
+          effects[idx] = { ...effects[idx], name: response.body.name };
+        }
+        return response.body;
+      }
+    } catch (e) {
+      console.error('Failed to rename effect:', e);
+    }
+    return null;
+  },
+
   async reconnectDevice(deviceId: string): Promise<boolean> {
     try {
       const response = await backendClient.reconnectDevice({ body: { device_id: deviceId } });

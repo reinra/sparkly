@@ -140,7 +140,7 @@ export class EffectWrapper {
   constructor(
     public readonly id: string,
     public readonly effect: AnyEffect,
-    private readonly name: string,
+    private name: string,
     public readonly canDelete: boolean = false
   ) {
     const sameColorEffect = effect instanceof BaseSameColorEffect;
@@ -154,6 +154,17 @@ export class EffectWrapper {
 
   public getName(): string {
     return this.name;
+  }
+
+  public setName(name: string): void {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      throw new Error('Effect name cannot be empty');
+    }
+    if (trimmed.length > 64) {
+      throw new Error('Effect name cannot exceed 64 characters');
+    }
+    this.name = trimmed;
   }
 
   public addMappingModeChangeListener(listener: () => void): void {

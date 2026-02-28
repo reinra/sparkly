@@ -233,6 +233,16 @@ const DeleteEffectRequestSchema = z.object({
   effect_id: z.string(),
 });
 
+const RenameEffectRequestSchema = z.object({
+  effect_id: z.string(),
+  name: z.string().min(1).max(64),
+});
+
+const RenameEffectResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
 const ResetEffectRequestSchema = z.object({
   effect_id: z.string(),
 });
@@ -499,6 +509,15 @@ export const backendApiContract = c.router({
     body: DeleteEffectRequestSchema,
     responses: {
       200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  renameEffect: {
+    method: 'POST',
+    path: '/api/effect/rename',
+    body: RenameEffectRequestSchema,
+    responses: {
+      200: RenameEffectResponseSchema,
       500: ErrorResponseSchema,
     },
   },

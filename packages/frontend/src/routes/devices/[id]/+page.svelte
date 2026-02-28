@@ -20,6 +20,9 @@
   let effectElements: HTMLButtonElement[] = [];
   let showMovieDialog = $state(false);
   let showRemoveDialog = $state(false);
+  let editingEffectName = $state(false);
+  let editEffectNameValue = $state('');
+  let renameTextarea: HTMLTextAreaElement | undefined = $state();
   let isOnline = $derived(deviceStore.isOnline(device));
   let isOffline = $derived(deviceStore.isOffline(device));
   let isConnecting = $derived(deviceStore.isConnecting(device));
@@ -175,6 +178,9 @@
         const newIndex = effects.findIndex((e) => e.id === newEffectId);
         if (newIndex >= 0) {
           await selectEffect(newIndex);
+          // Start editing the name of the cloned effect
+          editEffectNameValue = response.body.name;
+          editingEffectName = true;
         }
       }
     } catch (e) {
@@ -244,6 +250,53 @@
       selectEffect(newIndex);
       // Keep focus on the newly selected effect button
       setTimeout(() => effectElements[newIndex]?.focus(), 0);
+    }
+  }
+
+  function startEditEffectName() {
+    if (!device?.effect || updating) return;
+    editEffectNameValue = device.effect.name;
+    editingEffectName = true;
+  }
+
+  $effect(() => {
+    if (editingEffectName && renameTextarea) {
+      renameTextarea.focus();
+      renameTextarea.select();
+    }
+  });
+
+  async function saveEffectName() {
+    if (!device?.effect || updating) return;
+    const trimmed = editEffectNameValue.trim();
+    if (!trimmed || trimmed === device.effect.name) {
+      editingEffectName = false;
+      return;
+    }
+    updating = true;
+    try {
+      const result = await deviceStore.renameEffect(device.effect.id, trimmed);
+      if (result) {
+        await deviceStore.fetchDevice(deviceId);
+      }
+    } catch (e) {
+      console.error('Failed to rename effect:', e);
+    }
+    editingEffectName = false;
+    updating = false;
+  }
+
+  function cancelEditEffectName() {
+    editingEffectName = false;
+  }
+
+  function handleRenameKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveEffectName();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelEditEffectName();
     }
   }
 
@@ -349,9 +402,29 @@
             <strong>ID:</strong>
             <span>{device.effect?.id ?? 'None'}</span>
           </div>
-          <div class="info-item">
+          <div class="info-item info-item-name">
             <strong>Name:</strong>
-            <span>{device.effect?.name ?? '—'}</span>
+            {#if editingEffectName}
+              <textarea
+                class="rename-input"
+                bind:this={renameTextarea}
+                bind:value={editEffectNameValue}
+                onkeydown={handleRenameKeyDown}
+                onblur={saveEffectName}
+                maxlength="64"
+                rows="2"
+              ></textarea>
+            {:else}
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <span
+                class="effect-name-editable"
+                ondblclick={startEditEffectName}
+                title="Double-click to rename"
+              >{device.effect?.name ?? '—'}</span>
+              {#if device.effect}
+                <button class="rename-button" onclick={startEditEffectName} disabled={updating} title="Rename effect">✏️</button>
+              {/if}
+            {/if}
           </div>
           <div class="info-item">
             <strong>Type:</strong>
@@ -614,6 +687,49 @@
   .effect-name {
     font-weight: 500;
     white-space: nowrap;
+  }
+
+  .info-item-name {
+    align-items: flex-start;
+  }
+
+  .effect-name-editable {
+    cursor: default;
+  }
+
+  .rename-input {
+    flex: 1;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #ff3e00;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: #333;
+    outline: none;
+    resize: vertical;
+  }
+
+  .rename-button {
+    background: transparent;
+    border: none;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: auto;
+    color: #666;
+    box-shadow: none;
+  }
+
+  .rename-button:hover:not(:disabled) {
+    background: transparent;
+    transform: none;
+    box-shadow: none;
+    color: #ff3e00;
+  }
+
+  .rename-button:disabled {
+    background: transparent;
+    opacity: 0.3;
   }
 
   .active-badge {

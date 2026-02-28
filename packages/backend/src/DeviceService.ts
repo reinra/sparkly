@@ -443,6 +443,16 @@ export class DeviceService {
     return result;
   }
 
+  renameEffect(effectId: string, name: string): { id: string; name: string } {
+    const effect = effects[effectId];
+    if (!effect) {
+      throw new EffectNotFoundError(effectId);
+    }
+    effect.setName(name);
+    logger.withMetadata({ effectId, newName: effect.getName() }).info('Effect renamed');
+    return { id: effectId, name: effect.getName() };
+  }
+
   deleteEffect(effectId: string): void {
     // If any device is currently running this effect, stop it
     for (const device of Object.values(devices)) {

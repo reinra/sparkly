@@ -90,6 +90,11 @@ export const apiController: TypedHandlers<typeof backendApiContract> = {
     res.json({ success: true });
   },
 
+  renameEffect: async (req, res) => {
+    const result = deviceService.renameEffect(req.body.effect_id, req.body.name);
+    res.json(result);
+  },
+
   resetEffect: async (req, res) => {
     await deviceService.resetEffect(req.body.effect_id);
     res.json({ success: true });
