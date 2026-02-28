@@ -19,9 +19,10 @@
   let fetchingBuffer = $state(false);
   let fetchingMapping = $state(false);
   let isLiveEnabled = $state(false);
-  let isRendering = $state(false);
   let liveIntervalId: number | null = null;
   let canvas = $state<HTMLCanvasElement | null>(null);
+  let sequenceCanvas = $state<HTMLCanvasElement | null>(null);
+  let canvasContainerEl = $state<HTMLDivElement | null>(null);
   let liveFps = $state<number | null>(null);
   const FPS_WINDOW_MS = 5000;
   let frameTimestamps: number[] = [];
@@ -81,6 +82,51 @@
     }
   }
 
+  // Sequence mode: box size to match the original CSS (.color-box 24px + 4px gap)
+  const SEQ_BOX = 24;
+  const SEQ_GAP = 4;
+  const SEQ_PAD = 8; // canvas internal padding
+  const SEQ_RADIUS = 3;
+
+  function renderSequenceCanvas() {
+    if (!sequenceCanvas || colors.length === 0) return;
+
+    // Compute grid layout based on container width
+    const containerWidth = canvasContainerEl?.clientWidth ?? 400;
+    const availableWidth = containerWidth - SEQ_PAD * 2;
+    const cols = Math.max(1, Math.floor((availableWidth + SEQ_GAP) / (SEQ_BOX + SEQ_GAP)));
+    const rows = Math.ceil(colors.length / cols);
+
+    const canvasW = SEQ_PAD * 2 + cols * SEQ_BOX + (cols - 1) * SEQ_GAP;
+    const canvasH = SEQ_PAD * 2 + rows * SEQ_BOX + (rows - 1) * SEQ_GAP;
+
+    sequenceCanvas.width = canvasW;
+    sequenceCanvas.height = canvasH;
+
+    const ctx = sequenceCanvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvasW, canvasH);
+
+    for (let i = 0; i < colors.length; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = SEQ_PAD + col * (SEQ_BOX + SEQ_GAP);
+      const y = SEQ_PAD + row * (SEQ_BOX + SEQ_GAP);
+      const c = colors[i];
+
+      ctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+      ctx.beginPath();
+      ctx.roundRect(x, y, SEQ_BOX, SEQ_BOX, SEQ_RADIUS);
+      ctx.fill();
+
+      // Subtle border like the original
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
   function render2DCanvas() {
     if (!canvas || !ledMapping || colors.length === 0) return;
 
@@ -116,7 +162,7 @@
   }
 
   async function fetchBuffer() {
-    if (fetchingBuffer || isRendering) return;
+    if (fetchingBuffer) return;
 
     fetchingBuffer = true;
     const fetchStartTime = performance.now();
@@ -144,18 +190,14 @@
         phase = result.body.phase ?? null;
         bufferData = result.body.base64_encoded;
         if (bufferData) {
-          isRendering = true;
           colors = parseBase64ToColors(bufferData);
 
-          // Render on canvas if in 2D mode
+          // Render on canvas
           if (displayMode === '2d-mapping') {
-            await new Promise((resolve) => setTimeout(resolve, 0));
             render2DCanvas();
+          } else {
+            renderSequenceCanvas();
           }
-
-          // Allow browser to render before marking as complete
-          await new Promise((resolve) => setTimeout(resolve, 0));
-          isRendering = false;
         } else {
           colors = [];
         }
@@ -184,7 +226,7 @@
 
       // Calculate next fetch time for live mode
       const fetchDuration = performance.now() - fetchStartTime;
-      const nextInterval = Math.max(100, fetchDuration);
+      const nextInterval = Math.max(50, fetchDuration);
 
       if (isLiveEnabled && liveIntervalId === null) {
         liveIntervalId = window.setTimeout(() => {
@@ -223,9 +265,12 @@
     }
 
     // Re-render if we have colors
-    if (colors.length > 0 && mode === '2d-mapping') {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      render2DCanvas();
+    if (colors.length > 0) {
+      if (mode === '2d-mapping') {
+        render2DCanvas();
+      } else {
+        renderSequenceCanvas();
+      }
     }
   }
 
@@ -246,10 +291,14 @@
     prevDisableLive = disableLive;
   });
 
-  // Re-render canvas when colors update in 2D mode
+  // Re-render canvas when colors update
   $effect(() => {
-    if (displayMode === '2d-mapping' && colors.length > 0 && ledMapping !== null) {
-      render2DCanvas();
+    if (colors.length > 0) {
+      if (displayMode === '2d-mapping' && ledMapping !== null) {
+        render2DCanvas();
+      } else if (displayMode === 'sequence') {
+        renderSequenceCanvas();
+      }
     }
   });
 </script>
@@ -296,14 +345,8 @@
       <strong>Buffer Colors ({colors.length} LEDs):</strong>
 
       {#if displayMode === 'sequence'}
-        <div class="color-grid">
-          {#each colors as color}
-            <div
-              class="color-box"
-              style="background-color: rgb({color.r}, {color.g}, {color.b});"
-              title="RGB({color.r}, {color.g}, {color.b})"
-            ></div>
-          {/each}
+        <div class="canvas-container" bind:this={canvasContainerEl}>
+          <canvas bind:this={sequenceCanvas} class="sequence-canvas"></canvas>
         </div>
       {:else if displayMode === '2d-mapping'}
         <div class="canvas-container">
@@ -394,30 +437,12 @@
     font-size: 0.85rem;
   }
 
-  .color-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 0.5rem;
-    padding: 0.5rem;
+  .sequence-canvas {
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 3px;
-  }
-
-  .color-box {
-    width: 24px;
-    height: 24px;
-    border-radius: 3px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
-
-  .color-box:hover {
-    transform: scale(1.3);
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    height: auto;
   }
 
   .mode-toggle {
