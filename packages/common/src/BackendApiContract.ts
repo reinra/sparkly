@@ -233,6 +233,10 @@ const DeleteEffectRequestSchema = z.object({
   effect_id: z.string(),
 });
 
+const ResetEffectRequestSchema = z.object({
+  effect_id: z.string(),
+});
+
 const SendMovieRequestSchema = DeviceRequestBaseSchema.extend({
   effect_id: z.string(),
 });
@@ -493,6 +497,15 @@ export const backendApiContract = c.router({
     method: 'POST',
     path: '/api/effect/delete',
     body: DeleteEffectRequestSchema,
+    responses: {
+      200: GenericSuccessResponseSchema,
+      500: ErrorResponseSchema,
+    },
+  },
+  resetEffect: {
+    method: 'POST',
+    path: '/api/effect/reset',
+    body: ResetEffectRequestSchema,
     responses: {
       200: GenericSuccessResponseSchema,
       500: ErrorResponseSchema,

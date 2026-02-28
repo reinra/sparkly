@@ -169,8 +169,8 @@
       });
       if (response.status === 200) {
         const newEffectId = response.body.id;
-        // Refresh effects list
-        await deviceStore.fetchAllDevices();
+        // Refresh device and effects list
+        await deviceStore.fetchDevice(deviceId);
         // Select and activate the cloned effect
         const newIndex = effects.findIndex((e) => e.id === newEffectId);
         if (newIndex >= 0) {
@@ -203,6 +203,24 @@
       }
     } catch (e) {
       console.error('Failed to delete effect:', e);
+    }
+    updating = false;
+  }
+
+  async function resetSelectedEffect() {
+    if (!device || updating || selectedEffectIndex < 0 || selectedEffectIndex >= effects.length) return;
+    const targetEffect = effects[selectedEffectIndex];
+
+    updating = true;
+    try {
+      const response = await backendClient.resetEffect({
+        body: { effect_id: targetEffect.id },
+      });
+      if (response.status === 200) {
+        await deviceStore.fetchDevice(deviceId);
+      }
+    } catch (e) {
+      console.error('Failed to reset effect:', e);
     }
     updating = false;
   }
@@ -318,6 +336,9 @@
         <div class="effect-actions">
           <button class="clone-button" onclick={cloneEffect} disabled={updating || effects.length === 0}>
             Clone
+          </button>
+          <button class="reset-button" onclick={resetSelectedEffect} disabled={updating || effects.length === 0}>
+            Reset
           </button>
           <button class="delete-button" onclick={deleteSelectedEffect} disabled={updating || !selectedEffectCanDelete}>
             Delete
@@ -503,6 +524,7 @@
   }
 
   .clone-button,
+  .reset-button,
   .delete-button {
     flex: 1;
   }

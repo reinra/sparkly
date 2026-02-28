@@ -1,4 +1,4 @@
-import { effects, cloneEffect, deleteEffect } from './effects/EffectLibrary';
+import { effects, cloneEffect, deleteEffect, resetEffect } from './effects/EffectLibrary';
 import { TaskExecutor } from './TaskExecutor';
 import {
   devices,
@@ -454,6 +454,31 @@ export class DeviceService {
     }
     deleteEffect(effectId);
     logger.withMetadata({ effectId }).info('Effect deleted');
+  }
+
+  /**
+   * Reset an effect to its code-defined defaults by replacing it with a fresh instance.
+   * Any device running this effect is re-attached to the new instance and restarted.
+   */
+  async resetEffect(effectId: string): Promise<void> {
+    const newWrapper = resetEffect(effectId);
+    logger.withMetadata({ effectId }).info('Effect reset to defaults');
+
+    // Re-attach any devices that were running this effect
+    for (const device of Object.values(devices)) {
+      const currentEffect = device.getCurrentEffect();
+      if (currentEffect && currentEffect.id === effectId) {
+        device.setCurrentEffect(newWrapper);
+        if (device.isOnline()) {
+          const renderCtx = new RenderContextImpl(device, newWrapper);
+          this.taskExecutor.startAndAbortPreviousTask(device.id, {
+            run: async (signal) => {
+              await startEffect(device, renderCtx, signal);
+            },
+          });
+        }
+      }
+    }
   }
 
   /**
