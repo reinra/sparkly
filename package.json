@@ -1,23 +1,23 @@
 {
-  "name": "twinkly-ts",
+  "name": "sparkly",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Twinkly LED controller with separate backend, frontend, and common modules",
+  "description": "LED controller for Twinkly devices",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "build": "npm run build:common && npm run build:backend && npm run build:frontend",
-    "build:common": "npm run build --workspace=@twinkly-ts/common",
-    "build:backend": "npm run build --workspace=@twinkly-ts/backend",
-    "build:frontend": "npm run build --workspace=@twinkly-ts/frontend",
+    "build:common": "npm run build --workspace=@sparkly/common",
+    "build:backend": "npm run build --workspace=@sparkly/backend",
+    "build:frontend": "npm run build --workspace=@sparkly/frontend",
     "build:executable": "npm run build && node scripts/build-executable.js",
     "package:distribution": "npm run build:executable && node scripts/create-distribution.js",
-    "dev:backend": "npm run dev --workspace=@twinkly-ts/backend",
-    "dev:frontend": "npm run dev --workspace=@twinkly-ts/frontend",
-    "start:backend": "npm run start --workspace=@twinkly-ts/backend",
-    "start:frontend": "npm run preview --workspace=@twinkly-ts/frontend"
+    "dev:backend": "npm run dev --workspace=@sparkly/backend",
+    "dev:frontend": "npm run dev --workspace=@sparkly/frontend",
+    "start:backend": "npm run start --workspace=@sparkly/backend",
+    "start:frontend": "npm run preview --workspace=@sparkly/frontend"
   },
   "keywords": [],
   "author": "",

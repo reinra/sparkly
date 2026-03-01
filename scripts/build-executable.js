@@ -57,7 +57,7 @@ async function buildExecutable() {
   console.log('\n🚀 Building executable...');
   // Use server-bun.ts which statically imports assets and handler
   const entryPoint = path.join(rootDir, 'packages', 'backend', 'src', 'server-bun.ts');
-  const outputPath = path.join(distDir, 'twinkly-server.exe');
+  const outputPath = path.join(distDir, 'sparkly.exe');
 
   // Check if entry point exists
   if (!fs.existsSync(entryPoint)) {

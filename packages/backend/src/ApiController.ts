@@ -1,5 +1,5 @@
 import type { TypedHandlers } from './TypedHandler';
-import { backendApiContract } from '@twinkly-ts/common';
+import { backendApiContract } from '@sparkly/common';
 import { deviceService } from './DeviceService';
 import { isMovieTaskActive } from './MovieTaskTracker';
 import type { ParameterValue } from './EffectParameters';
@@ -12,7 +12,7 @@ import type { ParameterValue } from './EffectParameters';
  */
 export const apiController: TypedHandlers<typeof backendApiContract> = {
   hello: (_req, res) => {
-    res.json({ message: 'Hello from Twinkly Backend!' });
+    res.json({ message: 'Hello from Sparkly Backend!' });
   },
 
   getSystemInfo: (_req, res) => {

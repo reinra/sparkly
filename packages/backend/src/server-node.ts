@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { logger, logError } from './logger';
 import { openBrowser } from './utils/BrowserUtils';
-import { backendApiContract } from '@twinkly-ts/common';
+import { backendApiContract } from '@sparkly/common';
 import { registerRoutes } from './TypedHandler';
 import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';

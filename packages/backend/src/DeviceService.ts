@@ -10,7 +10,7 @@ import {
   discoverDevices,
   reconnectDevice,
 } from './DeviceList';
-import type { DiscoveredDevice } from '@twinkly-ts/common';
+import type { DiscoveredDevice } from '@sparkly/common';
 import { sendEffectAsMovie, startEffect } from './render/EffectLauncher';
 import type { MovieProgressCallback } from './render/EffectLauncher';
 import { logger, logError } from './logger';
@@ -20,7 +20,7 @@ import { getEffectGroup, type DeviceHelper, type LedMapping } from './DeviceHelp
 import { AnimationMode, type EffectLoop, type EffectSequence, type LedPoint } from './effects/Effect';
 import { RenderContextImpl } from './render/RenderContext';
 import type { FrameBuffer } from './render/FrameOutputStream';
-import type { DeviceInfo } from '@twinkly-ts/common';
+import type { DeviceInfo } from '@sparkly/common';
 import type { ParameterValue } from './EffectParameters';
 import {
   startMovieTask,

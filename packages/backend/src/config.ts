@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 // Detect if running in Bun bundled executable
 const isBundledExecutable =
   typeof process !== 'undefined' &&
-  (process.execPath?.includes('twinkly-server') || process.argv[0]?.includes('twinkly-server'));
+  (process.execPath?.includes('sparkly') || process.argv[0]?.includes('sparkly'));
 
 // Define config schema with Zod
 const ConfigSchema = z.object({

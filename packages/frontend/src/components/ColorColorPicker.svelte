@@ -5,7 +5,7 @@
 
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import { ColorMode, type ColorValue, type Hsl, type RgbFloat } from '@twinkly-ts/common';
+  import { ColorMode, type ColorValue, type Hsl, type RgbFloat } from '@sparkly/common';
   import { hslToRgbFloat, rgbFloatToHsl } from '../utils/ColorConvert';
 
   interface Props {

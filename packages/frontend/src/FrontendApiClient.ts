@@ -1,5 +1,5 @@
 import { initClient } from '@ts-rest/core';
-import { backendApiContract } from '@twinkly-ts/common';
+import { backendApiContract } from '@sparkly/common';
 
 // Create a type-safe client for the backend API
 const getBaseUrl = () => {
@@ -27,4 +27,4 @@ export type {
   MovieTaskProgressResponse,
   GetMovieStatusResponse,
   DebugEffectsResponse,
-} from '@twinkly-ts/common';
+} from '@sparkly/common';

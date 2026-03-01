@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { HslEffectParameter, Hsl } from '@twinkly-ts/common';
+  import type { HslEffectParameter, Hsl } from '@sparkly/common';
   import HslColorPicker from '../HslColorPicker.svelte';
   import { formatHslDisplay } from '../../utils/HslUtils';
 

@@ -1,4 +1,4 @@
-import { Hsl } from '@twinkly-ts/common';
+import { Hsl } from '@sparkly/common';
 import { Color, HslColor, RgbColor } from '../../color/Color';
 import { EffectParameterStorage } from '../../EffectParameters';
 import {

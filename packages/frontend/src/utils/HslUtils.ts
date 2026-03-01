@@ -1,4 +1,4 @@
-import type { Hsl } from '@twinkly-ts/common';
+import type { Hsl } from '@sparkly/common';
 
 export function formatHslDisplay(color: Hsl): string {
   const clamp = (value: number) => Math.min(1, Math.max(0, value));

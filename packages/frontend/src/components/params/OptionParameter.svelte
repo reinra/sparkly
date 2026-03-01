@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { OptionEffectParameter } from '@twinkly-ts/common';
+  import type { OptionEffectParameter } from '@sparkly/common';
 
   interface Props {
     param: OptionEffectParameter;

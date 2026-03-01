@@ -1,5 +1,5 @@
 {
-  "name": "@twinkly-ts/common",
+  "name": "@sparkly/common",
   "version": "1.0.0",
   "type": "module",
   "description": "Common API contracts and types shared between backend and frontend",

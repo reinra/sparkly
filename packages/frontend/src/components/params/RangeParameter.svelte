@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { RangeEffectParameter } from '@twinkly-ts/common';
+  import type { RangeEffectParameter } from '@sparkly/common';
 
   interface Props {
     param: RangeEffectParameter;

@@ -1,5 +1,5 @@
 import { backendClient, type GetInfoResponse } from '../FrontendApiClient';
-import { ConnectionStatus, type DeviceMode } from '@twinkly-ts/common';
+import { ConnectionStatus, type DeviceMode } from '@sparkly/common';
 
 // Shared device state
 let devices = $state<GetInfoResponse['devices']>([]);

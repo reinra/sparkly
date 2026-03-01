@@ -1,11 +1,11 @@
-# Twinkly-TS Modular Architecture
+# Sparkly Modular Architecture
 
 This project has been restructured into a monorepo with three clear modules:
 
 ## 📦 Project Structure
 
 ```
-twinkly-ts/
+sparkly/
 ├── packages/
 │   ├── common/          # Shared API contract and types
 │   ├── backend/         # Node.js backend server
@@ -15,18 +15,16 @@ twinkly-ts/
 
 ## 🏗️ Module Descriptions
 
-### 1. **@twinkly-ts/common**
+### 1. **@sparkly/common**
 
 Contains the REST API contract between backend and frontend using [@ts-rest](https://ts-rest.com/):
 
 - API endpoint definitions
 - Request/Response schemas (Zod)
-- Shared TypeScript types
-- Mode enums and common interfaces
 
 **No browser or Node.js specific code** - pure TypeScript types and schemas.
 
-### 2. **@twinkly-ts/backend**
+### 2. **@sparkly/backend**
 
 Node.js backend server that:
 
@@ -37,7 +35,7 @@ Node.js backend server that:
 
 Can use Node.js-specific libraries without browser compatibility issues.
 
-### 3. **@twinkly-ts/frontend**
+### 3. **@sparkly/frontend**
 
 SvelteKit frontend that:
 
@@ -100,8 +98,8 @@ Device configuration is managed through the web interface. The backend persists 
 
 The separation prevents accidental cross-imports:
 
-- ✅ Backend can import from `@twinkly-ts/common`
-- ✅ Frontend can import from `@twinkly-ts/common`
+- ✅ Backend can import from `@sparkly/common`
+- ✅ Frontend can import from `@sparkly/common`
 - ❌ Backend **cannot** import from frontend
 - ❌ Frontend **cannot** import from backend
 - ❌ Common **cannot** import from backend or frontend
@@ -116,7 +114,7 @@ This ensures:
 ## 🛠️ Key Benefits
 
 1. **Clear Separation**: Frontend and backend code cannot accidentally reference each other
-2. **Shared Contract**: API types are defined once and shared via `@twinkly-ts/common`
+2. **Shared Contract**: API types are defined once and shared via `@sparkly/common`
 3. **Type Safety**: Full TypeScript support across the entire API surface
 4. **Independent Development**: Frontend and backend can be developed/deployed separately
 5. **Library Compatibility**: Use Node.js libraries in backend and browser APIs in frontend without conflicts

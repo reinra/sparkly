@@ -9,7 +9,7 @@
   import { deviceStore } from '../../../stores/DeviceStore.svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { ParameterGroup } from '@twinkly-ts/common';
+  import { ParameterGroup } from '@sparkly/common';
 
   let deviceId = $derived(page.params.id);
   let device = $derived(deviceStore.getDevice(deviceId));

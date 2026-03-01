@@ -3,7 +3,7 @@ import { loadConfig, addDeviceToConfig, removeDeviceFromConfig } from './config'
 import { logger, logError } from './logger';
 import { DeviceHelper, ConnectionStatus } from './DeviceHelper';
 import { discoverDevicesOnNetwork } from './deviceClient/Discovery';
-import type { DiscoveredDevice } from '@twinkly-ts/common';
+import type { DiscoveredDevice } from '@sparkly/common';
 
 const config = loadConfig();
 

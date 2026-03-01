@@ -1,6 +1,6 @@
-# twinkly-ts
+# Sparkly
 
-A Twinkly LED controller with TypeScript backend and SvelteKit frontend.
+LED controller for Twinkly devices, with TypeScript backend and SvelteKit frontend.
 
 > **Note**: This project now uses a modular architecture with separate packages for common types, backend, and frontend. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 
@@ -70,7 +70,7 @@ This project can be built as a **self-contained executable** that runs on any Wi
 npm run package:distribution
 ```
 
-This creates a complete distribution package at `dist/twinkly-server-package/` with:
+This creates a complete distribution package at `dist/sparkly-package/` with:
 
 - Self-contained executable (~110 MB, includes Bun runtime)
 - Frontend web interface
@@ -84,12 +84,12 @@ This project uses a monorepo (npm workspaces) with three packages:
 
 ```
 packages/
-├── common/          # Shared API contract and types (@twinkly-ts/common)
+├── common/          # Shared API contract and types (@sparkly/common)
 │   └── src/
 │       ├── BackendApiContract.ts
 │       ├── types.ts
 │       └── index.ts
-├── backend/         # Express backend server (@twinkly-ts/backend)
+├── backend/         # Express backend server (@sparkly/backend)
 │   └── src/
 │       ├── server.ts          # Development Express server
 │       ├── server-node.ts     # Production server (Node.js)
@@ -98,7 +98,7 @@ packages/
 │       ├── deviceClient/      # Twinkly device communication
 │       ├── effects/           # LED effect implementations
 │       └── ...
-└── frontend/        # SvelteKit frontend (@twinkly-ts/frontend)
+└── frontend/        # SvelteKit frontend (@sparkly/frontend)
     └── src/
         ├── routes/            # SvelteKit pages
         ├── components/        # Svelte components

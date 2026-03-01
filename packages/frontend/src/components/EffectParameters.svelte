@@ -16,7 +16,7 @@
     type RgbEffectParameter,
     type ColorEffectParameter,
     type MultiColorEffectParameter,
-  } from '@twinkly-ts/common';
+  } from '@sparkly/common';
   import RangeParameter from './params/RangeParameter.svelte';
   import BooleanParameter from './params/BooleanParameter.svelte';
   import HslParameter from './params/HslParameter.svelte';

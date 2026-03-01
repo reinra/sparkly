@@ -10,7 +10,7 @@ async function createDistributionPackage() {
   console.log('📦 Creating distribution package...\n');
 
   const distDir = path.join(rootDir, 'dist');
-  const packageDir = path.join(distDir, 'twinkly-server-package');
+  const packageDir = path.join(distDir, 'sparkly-package');
 
   // Create package directory
   if (!fs.existsSync(packageDir)) {
@@ -19,12 +19,12 @@ async function createDistributionPackage() {
 
   // 1. Copy executable
   console.log('📋 Copying executable...');
-  const exePath = path.join(distDir, 'twinkly-server.exe');
+  const exePath = path.join(distDir, 'sparkly.exe');
   if (!fs.existsSync(exePath)) {
     console.error('❌ Executable not found. Run "npm run build:executable" first.');
     process.exit(1);
   }
-  fs.copyFileSync(exePath, path.join(packageDir, 'twinkly-server.exe'));
+  fs.copyFileSync(exePath, path.join(packageDir, 'sparkly.exe'));
   console.log('✓ Executable copied');
 
   // 2. Frontend files are now embedded in the executable - no need to copy
@@ -46,19 +46,19 @@ async function createDistributionPackage() {
   console.log(`📍 Location: ${packageDir}`);
   console.log(`📦 Total size: ${sizeMB} MB`);
   console.log('\n📋 Package contents:');
-  console.log('   - twinkly-server.exe (self-contained executable)');
+  console.log('   - sparkly.exe (self-contained executable)');
   console.log('   - README.md (user documentation)');
   console.log('\n🚀 Distribution package is ready to deploy!');
   console.log('📦 You can now zip this folder and distribute it.');
   console.log('\n⚠️  Users will need to:');
-  console.log('   1. Run twinkly-server.exe');
+  console.log('   1. Run sparkly.exe');
   console.log('   2. Access http://localhost:3001 in their browser');
   console.log('   3. Add devices via the web interface');
   
   // Rename the build artifact to prevent confusion
   console.log('\n🔧 Renaming build artifact to prevent accidental use...');
-  const buildArtifact = path.join(distDir, 'twinkly-server.exe');
-  const renamedArtifact = path.join(distDir, 'twinkly-server-BUILD-ARTIFACT-DO-NOT-RUN.exe');
+  const buildArtifact = path.join(distDir, 'sparkly.exe');
+  const renamedArtifact = path.join(distDir, 'sparkly-BUILD-ARTIFACT-DO-NOT-RUN.exe');
   
   if (fs.existsSync(buildArtifact)) {
     if (fs.existsSync(renamedArtifact)) {
@@ -66,10 +66,10 @@ async function createDistributionPackage() {
     }
     fs.renameSync(buildArtifact, renamedArtifact);
     console.log('✓ Build artifact renamed to prevent confusion');
-    console.log(`   dist/twinkly-server-BUILD-ARTIFACT-DO-NOT-RUN.exe`);
+    console.log(`   dist/sparkly-BUILD-ARTIFACT-DO-NOT-RUN.exe`);
     console.log('\n⚠️  IMPORTANT: Always use the distribution package:');
-    console.log(`   ✓ CORRECT: ${path.join('dist', 'twinkly-server-package', 'twinkly-server.exe')}`);
-    console.log(`   ✗ WRONG:   ${path.join('dist', 'twinkly-server.exe')} (build artifact)`);
+    console.log(`   ✓ CORRECT: ${path.join('dist', 'sparkly-package', 'sparkly.exe')}`);
+    console.log(`   ✗ WRONG:   ${path.join('dist', 'sparkly.exe')} (build artifact)`);
   }
 }
 

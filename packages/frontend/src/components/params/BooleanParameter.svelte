@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { BooleanEffectParameter } from '@twinkly-ts/common';
+  import type { BooleanEffectParameter } from '@sparkly/common';
 
   interface Props {
     param: BooleanEffectParameter;

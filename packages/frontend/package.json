@@ -1,5 +1,5 @@
 {
-  "name": "@twinkly-ts/frontend",
+  "name": "@sparkly/frontend",
   "version": "1.0.0",
   "type": "module",
   "description": "Frontend UI for Twinkly device control",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
-    "@twinkly-ts/common": "file:../common"
+    "@sparkly/common": "file:../common"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.4.0",

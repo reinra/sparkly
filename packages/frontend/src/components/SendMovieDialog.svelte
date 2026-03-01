@@ -1,6 +1,6 @@
 <script lang="ts">
   import { backendClient } from '../FrontendApiClient';
-  import type { MovieTaskProgressResponse } from '@twinkly-ts/common';
+  import type { MovieTaskProgressResponse } from '@sparkly/common';
 
   interface Props {
     deviceId: string;

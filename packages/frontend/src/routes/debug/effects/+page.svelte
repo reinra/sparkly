@@ -1,6 +1,6 @@
 <script lang="ts">
   import { backendClient } from '../../../FrontendApiClient';
-  import type { DebugEffectsResponse, DebugEffectEntry } from '@twinkly-ts/common';
+  import type { DebugEffectsResponse, DebugEffectEntry } from '@sparkly/common';
   import { handleApiCall } from '../../../utils/ApiHelper';
 
   type SortKey =

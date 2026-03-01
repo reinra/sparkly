@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import type { RgbFloat } from '@twinkly-ts/common';
+  import type { RgbFloat } from '@sparkly/common';
 
   interface Props {
     value: RgbFloat;

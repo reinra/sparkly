@@ -1,4 +1,4 @@
-import type { RgbFloat } from '@twinkly-ts/common';
+import type { RgbFloat } from '@sparkly/common';
 
 export function formatRgbDisplay(color: RgbFloat): string {
   const clamp = (value: number) => Math.min(1, Math.max(0, value));

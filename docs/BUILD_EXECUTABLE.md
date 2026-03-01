@@ -1,6 +1,6 @@
-# Building Self-Contained Executable for Twinkly-TS
+# Building Self-Contained Executable for Sparkly
 
-This guide explains how to build a self-contained executable for your Twinkly-TS application.
+This guide explains how to build a self-contained executable for your Sparkly application.
 
 ## Overview
 
@@ -45,9 +45,9 @@ You have two options for building the executable:
    This will:
    - Compile TypeScript code for all packages
    - Build the frontend as static files
-   - Create a self-contained executable at `dist/twinkly-server.exe`
+   - Create a self-contained executable at `dist/sparkly.exe`
 
-2. **Output location**: `dist/twinkly-server.exe`
+2. **Output location**: `dist/sparkly.exe`
 
 ### With Node.js pkg (Alternative)
 
@@ -67,21 +67,21 @@ If you prefer to use Node.js pkg instead of Bun, follow these steps:
 
 3. **Create the executable**:
    ```bash
-   pkg packages/backend/dist/server-node.js --target node20-win-x64 --output dist/twinkly-server.exe --compress GZip
+   pkg packages/backend/dist/server-node.js --target node20-win-x64 --output dist/sparkly.exe --compress GZip
    ```
 
 ## Distribution
 
 After building, you'll need to distribute:
 
-1. **The executable**: `dist/twinkly-server.exe`
+1. **The executable**: `dist/sparkly.exe`
 2. **Frontend files**: `packages/frontend/build/` directory (must be in `../../frontend/build` relative to the executable)
 
 ### Recommended Distribution Structure
 
 ```
-twinkly-server/
-├── twinkly-server.exe
+sparkly/
+├── sparkly.exe
 ├── README.md (EXECUTABLE_README.md)
 └── packages/
     └── frontend/
@@ -93,7 +93,7 @@ twinkly-server/
 
 1. Run the executable:
    ```powershell
-   ./twinkly-server.exe
+   ./sparkly.exe
    ```
 2. Access the web interface at `http://localhost:3001`
 
@@ -122,7 +122,7 @@ Before building the executable, you can test the production setup:
 2. **Run production server** (without executable):
 
    ```bash
-   npm run start:production --workspace=@twinkly-ts/backend
+   npm run start:production --workspace=@sparkly/backend
    ```
 
    Or directly:
@@ -183,9 +183,9 @@ To build for different platforms:
 **With Bun:**
 
 ```bash
-bun build packages/backend/dist/server-bun.js --compile --target=bun-windows-x64 --outfile dist/twinkly-server-win.exe
-bun build packages/backend/dist/server-bun.js --compile --target=bun-linux-x64 --outfile dist/twinkly-server-linux
-bun build packages/backend/dist/server-bun.js --compile --target=bun-darwin-x64 --outfile dist/twinkly-server-mac
+bun build packages/backend/dist/server-bun.js --compile --target=bun-windows-x64 --outfile dist/sparkly-win.exe
+bun build packages/backend/dist/server-bun.js --compile --target=bun-linux-x64 --outfile dist/sparkly-linux
+bun build packages/backend/dist/server-bun.js --compile --target=bun-darwin-x64 --outfile dist/sparkly-mac
 ```
 
 **With pkg:**

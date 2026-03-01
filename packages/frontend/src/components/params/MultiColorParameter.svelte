@@ -5,7 +5,7 @@
     type ColorValue,
     type Hsl,
     type RgbFloat,
-  } from '@twinkly-ts/common';
+  } from '@sparkly/common';
   import ColorColorPicker from '../ColorColorPicker.svelte';
   import { formatHslDisplay } from '../../utils/HslUtils';
   import { formatRgbDisplay } from '../../utils/RgbUtils';

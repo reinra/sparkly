@@ -1,5 +1,5 @@
 {
-  "name": "@twinkly-ts/backend",
+  "name": "@sparkly/backend",
   "version": "1.0.0",
   "type": "module",
   "description": "Backend server for Twinkly device control",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@loglayer/transport-pino": "^2.2.17",
     "@ts-rest/core": "^3.52.1",
-    "@twinkly-ts/common": "file:../common",
+    "@sparkly/common": "file:../common",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "cors": "^2.8.5",

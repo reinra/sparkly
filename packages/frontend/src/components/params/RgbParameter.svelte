@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { RgbEffectParameter, RgbFloat } from '@twinkly-ts/common';
+  import type { RgbEffectParameter, RgbFloat } from '@sparkly/common';
   import RgbColorPicker from '../RgbColorPicker.svelte';
   import { formatRgbDisplay } from '../../utils/RgbUtils';
 

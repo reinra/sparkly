@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import type { Hsl } from '@twinkly-ts/common';
+  import type { Hsl } from '@sparkly/common';
 
   interface Props {
     value: Hsl;

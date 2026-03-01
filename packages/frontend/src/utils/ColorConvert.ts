@@ -1,4 +1,4 @@
-import type { Hsl, RgbFloat } from '@twinkly-ts/common';
+import type { Hsl, RgbFloat } from '@sparkly/common';
 
 function hueToRgb(p: number, q: number, t: number): number {
   if (t < 0) t += 1;

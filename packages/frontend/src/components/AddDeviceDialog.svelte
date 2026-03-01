@@ -1,6 +1,6 @@
 <script lang="ts">
   import { backendClient } from '../FrontendApiClient';
-  import type { DiscoveredDevice } from '@twinkly-ts/common';
+  import type { DiscoveredDevice } from '@sparkly/common';
 
   interface Props {
     /** Called when the dialog should be closed (after success or cancel) */

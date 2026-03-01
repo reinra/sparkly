@@ -6,7 +6,7 @@ import { Writable } from 'stream';
 // Detect if running in Bun bundled executable
 // Bun sets process.isBun and executable has different characteristics
 const isBundledExecutable = typeof process !== 'undefined' && 
-  (process.execPath?.includes('twinkly-server') || process.argv[0]?.includes('twinkly-server'));
+  (process.execPath?.includes('sparkly') || process.argv[0]?.includes('sparkly'));
 
 // Custom stream for human-friendly production logging
 class HumanFriendlyStream extends Writable {

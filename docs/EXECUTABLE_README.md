@@ -1,6 +1,6 @@
-# Twinkly-TS Executable Distribution
+# Sparkly Executable Distribution
 
-This is a self-contained executable build of the Twinkly-TS server.
+This is a self-contained executable build of the Sparkly server.
 
 ## What's Included
 
@@ -20,8 +20,8 @@ This executable bundles:
 **⚠️ The executable must remain in its distribution package directory structure:**
 
 ```
-twinkly-server-package/
-├── twinkly-server.exe       ← Executable must stay here
+sparkly-package/
+├── sparkly.exe       ← Executable must stay here
 └── packages/
     └── frontend/
         └── build/           ← Frontend files must be in this location
@@ -38,14 +38,14 @@ You can run the executable from any working directory using an absolute or relat
    Option A - From within the package directory:
 
    ```bash
-   cd twinkly-server-package
-   .\twinkly-server.exe
+   cd sparkly-package
+   .\sparkly.exe
    ```
 
    Option B - From any other directory:
 
    ```bash
-   .\path\to\twinkly-server-package\twinkly-server.exe
+   .\path\to\sparkly-package\sparkly.exe
    ```
 
 2. **Access the web interface**:
@@ -76,7 +76,7 @@ Example error output:
 {
   "error": "Frontend failed to load - Invalid directory structure",
   "details": "Missing 'packages' directory...",
-  "executableLocation": "F:\\path\\to\\twinkly-server.exe",
+  "executableLocation": "F:\\path\\to\\sparkly.exe",
   "expectedFrontendPath": "F:\\path\\to\\packages\\frontend\\build"
 }
 ```

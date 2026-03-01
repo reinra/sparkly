@@ -1,6 +1,6 @@
-## Project: twinkly-ts
+## Project: sparkly
 
-A Node.js TypeScript hello world project.
+LED controller for Twinkly devices.
 
 ### Important Guidelines
 
