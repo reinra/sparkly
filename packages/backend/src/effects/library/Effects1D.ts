@@ -48,7 +48,6 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
       factory('green', 'Single Color: Green', GREEN_HSL_COLOR),
       factory('blue', 'Single Color: Blue', BLUE_HSL_COLOR),
       factory('white', 'Single Color: White', WHITE_HSL_COLOR),
-      factory('black', 'Single Color: Black', BLACK_HSL_COLOR),
       factory('choose_hsl', 'Single Color: Custom', DEFAULT_HSL_COLOR),
     ];
   }
