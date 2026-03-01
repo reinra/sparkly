@@ -2,6 +2,53 @@
 
 LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Control effects, brightness, and colors through a web interface served from a single executable.
 
+## Background
+
+This is a pet project I have created during free time to play with my LED lights at home.
+From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1132187056) I was missing:
+
+1. Selection of effects in general.
+2. 1D effects for LED strips which work on the level of individual LEDs.
+3. Long effects which might not fit on the device memory.
+4. Freedom to choose colors randomly.
+5. Adjust for 100+100 strips so it looks natural (reverse one branch) without using 2D mapping.
+
+## Current State
+
+> **Beta** — Mostly stable but may have bugs. Future versions may break compatibility.
+
+### Features
+
+#### Standalone App
+- **Web-based UI** — runs in background; access from the same device, another computer, or phone
+- **Persistent settings** — saved to disk once per minute and on exit
+
+#### Device Management
+- **Auto-discovery** or manual add by IP address
+- **Multiple devices** handled in parallel
+- Should support all Twinkly devices (tested with 4 device types; RGB+W uses RGB only)
+
+#### Effects
+- **Real-time** (app must run) or **uploaded as a looping movie** to device hardware
+- **Auto-rotate** effects with a custom interval (real-time mode only)
+- **Rename, clone, reset, or delete** effects (built-in effects cannot be deleted)
+- **Live LED preview** in the browser
+
+#### Per-Device Settings
+- Brightness, saturation, gamma correction, color temperature, RGB gain
+- Mirror LEDs, adjust FPS
+
+#### Per-Effect Settings
+- **Speed** multiplier (separate from FPS)
+- **Geometry** — mirror, 1D→2D mapping mode, 2D rotation, LEDs per pixel
+- **Color correction** — gamma, invert
+- **Movie config** — loop cycle count (some effects)
+
+#### Palette & Color Options (many effects)
+- **Color space** — Static (1 color), Multiple (n colors), Rainbow, Any
+- **Order** — Round robin or random
+- **Easing** — instant or smooth transitions between colors
+
 ## Download & Run
 
 1. **Download** the latest release from [GitHub Releases](../../releases)
