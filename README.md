@@ -2,6 +2,33 @@
 
 LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Control effects, brightness, and colors through a web interface served from a single executable.
 
+## Table of Contents
+
+- [Background](#background)
+- [Current State](#current-state)
+- [Download & Run](#download--run)
+- [Using Sparkly](#using-sparkly)
+  - [Adding Devices](#adding-devices)
+  - [Controlling Devices](#controlling-devices)
+  - [LED Preview](#led-preview)
+  - [Debug Page](#debug-page)
+- [Troubleshooting](#troubleshooting)
+- [Requirements](#requirements)
+
+**[Developer Guide](#developer-guide)**
+
+- [Architecture](#architecture)
+  - [Colors](#colors)
+  - [Parameters (Backend-Driven UI)](#parameters-backend-driven-ui)
+  - [Effects Abstraction](#effects-abstraction)
+  - [Modules](#modules)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Scripts](#scripts)
+- [Building the Executable](#building-the-executable)
+- [API Reference](#api-reference)
+- [Further Documentation](#further-documentation)
+
 ## Background
 
 This is a pet project I have created during free time to play with my LED lights at home.
@@ -127,11 +154,11 @@ In the **UI**, users choose colors in **HSL** (hue, saturation, lightness) or **
 
 | Type         | Location              | Role                                                               |
 | ------------ | --------------------- | ------------------------------------------------------------------ |
-| `RgbFloat`   | `color/ColorFloat.ts` | Internal working color space (0.0–1.0 floats)                      |
-| `Rgb24`      | `color/Color8bit.ts`  | Output format sent to LED hardware (0–255)                         |
-| `Hsl`        | `ParameterTypes.ts`   | HSL representation (hue/saturation/lightness, all 0.0–1.0)         |
-| `Color`      | `color/Color.ts`      | Polymorphic wrapper — `HslColor` or `RgbColor`, converts on demand |
-| `ColorValue` | `ParameterTypes.ts`   | Serializable union for persistence and UI (HSL or RGB mode)        |
+| `RgbFloat`   | [ColorFloat.ts](packages/backend/src/color/ColorFloat.ts) | Internal working color space (0.0–1.0 floats)                      |
+| `Rgb24`      | [Color8bit.ts](packages/backend/src/color/Color8bit.ts)   | Output format sent to LED hardware (0–255)                         |
+| `Hsl`        | [ParameterTypes.ts](packages/backend/src/ParameterTypes.ts) | HSL representation (hue/saturation/lightness, all 0.0–1.0)         |
+| `Color`      | [Color.ts](packages/backend/src/color/Color.ts)           | Polymorphic wrapper — `HslColor` or `RgbColor`, converts on demand |
+| `ColorValue` | [ParameterTypes.ts](packages/backend/src/ParameterTypes.ts) | Serializable union for persistence and UI (HSL or RGB mode)        |
 
 The output pipeline applies corrections per-pixel in order: invert → channel gain → gamma → color temperature → float-to-8-bit.
 
@@ -171,13 +198,13 @@ Effects compute colors **directly for the actual LEDs** on the device. There is 
 
 | Concept               | File(s)                       | Role                                                                               |
 | --------------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
-| **Effect**            | `effects/Effect.ts`           | Interface defining an effect's metadata, parameters, and a `createLogic()` factory |
-| **EffectLogic**       | `effects/Effect.ts`           | The rendering workhorse — implements `renderGlobal(ctx, points): RgbFloat[]`       |
-| **EffectWrapper**     | `EffectWrapper.ts`            | Wraps any effect with orthogonal settings (speed, gamma, mirror, mapping)          |
-| **EffectLibrary**     | `effects/EffectLibrary.ts`    | Registry — `register(EffectClass)` to add effects, manages clone/delete/reset      |
-| **EffectParameters**  | `EffectParameters.ts`         | Storage + validation for runtime-adjustable parameters with change tracking        |
-| **Renderer**          | `render/Renderer.ts`          | Drives the render loop (live real-time or batch for movie upload)                  |
-| **FrameOutputStream** | `render/FrameOutputStream.ts` | Composable output chain (send to device, buffer for UI preview, record movie)      |
+| **Effect**            | [Effect.ts](packages/backend/src/effects/Effect.ts)                     | Interface defining an effect's metadata, parameters, and a `createLogic()` factory |
+| **EffectLogic**       | [Effect.ts](packages/backend/src/effects/Effect.ts)                     | The rendering workhorse — implements `renderGlobal(ctx, points): RgbFloat[]`       |
+| **EffectWrapper**     | [EffectWrapper.ts](packages/backend/src/EffectWrapper.ts)               | Wraps any effect with orthogonal settings (speed, gamma, mirror, mapping)          |
+| **EffectLibrary**     | [EffectLibrary.ts](packages/backend/src/effects/EffectLibrary.ts)       | Registry — `register(EffectClass)` to add effects, manages clone/delete/reset      |
+| **EffectParameters**  | [EffectParameters.ts](packages/backend/src/EffectParameters.ts)         | Storage + validation for runtime-adjustable parameters with change tracking        |
+| **Renderer**          | [Renderer.ts](packages/backend/src/render/Renderer.ts)                  | Drives the render loop (live real-time or batch for movie upload)                  |
+| **FrameOutputStream** | [FrameOutputStream.ts](packages/backend/src/render/FrameOutputStream.ts) | Composable output chain (send to device, buffer for UI preview, record movie)      |
 
 #### Animation Modes
 
@@ -203,7 +230,7 @@ Effects are generic over spatial input:
 
 #### Base Classes
 
-Located in `effects/BaseEffects.ts` — reduce boilerplate for common patterns:
+Located in [BaseEffects.ts](packages/backend/src/effects/BaseEffects.ts) — reduce boilerplate for common patterns:
 
 | Base Class            | Use When                                                                                     |
 | --------------------- | -------------------------------------------------------------------------------------------- |
@@ -217,8 +244,8 @@ For **stateful** effects that need memory between frames (particle systems, etc.
 
 Effects can compose reusable parameter groups into their parameter view:
 
-- **PaletteParameters** (`effects/util/Palette.ts`) — color space (static, multiple, rainbow, any) + order (round robin, random)
-- **FullEasingParameters** (`effects/util/EasingMode.ts`) — easing function + direction for smooth transitions
+- **PaletteParameters** ([Palette.ts](packages/backend/src/effects/util/Palette.ts)) — color space (static, multiple, rainbow, any) + order (round robin, random)
+- **FullEasingParameters** ([EasingMode.ts](packages/backend/src/effects/util/EasingMode.ts)) — easing function + direction for smooth transitions
 
 These are combined with the effect's own parameters via `MultiParameterStorageView`.
 
@@ -226,16 +253,16 @@ These are combined with the effect's own parameters via `MultiParameterStorageVi
 
 | Utility             | Purpose                                                 |
 | ------------------- | ------------------------------------------------------- |
-| `Palette.ts`        | Color palette implementations and parameter group       |
-| `Easing.ts`         | Easing functions (linear, quadratic, cubic, sine, etc.) |
-| `NoiseUtils.ts`     | Simplex noise wrapper with seamless loop support        |
-| `PhaseUtils.ts`     | Phase transformations (reverse, back-and-forth)         |
-| `FlashAnimation.ts` | Reusable on/off flash helper                            |
-| `ArrayUtils.ts`     | Buffer creation, shuffling                              |
+| [Palette.ts](packages/backend/src/effects/util/Palette.ts)               | Color palette implementations and parameter group       |
+| [Easing.ts](packages/backend/src/effects/util/Easing.ts)                 | Easing functions (linear, quadratic, cubic, sine, etc.) |
+| [NoiseUtils.ts](packages/backend/src/effects/util/NoiseUtils.ts)         | Simplex noise wrapper with seamless loop support        |
+| [PhaseUtils.ts](packages/backend/src/effects/util/PhaseUtis.ts)          | Phase transformations (reverse, back-and-forth)         |
+| [FlashAnimation.ts](packages/backend/src/effects/util/FlashAnimation.ts) | Reusable on/off flash helper                            |
+| [ArrayUtils.ts](packages/backend/src/effects/util/ArrayUtils.ts)         | Buffer creation, shuffling                              |
 
 #### Creating a New Effect
 
-1. Create a file in `effects/library/`
+1. Create a file in [effects/library/](packages/backend/src/effects/library/)
 2. For a simple per-pixel effect, extend `PerPixelEffect`:
 
    ```typescript
@@ -256,7 +283,7 @@ These are combined with the effect's own parameters via `MultiParameterStorageVi
    }
    ```
 
-3. Register in `effects/EffectLibrary.ts`:
+3. Register in [EffectLibrary.ts](packages/backend/src/effects/EffectLibrary.ts):
    ```typescript
    register(MyEffect);
    ```
