@@ -219,7 +219,7 @@ Every effect declares one of three animation modes which determines what context
 Effects are generic over spatial input:
 
 - **1D** — each LED has `id` (hardware buffer index), `position` (sequential integer index along the strip), and `distance` (float 0.0–1.0, normalized position)
-- **2D** — each LED has `id`, `x`, and `y` coordinates (floats 0.0–1.0) from the device's 2D mapping
+- **2D** — each LED has `id`, `x`, and `y` coordinates (floats 0.0–1.0) from the device's 2D mapping. The mapping must be created first using the official [Twinkly app](https://apps.apple.com/us/app/twinkly/id1132187056) (via its mapping scan feature) — the coordinates are persisted on the device itself, and Sparkly reads them from there
 
 1D effects can run on 2D-mapped devices via the wrapper's mapping mode (sequence, horizontal, vertical).
 
