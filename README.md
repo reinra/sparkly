@@ -30,6 +30,7 @@ LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Contro
 - [Building the Executable](#building-the-executable)
 - [API Reference](#api-reference)
 - [Further Documentation](#further-documentation)
+- [Acknowledgment](#acknowledgment)
 
 ## Background
 
@@ -450,3 +451,12 @@ The backend REST API runs on port 3001.
 - [Architecture](docs/ARCHITECTURE.md) — Module structure and boundaries
 - [Build Executable](docs/BUILD_EXECUTABLE.md) — Building the self-contained executable
 - [Logging](docs/LOGGING.md) — Logger configuration and usage
+
+## Acknowledgment
+
+- I would like to remember my late father, who didn't live to see this completed, but who inspired me with his own work of building a physical programmable lighting system and also a "color organ" decades ago.
+- Thanks to Ledworks S.R.L. for developing the [Twinkly devices](https://twinkly.com/).
+- Thanks to Pavol Babinčák for [reverse engineering the Twinkly protocol](https://xled-docs.readthedocs.io/en/latest/).
+- Thanks to Google Gemini AI for initial ideas for designing the system.
+- Thanks to Anthropic Claude Opus AI for helping me with the design and implementation.
+- Thanks to my family for the support.
