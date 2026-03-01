@@ -26,7 +26,9 @@
   <nav>
     <div class="nav-container">
       <div class="brand-container">
-        <h1 class="logo"><a href="/devices">Sparkly <span class="app-description">LED controller for Twinkly devices</span></a></h1>
+        <h1 class="logo">
+          <a href="/devices">Sparkly <span class="app-description">LED controller for Twinkly devices</span></a>
+        </h1>
         {#if buildDate}
           <div class="build-date">Build: {buildDate}</div>
         {/if}

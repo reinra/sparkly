@@ -19,11 +19,13 @@ LED controller for Twinkly devices.
 **Prerequisites:** Node.js and npm must be installed on your system.
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Run in development mode:
+
    ```bash
    npm run dev
    ```
