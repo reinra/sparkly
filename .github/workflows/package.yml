@@ -34,7 +34,7 @@ jobs:
         id: slug
         run: |
           echo "sha=$($env:GITHUB_SHA.Substring(0,5))" >> $env:GITHUB_OUTPUT
-          echo "date=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_OUTPUT
+          echo "datetime=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> $env:GITHUB_OUTPUT
 
       - name: Zip distribution
         run: Compress-Archive -Path dist/sparkly-package/* -DestinationPath dist/sparkly-dev.zip
@@ -42,8 +42,8 @@ jobs:
       - name: Create or update dev release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dev-${{ steps.slug.outputs.date }}-${{ steps.slug.outputs.sha }}
-          name: 'Dev Build (${{ steps.slug.outputs.date }}-${{ steps.slug.outputs.sha }})'
+          tag_name: dev-${{ steps.slug.outputs.sha }}
+          name: 'Dev Build (${{ steps.slug.outputs.datetime }}-${{ steps.slug.outputs.sha }})'
           body: |
             Automated dev build from commit ${{ github.sha }}
             Branch: ${{ github.ref_name }}
