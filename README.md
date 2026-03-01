@@ -152,12 +152,12 @@ Effects internally work with **floating-point RGB** (`RgbFloat` — channels 0.0
 
 In the **UI**, users choose colors in **HSL** (hue, saturation, lightness) or **RGB**, depending on the parameter type. A `ColorValue` discriminated union (`{ mode: HSL, hsl }` or `{ mode: RGB, rgb }`) preserves the user's chosen color model through serialization, while the backend wraps it in a polymorphic `Color` object that effects can call `.asRgb()` on regardless of the underlying mode.
 
-| Type         | Location              | Role                                                               |
-| ------------ | --------------------- | ------------------------------------------------------------------ |
-| `RgbFloat`   | [ColorFloat.ts](packages/backend/src/color/ColorFloat.ts) | Internal working color space (0.0–1.0 floats)                      |
-| `Rgb24`      | [Color8bit.ts](packages/backend/src/color/Color8bit.ts)   | Output format sent to LED hardware (0–255)                         |
+| Type         | Location                                                    | Role                                                               |
+| ------------ | ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| `RgbFloat`   | [ColorFloat.ts](packages/backend/src/color/ColorFloat.ts)   | Internal working color space (0.0–1.0 floats)                      |
+| `Rgb24`      | [Color8bit.ts](packages/backend/src/color/Color8bit.ts)     | Output format sent to LED hardware (0–255)                         |
 | `Hsl`        | [ParameterTypes.ts](packages/backend/src/ParameterTypes.ts) | HSL representation (hue/saturation/lightness, all 0.0–1.0)         |
-| `Color`      | [Color.ts](packages/backend/src/color/Color.ts)           | Polymorphic wrapper — `HslColor` or `RgbColor`, converts on demand |
+| `Color`      | [Color.ts](packages/backend/src/color/Color.ts)             | Polymorphic wrapper — `HslColor` or `RgbColor`, converts on demand |
 | `ColorValue` | [ParameterTypes.ts](packages/backend/src/ParameterTypes.ts) | Serializable union for persistence and UI (HSL or RGB mode)        |
 
 The output pipeline applies corrections per-pixel in order: invert → channel gain → gamma → color temperature → float-to-8-bit.
@@ -196,14 +196,14 @@ Effects compute colors **directly for the actual LEDs** on the device. There is 
 
 #### Key Concepts
 
-| Concept               | File(s)                       | Role                                                                               |
-| --------------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
-| **Effect**            | [Effect.ts](packages/backend/src/effects/Effect.ts)                     | Interface defining an effect's metadata, parameters, and a `createLogic()` factory |
-| **EffectLogic**       | [Effect.ts](packages/backend/src/effects/Effect.ts)                     | The rendering workhorse — implements `renderGlobal(ctx, points): RgbFloat[]`       |
-| **EffectWrapper**     | [EffectWrapper.ts](packages/backend/src/EffectWrapper.ts)               | Wraps any effect with orthogonal settings (speed, gamma, mirror, mapping)          |
-| **EffectLibrary**     | [EffectLibrary.ts](packages/backend/src/effects/EffectLibrary.ts)       | Registry — `register(EffectClass)` to add effects, manages clone/delete/reset      |
-| **EffectParameters**  | [EffectParameters.ts](packages/backend/src/EffectParameters.ts)         | Storage + validation for runtime-adjustable parameters with change tracking        |
-| **Renderer**          | [Renderer.ts](packages/backend/src/render/Renderer.ts)                  | Drives the render loop (live real-time or batch for movie upload)                  |
+| Concept               | File(s)                                                                  | Role                                                                               |
+| --------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Effect**            | [Effect.ts](packages/backend/src/effects/Effect.ts)                      | Interface defining an effect's metadata, parameters, and a `createLogic()` factory |
+| **EffectLogic**       | [Effect.ts](packages/backend/src/effects/Effect.ts)                      | The rendering workhorse — implements `renderGlobal(ctx, points): RgbFloat[]`       |
+| **EffectWrapper**     | [EffectWrapper.ts](packages/backend/src/EffectWrapper.ts)                | Wraps any effect with orthogonal settings (speed, gamma, mirror, mapping)          |
+| **EffectLibrary**     | [EffectLibrary.ts](packages/backend/src/effects/EffectLibrary.ts)        | Registry — `register(EffectClass)` to add effects, manages clone/delete/reset      |
+| **EffectParameters**  | [EffectParameters.ts](packages/backend/src/EffectParameters.ts)          | Storage + validation for runtime-adjustable parameters with change tracking        |
+| **Renderer**          | [Renderer.ts](packages/backend/src/render/Renderer.ts)                   | Drives the render loop (live real-time or batch for movie upload)                  |
 | **FrameOutputStream** | [FrameOutputStream.ts](packages/backend/src/render/FrameOutputStream.ts) | Composable output chain (send to device, buffer for UI preview, record movie)      |
 
 #### Animation Modes
@@ -251,8 +251,8 @@ These are combined with the effect's own parameters via `MultiParameterStorageVi
 
 #### Utilities (`effects/util/`)
 
-| Utility             | Purpose                                                 |
-| ------------------- | ------------------------------------------------------- |
+| Utility                                                                  | Purpose                                                 |
+| ------------------------------------------------------------------------ | ------------------------------------------------------- |
 | [Palette.ts](packages/backend/src/effects/util/Palette.ts)               | Color palette implementations and parameter group       |
 | [Easing.ts](packages/backend/src/effects/util/Easing.ts)                 | Easing functions (linear, quadratic, cubic, sine, etc.) |
 | [NoiseUtils.ts](packages/backend/src/effects/util/NoiseUtils.ts)         | Simplex noise wrapper with seamless loop support        |
