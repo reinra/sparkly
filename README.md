@@ -7,45 +7,28 @@ LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Contro
 ## Table of Contents
 
 - [Background](#background)
-
 - [Current State](#current-state)
-
 - [Download & Run](#download--run)
-
 - [Using Sparkly](#using-sparkly)
   - [Adding Devices](#adding-devices)
-
   - [Controlling Devices](#controlling-devices)
-
   - [LED Preview](#led-preview)
-
   - [Debug Page](#debug-page)
-
 - [Troubleshooting](#troubleshooting)
-
 - [Requirements](#requirements)
 
 **[Developer Guide](#developer-guide)**
 
 - [Architecture](#architecture)
   - [Colors](#colors)
-
   - [Parameters (Backend-Driven UI)](#parameters-backend-driven-ui)
-
   - [Effects Abstraction](#effects-abstraction)
-
   - [Modules](#modules)
-
 - [Prerequisites](#prerequisites)
-
 - [Getting Started](#getting-started)
-
 - [Scripts](#scripts)
-
 - [Building the Executable](#building-the-executable)
-
 - [API Reference](#api-reference)
-
 - [Further Documentation](#further-documentation)
 
 ## Background
@@ -68,49 +51,37 @@ From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1
 #### Standalone App
 
 - **Web-based UI** — runs in background; access from the same device, another computer, or phone
-
 - **Persistent settings** — saved to disk once per minute and on exit
 
 #### Device Management
 
 - **Auto-discovery** or manual add by IP address
-
 - **Multiple devices** handled in parallel
-
 - Should support all Twinkly devices (tested with 4 device types; RGB+W uses RGB only)
 
 #### Effects
 
 - **Real-time** (app must run) or **uploaded as a looping movie** to device hardware
-
 - **Auto-rotate** effects with a custom interval (real-time mode only)
-
 - **Rename, clone, reset, or delete** effects (built-in effects cannot be deleted)
-
 - **Live LED preview** in the browser
 
 #### Per-Device Settings
 
 - Brightness, saturation, gamma correction, color temperature, RGB gain
-
 - Mirror LEDs, adjust FPS
 
 #### Per-Effect Settings
 
 - **Speed** multiplier (separate from FPS)
-
 - **Geometry** — mirror, 1D→2D mapping mode, 2D rotation, LEDs per pixel
-
 - **Color correction** — gamma, invert
-
 - **Movie config** — loop cycle count (some effects)
 
 #### Palette & Color Options (many effects)
 
 - **Color space** — Static (1 color), Multiple (n colors), Rainbow, Any
-
 - **Order** — Round robin or random
-
 - **Easing** — instant or smooth transitions between colors
 
 ## Download & Run
@@ -129,7 +100,6 @@ No installation or setup required — the executable is fully self-contained.
 When you first open Sparkly, head to the **Devices** page. You can add your Twinkly devices in two ways:
 
 - **Auto-discover** — Click the discover button to scan your network for Twinkly devices
-
 - **Manual add** — Enter the device's IP address directly
 
 Devices are remembered between sessions automatically.
@@ -139,13 +109,9 @@ Devices are remembered between sessions automatically.
 Each device card on the Devices page lets you:
 
 - **Set mode** — Switch between off, color, effect, and other device modes
-
 - **Adjust brightness** — Slide to set brightness (0–100%)
-
 - **Choose an effect** — Pick from the built-in effect library
-
 - **Tune parameters** — Customize effect colors, speed, and other settings
-
 - **Send movie** — Render an effect and upload it directly to the device hardware
 
 ### LED Preview
@@ -153,7 +119,6 @@ Each device card on the Devices page lets you:
 The web interface can mirror your device's LED state in real time. Two viewing modes are available:
 
 - **Sequential** — LEDs shown in order, ideal for LED strips
-
 - **2D mapped** — LEDs positioned using the device's 2D coordinate mapping
 
 ### Debug Page
