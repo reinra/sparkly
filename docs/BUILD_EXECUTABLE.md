@@ -63,7 +63,7 @@ If you prefer to use Node.js pkg instead of Bun, follow these steps:
 
 3. **Create the executable**:
    ```bash
-   pkg packages/backend/dist/server-production.js --target node20-win-x64 --output dist/twinkly-server.exe --compress GZip
+   pkg packages/backend/dist/server-node.js --target node20-win-x64 --output dist/twinkly-server.exe --compress GZip
    ```
 
 ## Distribution
@@ -124,13 +124,14 @@ Before building the executable, you can test the production setup:
 
    Or directly:
    ```bash
-   node packages/backend/dist/server-production.js
+   node packages/backend/dist/server-node.js
    ```
 
 ## File Changes Summary
 
 ### New Files
-- `packages/backend/src/server-production.ts` - Production server that serves both API and static frontend
+- `packages/backend/src/server-node.ts` - Production server for Node.js that serves both API and static frontend
+- `packages/backend/src/server-bun.ts` - Production server for Bun executable
 - `scripts/build-executable.js` - Build script for creating the executable
 - `EXECUTABLE_README.md` - User documentation for the executable
 
@@ -147,7 +148,7 @@ Install Bun using the command in the Prerequisites section, or use the pkg alter
 Run `npm run build` before `npm run build:executable`.
 
 ### "Port 3001 already in use"
-Stop any other services using port 3001, or modify `packages/backend/src/server-production.ts` to use a different port.
+Stop any other services using port 3001, or modify `packages/backend/src/server-node.ts` to use a different port.
 
 ### Frontend not loading
 Ensure the `packages/frontend/build/` directory exists and is in the correct relative location to the executable.
@@ -171,12 +172,12 @@ To build for different platforms:
 
 **With Bun:**
 ```bash
-bun build packages/backend/dist/server-production.js --compile --target=bun-windows-x64 --outfile dist/twinkly-server-win.exe
-bun build packages/backend/dist/server-production.js --compile --target=bun-linux-x64 --outfile dist/twinkly-server-linux
-bun build packages/backend/dist/server-production.js --compile --target=bun-darwin-x64 --outfile dist/twinkly-server-mac
+bun build packages/backend/dist/server-bun.js --compile --target=bun-windows-x64 --outfile dist/twinkly-server-win.exe
+bun build packages/backend/dist/server-bun.js --compile --target=bun-linux-x64 --outfile dist/twinkly-server-linux
+bun build packages/backend/dist/server-bun.js --compile --target=bun-darwin-x64 --outfile dist/twinkly-server-mac
 ```
 
 **With pkg:**
 ```bash
-pkg packages/backend/dist/server-production.js --targets node20-win-x64,node20-linux-x64,node20-macos-x64 --out-path dist
+pkg packages/backend/dist/server-node.js --targets node20-win-x64,node20-linux-x64,node20-macos-x64 --out-path dist
 ```

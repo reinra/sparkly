@@ -7,7 +7,7 @@
 Open a terminal and run:
 
 ```bash
-npm run dev:server
+npm run dev:backend
 ```
 
 This will start the Express backend API on **http://localhost:3001**
@@ -28,8 +28,8 @@ Navigate to **http://localhost:5173** in your web browser.
 
 You should see:
 
-- A "Hello World Test" section with a message from the backend
-- A "Device Status" section where you can query your Twinkly device (requires proper config.toml setup)
+- A **Devices** page listing your Twinkly devices
+- A **Debug** page for inspecting device state and effects
 
 ## Testing the API
 
@@ -39,8 +39,8 @@ You can also test the backend API directly:
 # Test hello endpoint
 curl http://localhost:3001/api/hello
 
-# Test device status (requires config.toml)
-curl http://localhost:3001/api/status
+# Get devices and effects info
+curl http://localhost:3001/api/info
 ```
 
 ## Troubleshooting
@@ -65,4 +65,4 @@ If you get "Failed to get device status":
 If port 3001 or 5173 is already in use, you can:
 
 - Stop the process using that port
-- Or modify the port in [src/server.ts](src/server.ts) (backend) or [vite.config.mjs](vite.config.mjs) (frontend)
+- Or modify the port in [packages/backend/src/server.ts](../packages/backend/src/server.ts) (backend) or [packages/frontend/vite.config.mjs](../packages/frontend/vite.config.mjs) (frontend)

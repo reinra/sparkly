@@ -11,7 +11,7 @@ This project uses **LogLayer** with **Pino** and **Pino-pretty** for structured,
 
 ## Configuration
 
-The logger is configured in [src/backend/logger.ts](../src/backend/logger.ts) and exports a LogLayer instance directly.
+The logger is configured in [packages/backend/src/logger.ts](../packages/backend/src/logger.ts) and exports a LogLayer instance directly.
 
 ## Usage
 
@@ -84,10 +84,10 @@ Set the `LOG_LEVEL` environment variable to control verbosity:
 
 ```bash
 # Run with debug logging
-LOG_LEVEL=debug npm run dev:server
+LOG_LEVEL=debug npm run dev:backend
 
 # Run with minimal logging (errors only)
-LOG_LEVEL=error npm run dev:server
+LOG_LEVEL=error npm run dev:backend
 ```
 
 ## Features

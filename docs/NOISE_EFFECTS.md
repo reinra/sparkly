@@ -7,7 +7,7 @@ This project now includes the `simplex-noise` library for creating organic, natu
 ### 1. Import the NoiseGenerator utility
 
 ```typescript
-import { NoiseGenerator } from "./NoiseUtils";
+import { NoiseGenerator } from "./util/NoiseUtils";
 ```
 
 ### 2. Create a noise generator in your effect class

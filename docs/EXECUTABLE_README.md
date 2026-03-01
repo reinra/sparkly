@@ -135,11 +135,6 @@ On startup, the executable validates:
 
 The server outputs logs to the console. Check for any error messages that might indicate configuration or connection issues.
 
-## Source Code
-
-This executable is built from the open-source project available at:
-[https://github.com/yourrepo/twinkly-ts](https://github.com/yourrepo/twinkly-ts)
-
 ## Building from Source
 
 To build this executable yourself:
