@@ -284,6 +284,13 @@
       await fetchLedMapping();
     }
 
+    // The {#if} block destroys/recreates canvas elements on mode switch,
+    // so reset cached dimensions to force a proper resize on the new canvas.
+    if (mode === 'sequence') {
+      lastSeqCols = 0;
+      lastSeqRows = 0;
+    }
+
     // Wait for DOM to update — the canvas element for the new mode may not be mounted yet
     await tick();
 
