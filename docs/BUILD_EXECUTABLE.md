@@ -72,22 +72,11 @@ If you prefer to use Node.js pkg instead of Bun, follow these steps:
 
 ## Distribution
 
-After building, you'll need to distribute:
+The Bun executable embeds the frontend assets, so the distribution is a single file:
 
 1. **The executable**: `dist/sparkly.exe`
-2. **Frontend files**: `packages/frontend/build/` directory (must be in `../../frontend/build` relative to the executable)
 
-### Recommended Distribution Structure
-
-```
-sparkly/
-├── sparkly.exe
-├── README.md (EXECUTABLE_README.md)
-└── packages/
-    └── frontend/
-        └── build/
-            └── (all built frontend files)
-```
+Run `npm run package:distribution` to create a ready-to-ship package at `dist/sparkly-package/` containing the executable and a README.
 
 ## Running the Executable
 
@@ -161,7 +150,7 @@ Stop any other services using port 3001, or modify `packages/backend/src/server-
 
 ### Frontend not loading
 
-Ensure the `packages/frontend/build/` directory exists and is in the correct relative location to the executable.
+The frontend is embedded in the Bun executable. If it fails to load, rebuild with `npm run build:executable`.
 
 ## Size Considerations
 

@@ -4,25 +4,17 @@
 
 ### File Locations
 
-The build process creates TWO executable files:
+The build process creates an executable and then packages it:
 
-1. **Build Artifact** (DO NOT RUN DIRECTLY)
-   - Location: `dist/sparkly.exe`
-   - Purpose: Intermediate build output
-   - ⚠️ Missing the `packages/` directory - will fail with error
+1. **Build Artifact** — `dist/sparkly.exe`
+   - Intermediate build output
+   - Renamed after packaging to prevent accidental use
 
-2. **Distribution Package** (READY TO RUN)
-   - Location: `dist/sparkly-package/sparkly.exe`
-   - Purpose: Complete distribution with all files
-   - ✅ Includes `packages/frontend/build/` directory
-   - ✅ Ready for deployment
+2. **Distribution Package** — `dist/sparkly-package/sparkly.exe`
+   - Ready to run and distribute
+   - Frontend is embedded in the executable itself
 
-### Why This Matters
-
-The executable uses `path.dirname(process.execPath)` to find frontend files. This means:
-
-- If you run `dist/sparkly.exe` → looks for `dist/packages/` (❌ doesn't exist)
-- If you run `dist/sparkly-package/sparkly.exe` → looks for `dist/sparkly-package/packages/` (✅ exists)
+Both are functionally identical — the distribution step simply copies and packages.
 
 ## Success-Based Validation
 
@@ -91,21 +83,6 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | Stop-Process -Fo
 
 ## Common Errors and Solutions
 
-### Error: "Missing 'packages' directory"
-
-```json
-{
-  "error": "Frontend failed to load - Invalid directory structure",
-  "details": "Missing 'packages' directory...",
-  "executableLocation": "F:\\...\\dist\\sparkly.exe",
-  "expectedFrontendPath": "F:\\...\\dist\\packages\\frontend\\build"
-}
-```
-
-**Cause:** Running the build artifact instead of the distribution package.
-
-**Solution:** Use `dist/sparkly-package/sparkly.exe` instead of `dist/sparkly.exe`.
-
 ### Error: Multiple Process Instances
 
 If validation fails even from the correct location, check for multiple running instances:
@@ -125,16 +102,14 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} |
 ## Build and Distribution Workflow
 
 1. **Build:** `npm run build:executable`
-   - Creates `dist/sparkly.exe` (intermediate artifact)
+   - Creates `dist/sparkly.exe` (frontend embedded in executable)
 
-2. **Package:** `npm run package:distribution` (or use `scripts/create-distribution.js`)
+2. **Package:** `npm run package:distribution`
    - Copies executable to `dist/sparkly-package/`
-   - Copies frontend files to `dist/sparkly-package/packages/`
-   - Copies config example and documentation
+   - Copies documentation
 
 3. **Distribute:** Zip `dist/sparkly-package/` folder
-   - Users extract and run from that directory
-   - Executable finds files relative to its location
+   - Users extract and run `sparkly.exe`
 
 ## Testing Different Scenarios
 
@@ -154,15 +129,7 @@ cd F:\...\dist
 # ✅ Should work (uses absolute path)
 ```
 
-### Test 3: Wrong Location (Expected to Fail)
-
-```powershell
-cd F:\...\dist
-.\sparkly.exe
-# ❌ Will show "Missing 'packages' directory" error
-```
-
-### Test 4: Unbiased Clean Location (Recommended)
+### Test 3: Unbiased Clean Location (Recommended)
 
 ```powershell
 # Copy distribution to a clean temp folder outside the project
@@ -197,8 +164,7 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | Stop-Process -Fo
 
 ## Summary
 
-- Always run from `dist/sparkly-package/` directory
+- The executable embeds the frontend — no external `packages/` folder needed
 - Validate using expected success markers, not error strings
 - Check for SvelteKit-rendered HTML content
 - Test in a clean location outside the project for unbiased validation
-- Clear error messages guide users to correct location

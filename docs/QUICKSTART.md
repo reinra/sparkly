@@ -1,35 +1,32 @@
-# Quick Start Guide
+# Developer Quick Start
 
-## Running the Application with Frontend
+> This guide is for **developers** working on the Sparkly source code. If you just want to run Sparkly, download the latest release from GitHub and run `sparkly.exe` — see the main [README](../README.md).
 
-### Step 1: Start the Backend Server
+## Running in Development Mode
 
-Open a terminal and run:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Start the Backend
 
 ```bash
 npm run dev:backend
 ```
 
-This will start the Express backend API on **http://localhost:3001**
+Backend API starts on **http://localhost:3001**.
 
-### Step 2: Start the Frontend
+### 3. Start the Frontend
 
-Open a second terminal and run:
+In a second terminal:
 
 ```bash
 npm run dev:frontend
 ```
 
-This will start the SvelteKit frontend on **http://localhost:5173**
-
-### Step 3: Open in Browser
-
-Navigate to **http://localhost:5173** in your web browser.
-
-You should see:
-
-- A **Devices** page listing your Twinkly devices
-- A **Debug** page for inspecting device state and effects
+Frontend dev server starts on **http://localhost:5173**.
 
 ## Testing the API
 

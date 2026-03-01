@@ -1,119 +1,51 @@
-# Sparkly Executable Distribution
+# Sparkly
 
-This is a self-contained executable build of the Sparkly server.
+LED controller for Twinkly smart LED devices. Control effects, brightness, and colors through a web interface.
 
-## What's Included
+## Getting Started
 
-This executable bundles:
+1. **Run** `sparkly.exe`
+2. **Open** your browser to **http://localhost:3001**
 
-- Backend API server
-- Frontend web interface (SvelteKit SSR)
-- All dependencies
+That's it — no installation required.
 
-## Requirements
+## Using Sparkly
 
-- Windows operating system
-- No Node.js installation required - fully self-contained
+### Adding Devices
 
-## Important: Directory Structure
+Open the **Devices** page in your browser. You can add Twinkly devices in two ways:
 
-**⚠️ The executable must remain in its distribution package directory structure:**
+- **Discover** — Automatically scans your network for Twinkly devices
+- **Add by IP** — Enter a device's IP address manually
 
-```
-sparkly-package/
-├── sparkly.exe       ← Executable must stay here
-└── packages/
-    └── frontend/
-        └── build/           ← Frontend files must be in this location
-```
+Devices are saved automatically between sessions.
 
-**Do not move the executable outside of this directory!** The executable uses its own location to find the frontend files in the `packages/` directory relative to itself.
+### Controlling Devices
 
-You can run the executable from any working directory using an absolute or relative path, but the executable file must physically remain in the directory that contains the `packages/` folder.
+Each device card lets you:
 
-## Setup
+- **Set mode** — Switch between off, color, effect, and other modes
+- **Adjust brightness** — 0–100%
+- **Choose an effect** — Pick from the effect library
+- **Tune parameters** — Customize colors, speed, and other settings
+- **Send movie** — Render an effect and upload it to the device hardware
 
-1. **Run the executable**:
+### Debug Page
 
-   Option A - From within the package directory:
-
-   ```bash
-   cd sparkly-package
-   .\sparkly.exe
-   ```
-
-   Option B - From any other directory:
-
-   ```bash
-   .\path\to\sparkly-package\sparkly.exe
-   ```
-
-2. **Access the web interface**:
-   Open your browser and navigate to `http://localhost:3001`
-
-3. **Add your devices**:
-   Use the web interface to discover and add your Twinkly devices.
-
-## Device Management
-
-Devices can be added and removed directly from the web interface. The server automatically persists device configurations to `config.toml`.
+The **Debug** page shows detailed device info and effect metadata — helpful for diagnosing connection issues.
 
 ## Troubleshooting
 
-### "Frontend failed to load" Error
-
-If you see an error like `{"error":"Frontend failed to load - Invalid directory structure"}`, this means the executable cannot find the frontend files.
-
-**Solution:** Ensure the executable is in the correct directory structure:
-
-- The executable must be in the same folder as the `packages/` directory
-- Do NOT move the executable to a different location
-- The error message will show you the expected paths
-
-Example error output:
-
-```json
-{
-  "error": "Frontend failed to load - Invalid directory structure",
-  "details": "Missing 'packages' directory...",
-  "executableLocation": "F:\\path\\to\\sparkly.exe",
-  "expectedFrontendPath": "F:\\path\\to\\packages\\frontend\\build"
-}
-```
-
-### Port Already in Use
-
-If port 3001 is already in use, you'll need to stop the conflicting application or modify the source code to use a different port and rebuild the executable.
-
-### Device Connection Issues
-
-- Verify your device IPs are correct
-- Ensure devices are on the same network as the server
-- Check that devices are powered on and accessible
-- Try using the Discover feature in the web interface to find devices automatically
-
-## Technical Details
-
-### Path Resolution
-
-The executable uses `path.dirname(process.execPath)` to resolve file paths, which means:
-
-- Frontend files are loaded relative to the executable's location
-- You can run the executable from any working directory
-- The executable itself must remain in the distribution package directory
-
-### Validation
-
-On startup, the executable validates:
-
-- `packages/` directory exists next to the executable
-- `packages/frontend/build/` directory exists
-- `handler.js` and `server/` directory are present
-- Clear error messages if validation fails
+| Problem                       | Solution                                                          |
+| ----------------------------- | ----------------------------------------------------------------- |
+| **Can't find devices**        | Make sure Twinkly devices are powered on and on the same network  |
+| **Port 3001 in use**          | Close any other application using that port, then restart Sparkly |
+| **"Frontend failed to load"** | Try re-downloading the latest release                             |
+| **Device won't respond**      | Try the Reconnect button, or verify you can ping the device IP    |
 
 ## Logs
 
-The server outputs logs to the console. Check for any error messages that might indicate configuration or connection issues.
+The server prints log messages to the console window. Check there for error details if something isn't working.
 
 ## Building from Source
 
