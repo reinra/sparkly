@@ -41,7 +41,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: dev-${{ steps.slug.outputs.sha }}
-          name: "Dev Build (${{ steps.slug.outputs.sha }})"
+          name: 'Dev Build (${{ steps.slug.outputs.sha }})'
           body: |
             Automated dev build from commit ${{ github.sha }}
             Branch: ${{ github.ref_name }}
