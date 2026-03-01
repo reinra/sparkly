@@ -239,7 +239,7 @@ export class DeviceService {
           ? {
               id: currentEffect.id,
               name: currentEffect.getName(),
-              type: currentEffect.effect.constructor.name,
+              type: currentEffect.effect.effectClassId,
               pointType: currentEffect.effect.pointType,
               animationMode: currentEffect.effect.animationMode as string,
               ...(loopDurationSeconds !== undefined && { loop_duration_seconds: loopDurationSeconds }),
