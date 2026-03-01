@@ -57,7 +57,9 @@ export async function reconnectDevice(deviceId: string): Promise<boolean> {
 function startReconnectLoop(): void {
   if (reconnectTimer) return;
   reconnectTimer = setInterval(async () => {
-    const offlineDevices = Object.values(devices).filter((d) => d.connectionStatus === ConnectionStatus.OFFLINE);
+    const offlineDevices = Object.values(devices).filter(
+      (d) => d.connectionStatus === ConnectionStatus.OFFLINE || d.connectionStatus === ConnectionStatus.CONNECTING
+    );
     if (offlineDevices.length === 0) return;
 
     logger.debug(`Attempting reconnect for ${offlineDevices.length} offline device(s)`);
@@ -129,6 +131,7 @@ export async function probeAndAddDevice(ip: string): Promise<AddDeviceResult> {
   const deviceId = `twinkly-${nextIndex}`;
   const helper = new DeviceHelper(deviceId, probeClient, deviceName);
   helper.alias = deviceName;
+  helper.connectionStatus = ConnectionStatus.ONLINE;
   devices[deviceId] = helper;
 
   // Refresh full device state in the background
