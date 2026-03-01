@@ -45,11 +45,13 @@ The **Debug** page provides detailed device information and effect metadata — 
 
 ## Troubleshooting
 
-| Problem                 | Solution                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| **Can't find devices**  | Make sure Twinkly devices are powered on and connected to the same network as your computer |
-| **Port 3001 in use**    | Close any other application using port 3001, then restart Sparkly                           |
-| **Frontend won't load** | Try re-downloading the latest release                                                       |
+| Problem                              | Solution                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| **Windows SmartScreen warning**       | Click **More info**, then click **Run anyway**                                              |
+| **"Unknown Publisher" security warning** | Click **Run** to proceed                                                                 |
+| **Can't find devices**               | Make sure Twinkly devices are powered on and connected to the same network as your computer |
+| **Port 3001 in use**                 | Close any other application using port 3001, then restart Sparkly                           |
+| **Frontend won't load**              | Try re-downloading the latest release                                                       |
 
 ## Requirements
 

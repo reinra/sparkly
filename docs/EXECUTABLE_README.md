@@ -36,12 +36,14 @@ The **Debug** page shows detailed device info and effect metadata — helpful fo
 
 ## Troubleshooting
 
-| Problem                       | Solution                                                          |
-| ----------------------------- | ----------------------------------------------------------------- |
-| **Can't find devices**        | Make sure Twinkly devices are powered on and on the same network  |
-| **Port 3001 in use**          | Close any other application using that port, then restart Sparkly |
-| **"Frontend failed to load"** | Try re-downloading the latest release                             |
-| **Device won't respond**      | Try the Reconnect button, or verify you can ping the device IP    |
+| Problem                              | Solution                                                          |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| **Windows SmartScreen warning**       | Click **More info**, then click **Run anyway**                    |
+| **"Unknown Publisher" security warning** | Click **Run** to proceed                                       |
+| **Can't find devices**               | Make sure Twinkly devices are powered on and on the same network  |
+| **Port 3001 in use**                 | Close any other application using that port, then restart Sparkly |
+| **"Frontend failed to load"**        | Try re-downloading the latest release                             |
+| **Device won't respond**             | Try the Reconnect button, or verify you can ping the device IP    |
 
 ## Logs
 
