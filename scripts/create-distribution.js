@@ -32,10 +32,12 @@ async function createDistributionPackage() {
 
   // 3. Copy README
   console.log('📋 Copying documentation...');
-  const readmeSrc = path.join(rootDir, 'EXECUTABLE_README.md');
+  const readmeSrc = path.join(rootDir, 'docs', 'EXECUTABLE_README.md');
   if (fs.existsSync(readmeSrc)) {
     fs.copyFileSync(readmeSrc, path.join(packageDir, 'README.md'));
     console.log('✓ Documentation copied');
+  } else {
+    console.warn('⚠️ EXECUTABLE_README.md not found at', readmeSrc);
   }
 
   // Calculate package size
