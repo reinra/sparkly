@@ -2,6 +2,10 @@
 
 Here's some ideas for evolving the project:
 
+- Improve UX
+  - Group parameters in UI by their purpose
+  - Add collapsing/expanding of parameters
+  - Add reset button for each parameter
 - Add more effects
 - Add support for sending mulitple movies and on-device playlists
 - Add support for searching for effects by different criteria

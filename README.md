@@ -415,61 +415,38 @@ The backend REST API runs on port 3001.
 **Device Management:**
 
 - `GET /api/info` — Devices and effects list
-
 - `GET /api/system-info` — Build date, version, device modes
-
 - `GET /api/device/discover` — Discover Twinkly devices on the network
-
 - `POST /api/device/add` — Add a device by IP
-
 - `POST /api/device/remove` — Remove a device
-
 - `POST /api/device/reconnect` — Reconnect a device
 
 **Device Control:**
 
 - `POST /api/mode` — Set device mode
-
 - `POST /api/brightness` — Set brightness (0–100)
-
 - `POST /api/effect` — Choose effect
-
 - `POST /api/parameters` — Set effect parameters
-
 - `POST /api/sendMovie` — Render and upload movie to device
-
 - `GET /api/sendMovie/status` — Movie upload progress
-
 - `GET /api/buffer` — Current LED buffer (browser LED mirroring)
-
 - `GET /api/ledMapping` — LED 2D coordinates (browser LED mirroring)
 
 **Effect Management:**
 
 - `POST /api/effect/clone` — Clone an effect
-
 - `POST /api/effect/delete` — Delete an effect
-
 - `POST /api/effect/rename` — Rename an effect
-
 - `POST /api/effect/reset` — Reset effect state
 
 **Debug:**
 
 - `GET /api/hello` — Health check
-
 - `GET /api/debug/device` — Device details
-
 - `GET /api/debug/effects` — All effects with metadata
 
 ## Further Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) — Module structure and boundaries
-
 - [Build Executable](docs/BUILD_EXECUTABLE.md) — Building the self-contained executable
-
-- [Validation Guide](docs/VALIDATION_GUIDE.md) — Testing the distribution package
-
 - [Logging](docs/LOGGING.md) — Logger configuration and usage
-
-- [Noise Effects](docs/NOISE_EFFECTS.md) — Using simplex noise in effects
