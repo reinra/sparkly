@@ -10,12 +10,17 @@ import { registerRoutes } from './TypedHandler';
 import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';
 import { initializeState } from './StateManager';
+import { ensurePortAvailable, listenWithPortCheck } from './utils/ServerUtils';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
 const PORT = 3001;
+
+// Bail out early if another instance is already running
+await ensurePortAvailable(PORT);
+
+const app = express();
 
 // Enable CORS for frontend
 app.use(cors());
@@ -23,8 +28,6 @@ app.use(express.json());
 
 // Register all API routes (shared with development server)
 registerRoutes(app, backendApiContract, apiRoutes);
-
-initializeState();
 
 // Path to frontend build relative to dist/server-production.js
 const frontendPath = path.join(__dirname, '../../frontend/build');
@@ -89,7 +92,8 @@ async function startServer() {
     process.exit(1);
   }
 
-  app.listen(PORT, () => {
+  listenWithPortCheck(app, PORT, () => {
+    initializeState();
     const url = `http://localhost:${PORT}`;
     logger.info(`Production server running on ${url}`);
     logger.info(`Serving frontend from: ${frontendPath}`);

@@ -7,14 +7,19 @@ import { tryToConnectAll } from './DeviceList';
 import { apiRoutes } from './ApiRoutes';
 import { openBrowser } from './utils/BrowserUtils';
 import { initializeState } from './StateManager';
+import { ensurePortAvailable, listenWithPortCheck } from './utils/ServerUtils';
 
 // @ts-ignore
 import { handler } from '../../frontend/build/handler.js';
 // @ts-ignore
 import { assets } from './generated/assets';
 
-const app = express();
 const PORT = 3001;
+
+// Bail out early if another instance is already running
+await ensurePortAvailable(PORT);
+
+const app = express();
 
 // Enable CORS for frontend
 app.use(cors());
@@ -22,8 +27,6 @@ app.use(express.json());
 
 // Register all API routes
 registerRoutes(app, backendApiContract, apiRoutes);
-
-initializeState();
 
 // Serve Static Assets from Embedded Bun Bundle
 app.use(async (req, res, next) => {
@@ -60,7 +63,8 @@ app.use(async (req, res, next) => {
 // The handler will take care of SSR and other routes
 app.use(handler);
 
-app.listen(PORT, () => {
+listenWithPortCheck(app, PORT, () => {
+  initializeState();
   const url = `http://localhost:${PORT}`;
   logger.info(`Bundled server running on ${url}`);
   logger.info(`Embedded assets loaded: ${Object.keys(assets).length} files`);
