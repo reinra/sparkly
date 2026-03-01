@@ -2,7 +2,7 @@
 
 A Twinkly LED controller with TypeScript backend and SvelteKit frontend.
 
-> **Note**: This project now uses a modular architecture with separate packages for common types, backend, and frontend. See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
+> **Note**: This project now uses a modular architecture with separate packages for common types, backend, and frontend. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 
 ## Getting Started
 
@@ -77,7 +77,7 @@ This creates a complete distribution package at `dist/twinkly-server-package/` w
 - Configuration template
 - User documentation
 
-See [BUILD_EXECUTABLE.md](BUILD_EXECUTABLE.md) for detailed instructions and [SETUP_COMPLETE.md](SETUP_COMPLETE.md) for the complete setup guide.
+See [BUILD_EXECUTABLE.md](docs/BUILD_EXECUTABLE.md) for detailed instructions and [SETUP_COMPLETE.md](docs/SETUP_COMPLETE.md) for the complete setup guide.
 
 ## Project Structure
 
