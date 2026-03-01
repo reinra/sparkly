@@ -87,7 +87,7 @@ From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1
 1. **Download** the latest release from [GitHub Releases](../../releases)
 2. **Extract** the zip archive
 3. **Run** `sparkly.exe`
-4. **Open** your browser to **http://localhost:3001**
+4. The browser opens automatically to **http://localhost:3001**
 
 No installation or setup required — the executable is fully self-contained.
 
