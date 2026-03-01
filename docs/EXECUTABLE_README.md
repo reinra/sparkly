@@ -5,6 +5,7 @@ This is a self-contained executable build of the Twinkly-TS server.
 ## What's Included
 
 This executable bundles:
+
 - Backend API server
 - Frontend web interface (SvelteKit SSR)
 - All dependencies
@@ -38,6 +39,7 @@ You can run the executable from any working directory using an absolute or relat
 1. **Create a configuration file** named `config.toml` in the same directory as the executable.
 
    Example `config.toml`:
+
    ```toml
    [[devices]]
    id = "device1"
@@ -46,19 +48,22 @@ You can run the executable from any working directory using an absolute or relat
    ```
 
 2. **Run the executable**:
-   
+
    Option A - From within the package directory:
+
    ```bash
    cd twinkly-server-package
    .\twinkly-server.exe
    ```
-   
+
    Option B - From any other directory:
+
    ```bash
    .\path\to\twinkly-server-package\twinkly-server.exe
    ```
-   
+
    Option C - Use the provided batch file:
+
    ```bash
    start.bat
    ```
@@ -91,11 +96,13 @@ ip = "192.168.1.51"
 If you see an error like `{"error":"Frontend failed to load - Invalid directory structure"}`, this means the executable cannot find the frontend files.
 
 **Solution:** Ensure the executable is in the correct directory structure:
+
 - The executable must be in the same folder as the `packages/` directory
 - Do NOT move the executable to a different location
 - The error message will show you the expected paths
 
 Example error output:
+
 ```json
 {
   "error": "Frontend failed to load - Invalid directory structure",
@@ -106,12 +113,15 @@ Example error output:
 ```
 
 ### Port Already in Use
+
 If port 3001 is already in use, you'll need to stop the conflicting application or modify the source code to use a different port and rebuild the executable.
 
 ### Configuration Not Found
+
 Make sure `config.toml` is in the same directory as the executable. The server will look for it in the executable's directory (not the current working directory when bundled).
 
 ### Device Connection Issues
+
 - Verify your device IPs are correct
 - Ensure devices are on the same network as the server
 - Check that devices are powered on and accessible
@@ -119,13 +129,17 @@ Make sure `config.toml` is in the same directory as the executable. The server w
 ## Technical Details
 
 ### Path Resolution
+
 The executable uses `path.dirname(process.execPath)` to resolve file paths, which means:
+
 - Frontend files are loaded relative to the executable's location
 - You can run the executable from any working directory
 - The executable itself must remain in the distribution package directory
 
 ### Validation
+
 On startup, the executable validates:
+
 - `packages/` directory exists next to the executable
 - `packages/frontend/build/` directory exists
 - `handler.js` and `server/` directory are present

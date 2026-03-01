@@ -119,6 +119,7 @@ docs/                # Documentation
 The backend exposes a REST API on port 3001. Key endpoints include:
 
 **Device Management:**
+
 - `GET /api/info` - Get devices and effects list
 - `GET /api/system-info` - Build date, version, device modes
 - `GET /api/device/discover` - Discover Twinkly devices on the network
@@ -127,6 +128,7 @@ The backend exposes a REST API on port 3001. Key endpoints include:
 - `POST /api/device/reconnect` - Reconnect a device
 
 **Device Control:**
+
 - `POST /api/mode` - Set device mode
 - `POST /api/brightness` - Set brightness (0-100)
 - `POST /api/effect` - Choose effect for a device
@@ -137,12 +139,14 @@ The backend exposes a REST API on port 3001. Key endpoints include:
 - `GET /api/ledMapping` - LED 2D coordinates (used for browser LED mirroring)
 
 **Effect Management:**
+
 - `POST /api/effect/clone` - Clone an effect
 - `POST /api/effect/delete` - Delete an effect
 - `POST /api/effect/rename` - Rename an effect
 - `POST /api/effect/reset` - Reset effect state
 
 **Debug:**
+
 - `GET /api/hello` - Health check
 - `GET /api/debug/device` - Debug device details
 - `GET /api/debug/effects` - All effects with metadata
