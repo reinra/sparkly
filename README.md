@@ -119,6 +119,181 @@ Everything below is for contributors and developers working on the Sparkly sourc
 
 ## Architecture
 
+### Colors
+
+Effects internally work with **floating-point RGB** (`RgbFloat` — channels 0.0–1.0) for better precision during color math, blending, and correction. The final conversion to 8-bit (`Rgb24` — 0–255) only happens at the output stage, after gamma, gain, and temperature corrections are applied.
+
+In the **UI**, users choose colors in **HSL** (hue, saturation, lightness) or **RGB**, depending on the parameter type. A `ColorValue` discriminated union (`{ mode: HSL, hsl }` or `{ mode: RGB, rgb }`) preserves the user's chosen color model through serialization, while the backend wraps it in a polymorphic `Color` object that effects can call `.asRgb()` on regardless of the underlying mode.
+
+| Type         | Location              | Role                                                               |
+| ------------ | --------------------- | ------------------------------------------------------------------ |
+| `RgbFloat`   | `color/ColorFloat.ts` | Internal working color space (0.0–1.0 floats)                      |
+| `Rgb24`      | `color/Color8bit.ts`  | Output format sent to LED hardware (0–255)                         |
+| `Hsl`        | `ParameterTypes.ts`   | HSL representation (hue/saturation/lightness, all 0.0–1.0)         |
+| `Color`      | `color/Color.ts`      | Polymorphic wrapper — `HslColor` or `RgbColor`, converts on demand |
+| `ColorValue` | `ParameterTypes.ts`   | Serializable union for persistence and UI (HSL or RGB mode)        |
+
+The output pipeline applies corrections per-pixel in order: invert → channel gain → gamma → color temperature → float-to-8-bit.
+
+### Parameters (Backend-Driven UI)
+
+Effect UIs are **entirely driven by the backend** through a parameter abstraction. Effects declare their parameters in code, and the frontend renders matching UI controls automatically — no frontend changes needed for new effects.
+
+Each parameter has a **type** that maps to a UI control:
+
+| Parameter Type | UI Control                               | Value                             |
+| -------------- | ---------------------------------------- | --------------------------------- |
+| `RANGE`        | Slider                                   | `number` (with min/max/step)      |
+| `BOOLEAN`      | Toggle                                   | `boolean`                         |
+| `OPTION`       | Tag list (single-select)                 | `string` (from a list of options) |
+| `HSL`          | HSL color picker                         | `Hsl`                             |
+| `RGB`          | RGB color picker                         | `RgbFloat`                        |
+| `COLOR`        | Color picker with HSL/RGB mode switch    | `ColorValue`                      |
+| `MULTI_HSL`    | Multiple HSL swatches                    | `Hsl[]`                           |
+| `MULTI_COLOR`  | Multiple color swatches with mode switch | `ColorValue[]`                    |
+
+Effects create an `EffectParameterStorage`, register parameters on it, and expose it as a `parameters` property. The frontend calls `GET /api/info` to discover all parameters and renders the appropriate controls. When a user changes a value, `POST /api/parameters` validates and updates it on the backend.
+
+**Composable parameter groups** let effects reuse common UI sections:
+
+- **PaletteParameters** — color space + order selection (adds a "Palette" section)
+- **FullEasingParameters** — easing function + direction (adds an "Easing" section)
+
+These are combined with the effect's own parameters via `MultiParameterStorageView`, which namespaces each group (e.g. `custom.`, `palette.`, `easing.`) into a single flat parameter list for the API.
+
+### Effects Abstraction
+
+Effects are the core creative unit — each one describes how LEDs should look at any given moment. The system separates **what** an effect looks like from **how** it's rendered and delivered to a device.
+
+Effects compute colors **directly for the actual LEDs** on the device. There is no virtual framebuffer or large image that gets sampled — each LED's position is passed to the effect, and the effect returns a color for it. This means effects naturally adapt to any LED count or layout without wasted computation.
+
+#### Key Concepts
+
+| Concept               | File(s)                       | Role                                                                               |
+| --------------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
+| **Effect**            | `effects/Effect.ts`           | Interface defining an effect's metadata, parameters, and a `createLogic()` factory |
+| **EffectLogic**       | `effects/Effect.ts`           | The rendering workhorse — implements `renderGlobal(ctx, points): RgbFloat[]`       |
+| **EffectWrapper**     | `EffectWrapper.ts`            | Wraps any effect with orthogonal settings (speed, gamma, mirror, mapping)          |
+| **EffectLibrary**     | `effects/EffectLibrary.ts`    | Registry — `register(EffectClass)` to add effects, manages clone/delete/reset      |
+| **EffectParameters**  | `EffectParameters.ts`         | Storage + validation for runtime-adjustable parameters with change tracking        |
+| **Renderer**          | `render/Renderer.ts`          | Drives the render loop (live real-time or batch for movie upload)                  |
+| **FrameOutputStream** | `render/FrameOutputStream.ts` | Composable output chain (send to device, buffer for UI preview, record movie)      |
+
+#### Animation Modes
+
+Every effect declares one of three animation modes which determines what context it receives:
+
+- **Static** — no time input; re-renders each frame to pick up parameter changes
+- **Loop** — receives `phase` (0.0–1.0); must define `getLoopDurationSeconds()`
+- **Sequence** — receives `time_ms` and `delta_time_ms` for open-ended animations
+
+#### Point Types
+
+Effects are generic over spatial input:
+
+- **1D** — each LED has `id` (hardware buffer index), `position` (sequential integer index along the strip), and `distance` (float 0.0–1.0, normalized position)
+- **2D** — each LED has `id`, `x`, and `y` coordinates (floats 0.0–1.0) from the device's 2D mapping
+
+1D effects can run on 2D-mapped devices via the wrapper's mapping mode (sequence, horizontal, vertical).
+
+**1D addressing styles:** A 1D effect can work in two ways depending on what spatial property it uses:
+
+- **Discrete (per-LED)** — use `point.id` or `point.position` to treat each LED as an individual pixel. `position` accounts for the "LEDs per pixel" grouping (multiple consecutive hardware LEDs share the same position). Good for dot-based effects like random dots or stars.
+- **Continuous (normalized distance)** — use `point.distance` (0.0–1.0) to treat the strip as a smooth space. Better for gradients, waves, and sweeps where the result should scale naturally across any LED count.
+
+#### Base Classes
+
+Located in `effects/BaseEffects.ts` — reduce boilerplate for common patterns:
+
+| Base Class            | Use When                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `PerPixelEffect`      | Each LED is rendered independently (stateless). Override `renderPixel(ctx, point): RgbFloat` |
+| `BaseSameColorEffect` | All LEDs show the same color. Override `renderColor(ctx): RgbFloat`                          |
+| `StatelessEffect`     | The effect IS its own logic (no separate state)                                              |
+
+For **stateful** effects that need memory between frames (particle systems, etc.), implement `Effect` directly and return a separate `EffectLogic` class from `createLogic()`.
+
+#### Composable Parameter Groups
+
+Effects can compose reusable parameter groups into their parameter view:
+
+- **PaletteParameters** (`effects/util/Palette.ts`) — color space (static, multiple, rainbow, any) + order (round robin, random)
+- **FullEasingParameters** (`effects/util/EasingMode.ts`) — easing function + direction for smooth transitions
+
+These are combined with the effect's own parameters via `MultiParameterStorageView`.
+
+#### Utilities (`effects/util/`)
+
+| Utility             | Purpose                                                 |
+| ------------------- | ------------------------------------------------------- |
+| `Palette.ts`        | Color palette implementations and parameter group       |
+| `Easing.ts`         | Easing functions (linear, quadratic, cubic, sine, etc.) |
+| `NoiseUtils.ts`     | Simplex noise wrapper with seamless loop support        |
+| `PhaseUtils.ts`     | Phase transformations (reverse, back-and-forth)         |
+| `FlashAnimation.ts` | Reusable on/off flash helper                            |
+| `ArrayUtils.ts`     | Buffer creation, shuffling                              |
+
+#### Creating a New Effect
+
+1. Create a file in `effects/library/`
+2. For a simple per-pixel effect, extend `PerPixelEffect`:
+
+   ```typescript
+   export class MyEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> implements EffectLoop<LedPoint1D> {
+     animationMode = AnimationMode.Loop;
+     effectClassId = 'my-effect';
+     pointType = '1D' as const;
+     isStateful = false;
+     effectId = 'my-effect';
+     effectName = 'My Effect';
+
+     getLoopDurationSeconds = () => 2;
+
+     renderPixel(ctx: EffectContextLoop, point: LedPoint1D): RgbFloat {
+       const brightness = (Math.sin(point.position * Math.PI * 2 + ctx.phase * Math.PI * 2) + 1) / 2;
+       return { r: brightness, g: 0, b: brightness };
+     }
+   }
+   ```
+
+3. Register in `effects/EffectLibrary.ts`:
+   ```typescript
+   register(MyEffect);
+   ```
+
+For effects with multiple presets, implement `getPresets()` instead of `effectId`/`effectName` — each preset becomes a separate entry in the library with its own default parameter values.
+
+#### Rendering Pipeline
+
+```
+EffectLauncher
+  ├── startEffect()        → live real-time rendering
+  │     EffectRenderer.renderLive()
+  │       └── loop: createLogic() → renderGlobal() → floatTo8bit → FrameOutputStream
+  │             └── MultipleFrameOutputStream
+  │                   ├── ApiClientFrameOutputStream  (sends to device via UDP)
+  │                   └── BufferReplacingFrameOutputStream  (UI preview)
+  │
+  └── sendEffectAsMovie()  → batch render + upload
+        EffectRenderer.renderAsap()
+          └── all frames → MovieBufferOutputStream → postMovieFull()
+```
+
+#### Movie Rendering
+
+When sending an effect as a movie to the device, the renderer needs to produce a finite loop. How this works depends on the animation mode:
+
+- **Loop (phase-based)** — the effect defines a fixed loop duration. The renderer records one full cycle (phase 0.0→1.0). Increasing the **loop cycles** parameter renders multiple consecutive cycles into the movie, which gives palette-based effects more room to show additional colors since each cycle may pick different colors.
+- **Sequence (self-terminating)** — the effect runs open-ended and signals when it has completed a natural cycle (via `cycleJustCompleted`). This gives better results for effects with randomness, since the effect itself decides when it has covered enough ground to close the loop.
+
+The resulting movie seamlessness varies:
+
+- Some effects loop **perfectly** (e.g. smooth gradients, waves)
+- Some may have a **visible jump** at the loop point (e.g. effects with random state)
+- For some it **depends on the palette** — a 2-color palette may loop cleanly while a 5-color one may need more cycles to look seamless. Random palettes (Rainbow, Any color) are especially likely to produce a visible jump since the start and end colors won't match
+
+### Modules
+
 Sparkly is a TypeScript monorepo (npm workspaces) with three packages:
 
 | Package             | Description                                               |
