@@ -16,7 +16,9 @@ twinkly-ts/
 ## 🏗️ Module Descriptions
 
 ### 1. **@twinkly-ts/common**
+
 Contains the REST API contract between backend and frontend using [@ts-rest](https://ts-rest.com/):
+
 - API endpoint definitions
 - Request/Response schemas (Zod)
 - Shared TypeScript types
@@ -25,7 +27,9 @@ Contains the REST API contract between backend and frontend using [@ts-rest](htt
 **No browser or Node.js specific code** - pure TypeScript types and schemas.
 
 ### 2. **@twinkly-ts/backend**
+
 Node.js backend server that:
+
 - Communicates with Twinkly devices via their API
 - Exposes REST API for frontend (implements the common contract)
 - Handles device management, effects, and rendering
@@ -34,7 +38,9 @@ Node.js backend server that:
 Can use Node.js-specific libraries without browser compatibility issues.
 
 ### 3. **@twinkly-ts/frontend**
+
 SvelteKit frontend that:
+
 - Provides web UI for controlling Twinkly devices
 - Consumes the backend API (using the common contract)
 - Displays device status, controls brightness/effects
@@ -88,7 +94,7 @@ npm run start:frontend
 
 ## 📂 Configuration
 
-Backend configuration is in `packages/backend/config.toml` - copy from `config.toml.example` and configure your Twinkly devices.
+Device configuration is managed through the web interface. The backend persists device settings to `packages/backend/config.toml` automatically.
 
 ## 🔒 Module Boundaries
 
@@ -101,6 +107,7 @@ The separation prevents accidental cross-imports:
 - ❌ Common **cannot** import from backend or frontend
 
 This ensures:
+
 - Clean architecture
 - No circular dependencies
 - Type safety across API boundaries

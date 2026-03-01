@@ -92,7 +92,6 @@ async function buildExecutable() {
       console.log(`📍 Location: ${outputPath}`);
       console.log(`📦 Size: ${sizeMB} MB`);
       console.log(`\n🎉 You can now run: ${outputPath}`);
-      console.log(`\n⚠️  Note: Make sure config.toml is in the same directory as the executable`);
     } else {
       console.error('❌ Executable was not created');
       process.exit(1);

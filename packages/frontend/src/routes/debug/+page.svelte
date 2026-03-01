@@ -27,10 +27,7 @@
     loading = true;
     error = '';
     try {
-      info = await handleApiCall<GetInfoResponse>(
-        () => backendClient.getInfo(),
-        'Failed to get info. Make sure config.toml is properly configured.'
-      );
+      info = await handleApiCall<GetInfoResponse>(() => backendClient.getInfo(), 'Failed to get info from the server.');
     } catch (e) {
       error = (e as Error).message;
     } finally {

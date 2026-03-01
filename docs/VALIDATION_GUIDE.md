@@ -33,6 +33,7 @@ Instead of checking for error strings, validate the expected success case by che
 From `packages/frontend/src/routes/+layout.svelte`:
 
 ✅ **Required Elements:**
+
 1. `<!doctype html>` - Valid HTML document
 2. `Twinkly LED Controller` - Application title
 3. `href="/devices"` - Devices navigation link
@@ -41,6 +42,7 @@ From `packages/frontend/src/routes/+layout.svelte`:
 6. `<main` - Main content area
 
 ✅ **Must NOT Contain:**
+
 1. `Frontend failed to load` - Error message
 2. `^{"error"` - JSON error response
 
@@ -109,14 +111,14 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | Stop-Process -Fo
 If validation fails even from the correct location, check for multiple running instances:
 
 ```powershell
-Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | 
+Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} |
     ForEach-Object { Write-Host "Running: $($_.Path)" }
 ```
 
 Kill all instances before testing:
 
 ```powershell
-Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | 
+Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} |
     Stop-Process -Force
 ```
 
@@ -137,6 +139,7 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} |
 ## Testing Different Scenarios
 
 ### Test 1: Correct Location
+
 ```powershell
 cd F:\...\dist\twinkly-server-package
 .\twinkly-server.exe
@@ -144,6 +147,7 @@ cd F:\...\dist\twinkly-server-package
 ```
 
 ### Test 2: From Parent Directory
+
 ```powershell
 cd F:\...\dist
 .\twinkly-server-package\twinkly-server.exe
@@ -151,6 +155,7 @@ cd F:\...\dist
 ```
 
 ### Test 3: Wrong Location (Expected to Fail)
+
 ```powershell
 cd F:\...\dist
 .\twinkly-server.exe
@@ -158,15 +163,13 @@ cd F:\...\dist
 ```
 
 ### Test 4: Unbiased Clean Location (Recommended)
+
 ```powershell
 # Copy distribution to a clean temp folder outside the project
 $testDir = "C:\Temp\twinkly-test"
 if(Test-Path $testDir) { Remove-Item $testDir -Recurse -Force }
 New-Item -ItemType Directory -Path $testDir | Out-Null
 Copy-Item "F:\...\dist\twinkly-server-package\*" -Destination $testDir -Recurse
-
-# Copy config example
-Copy-Item "$testDir\config.toml.example" -Destination "$testDir\config.toml"
 
 # Run from clean location
 cd $testDir
@@ -186,6 +189,7 @@ Get-Process | Where-Object {$_.ProcessName -like "*twinkly*"} | Stop-Process -Fo
 ```
 
 **Why this test is important:**
+
 - Eliminates bias from development environment
 - Proves the distribution is truly self-contained
 - Simulates end-user deployment scenario

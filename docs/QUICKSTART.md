@@ -56,9 +56,9 @@ If the frontend shows "Failed to connect to backend":
 
 If you get "Failed to get device status":
 
-1. Ensure `config.toml` exists and has the correct IP address
-2. Make sure your Twinkly device is powered on and connected to the network
-3. Verify you can ping the device from your computer
+1. Make sure your Twinkly device is powered on and connected to the network
+2. Verify you can ping the device from your computer
+3. Add devices via the web interface if not already added
 
 ### Port Already in Use
 

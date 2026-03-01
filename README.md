@@ -20,11 +20,6 @@ Install dependencies for all packages:
 npm install
 ```
 
-### Configuration
-
-1. Copy `packages/backend/config.toml.example` to `packages/backend/config.toml`
-2. Update the IP address of your Twinkly device in `config.toml`
-
 ### Running the Project
 
 #### Development Mode
@@ -79,7 +74,6 @@ This creates a complete distribution package at `dist/twinkly-server-package/` w
 
 - Self-contained executable (~110 MB, includes Bun runtime)
 - Frontend web interface
-- Configuration template
 - User documentation
 
 See [BUILD_EXECUTABLE.md](docs/BUILD_EXECUTABLE.md) for detailed build instructions.

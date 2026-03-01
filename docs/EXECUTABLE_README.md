@@ -14,7 +14,6 @@ This executable bundles:
 
 - Windows operating system
 - No Node.js installation required - fully self-contained
-- `config.toml` file (configuration for your Twinkly devices)
 
 ## Important: Directory Structure
 
@@ -26,7 +25,6 @@ twinkly-server-package/
 ├── packages/
 │   └── frontend/
 │       └── build/           ← Frontend files must be in this location
-├── config.toml              ← Your configuration
 └── start.bat                ← Optional launcher script
 ```
 
@@ -36,18 +34,7 @@ You can run the executable from any working directory using an absolute or relat
 
 ## Setup
 
-1. **Create a configuration file** named `config.toml` in the same directory as the executable.
-
-   Example `config.toml`:
-
-   ```toml
-   [[devices]]
-   id = "device1"
-   alias = "Tree"
-   ip = "192.168.1.100"
-   ```
-
-2. **Run the executable**:
+1. **Run the executable**:
 
    Option A - From within the package directory:
 
@@ -68,26 +55,15 @@ You can run the executable from any working directory using an absolute or relat
    start.bat
    ```
 
-3. **Access the web interface**:
+2. **Access the web interface**:
    Open your browser and navigate to `http://localhost:3001`
 
-## Configuration
+3. **Add your devices**:
+   Use the web interface to discover and add your Twinkly devices.
 
-The `config.toml` file should contain your Twinkly device configurations. You can find an example in the source repository at `packages/backend/config.toml.example`.
+## Device Management
 
-### Example Configuration
-
-```toml
-[[devices]]
-id = "living_room"
-alias = "Living Room Tree"
-ip = "192.168.1.50"
-
-[[devices]]
-id = "bedroom"
-alias = "Bedroom Lights"
-ip = "192.168.1.51"
-```
+Devices can be added and removed directly from the web interface. The server automatically persists device configurations to `config.toml`.
 
 ## Troubleshooting
 
@@ -116,15 +92,12 @@ Example error output:
 
 If port 3001 is already in use, you'll need to stop the conflicting application or modify the source code to use a different port and rebuild the executable.
 
-### Configuration Not Found
-
-Make sure `config.toml` is in the same directory as the executable. The server will look for it in the executable's directory (not the current working directory when bundled).
-
 ### Device Connection Issues
 
 - Verify your device IPs are correct
 - Ensure devices are on the same network as the server
 - Check that devices are powered on and accessible
+- Try using the Discover feature in the web interface to find devices automatically
 
 ## Technical Details
 

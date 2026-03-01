@@ -75,15 +75,13 @@ If you prefer to use Node.js pkg instead of Bun, follow these steps:
 After building, you'll need to distribute:
 
 1. **The executable**: `dist/twinkly-server.exe`
-2. **Configuration file**: `config.toml` (user must create or you provide a template)
-3. **Frontend files**: `packages/frontend/build/` directory (must be in `../../frontend/build` relative to the executable)
+2. **Frontend files**: `packages/frontend/build/` directory (must be in `../../frontend/build` relative to the executable)
 
 ### Recommended Distribution Structure
 
 ```
 twinkly-server/
 ├── twinkly-server.exe
-├── config.toml.example
 ├── README.md (EXECUTABLE_README.md)
 └── packages/
     └── frontend/
@@ -93,12 +91,11 @@ twinkly-server/
 
 ## Running the Executable
 
-1. Create a `config.toml` file in the directory containing the executable
-2. Run the executable:
+1. Run the executable:
    ```powershell
    ./twinkly-server.exe
    ```
-3. Access the web interface at `http://localhost:3001`
+2. Access the web interface at `http://localhost:3001`
 
 ## Development Mode (Unchanged)
 
@@ -176,8 +173,8 @@ Both methods produce a fully self-contained executable with no external dependen
 ## Security Notes
 
 - The executable includes all source code (though minified)
-- Configuration files (like `config.toml`) are read at runtime and not embedded
-- Sensitive information should only be in `config.toml`, never hardcoded
+- Device configuration (`config.toml`) is managed via the web interface and persisted at runtime
+- Sensitive information should not be hardcoded
 
 ## Cross-Platform Building
 

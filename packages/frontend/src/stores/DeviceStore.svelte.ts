@@ -110,7 +110,7 @@ export const deviceStore = {
         effects = response.body.effects;
         updatePolling();
       } else {
-        error = 'Failed to get info. Make sure config.toml is properly configured.';
+        error = 'Failed to get device info from the server.';
       }
     } catch (e) {
       error = (e as Error).message;

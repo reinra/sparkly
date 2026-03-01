@@ -30,15 +30,7 @@ async function createDistributionPackage() {
   // 2. Frontend files are now embedded in the executable - no need to copy
   console.log('✓ Frontend files are embedded in the executable');
 
-  // 3. Copy config example
-  console.log('📋 Copying configuration example...');
-  const configExample = path.join(rootDir, 'packages', 'backend', 'config.toml.example');
-  if (fs.existsSync(configExample)) {
-    fs.copyFileSync(configExample, path.join(packageDir, 'config.toml.example'));
-    console.log('✓ Config example copied');
-  }
-
-  // 4. Copy README
+  // 3. Copy README
   console.log('📋 Copying documentation...');
   const readmeSrc = path.join(rootDir, 'EXECUTABLE_README.md');
   if (fs.existsSync(readmeSrc)) {
@@ -50,9 +42,6 @@ async function createDistributionPackage() {
   console.log('📋 Creating startup script...');
   const startScript = `@echo off
 echo Starting Twinkly Server...
-echo.
-echo Make sure you have created a config.toml file in this directory.
-echo If you haven't, copy config.toml.example to config.toml and edit it.
 echo.
 twinkly-server.exe
 pause
@@ -69,16 +58,14 @@ pause
   console.log(`📦 Total size: ${sizeMB} MB`);
   console.log('\n📋 Package contents:');
   console.log('   - twinkly-server.exe (self-contained executable)');
-
-  console.log('   - config.toml.example (configuration template)');
   console.log('   - README.md (user documentation)');
   console.log('   - start.bat (Windows startup script)');
   console.log('\n🚀 Distribution package is ready to deploy!');
   console.log('📦 You can now zip this folder and distribute it.');
   console.log('\n⚠️  Users will need to:');
-  console.log('   1. Create config.toml from config.toml.example');
-  console.log('   2. Run start.bat or twinkly-server.exe');
-  console.log('   3. Access http://localhost:3001 in their browser');
+  console.log('   1. Run start.bat or twinkly-server.exe');
+  console.log('   2. Access http://localhost:3001 in their browser');
+  console.log('   3. Add devices via the web interface');
   
   // Rename the build artifact to prevent confusion
   console.log('\n🔧 Renaming build artifact to prevent accidental use...');
