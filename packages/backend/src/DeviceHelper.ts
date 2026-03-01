@@ -82,6 +82,40 @@ export class DeviceHelper {
 
   private static readonly DEFAULT_MAX_FPS = 60;
 
+  private readonly brightness: RangeEffectParameter = this.deviceParams.register(
+    {
+      id: 'brightness',
+      name: 'Brightness',
+      description: 'Current brightness of LEDs regardless of mode, not shown in previews',
+      type: ParameterType.RANGE,
+      value: 100,
+      min: 0,
+      max: 100,
+      unit: '%',
+      step: 1,
+      transient: true,
+    },
+    async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setBrightnessAbsolute(newValue);
+    }
+  );
+  private readonly saturation: RangeEffectParameter = this.deviceParams.register(
+    {
+      id: 'saturation',
+      name: 'Saturation',
+      description: 'Current saturation of LEDs regardless of mode, not shown in previews',
+      type: ParameterType.RANGE,
+      value: 100,
+      min: 0,
+      max: 100,
+      unit: '%',
+      step: 1,
+      transient: true,
+    },
+    async (_parameter, _oldValue, newValue) => {
+      await this.apiClient.setSaturationAbsolute(newValue);
+    }
+  );
   private readonly maxFps: RangeEffectParameter = this.deviceParams.register({
     id: 'fps',
     name: 'Max rendering frequency',
@@ -152,40 +186,6 @@ export class DeviceHelper {
     unit: '%',
     step: 1,
   });
-  private readonly brightness: RangeEffectParameter = this.deviceParams.register(
-    {
-      id: 'brightness',
-      name: 'Brightness',
-      description: 'Current brightness of LEDs regardless of mode, not shown in previews',
-      type: ParameterType.RANGE,
-      value: 100,
-      min: 0,
-      max: 100,
-      unit: '%',
-      step: 1,
-      transient: true,
-    },
-    async (_parameter, _oldValue, newValue) => {
-      await this.apiClient.setBrightnessAbsolute(newValue);
-    }
-  );
-  private readonly saturation: RangeEffectParameter = this.deviceParams.register(
-    {
-      id: 'saturation',
-      name: 'Saturation',
-      description: 'Current saturation of LEDs regardless of mode, not shown in previews',
-      type: ParameterType.RANGE,
-      value: 100,
-      min: 0,
-      max: 100,
-      unit: '%',
-      step: 1,
-      transient: true,
-    },
-    async (_parameter, _oldValue, newValue) => {
-      await this.apiClient.setSaturationAbsolute(newValue);
-    }
-  );
   private readonly autoRotate: BooleanEffectParameter = this.deviceParams.register(
     {
       id: 'autoRotate',
@@ -256,7 +256,11 @@ export class DeviceHelper {
    * This avoids redundant HTTP requests when multiple callers need the summary in quick succession.
    */
   private async getCachedSummary(forceRefresh = false): Promise<NonNullable<typeof this.summaryCache>> {
-    if (!forceRefresh && this.summaryCache && Date.now() - this.lastDeviceRefreshTime < DeviceHelper.DEVICE_REFRESH_INTERVAL_MS) {
+    if (
+      !forceRefresh &&
+      this.summaryCache &&
+      Date.now() - this.lastDeviceRefreshTime < DeviceHelper.DEVICE_REFRESH_INTERVAL_MS
+    ) {
       return this.summaryCache;
     }
     this.summaryCache = await this.apiClient.getSummary();
@@ -284,9 +288,8 @@ export class DeviceHelper {
   }
 
   private getFilterFromSummary(summary: NonNullable<typeof this.summaryCache>, name: string): number | undefined {
-    return summary.filters?.find(
-      (f) => f.filter === name && f.config.mode === EnabledDisabledSchema.Values.enabled
-    )?.config?.value;
+    return summary.filters?.find((f) => f.filter === name && f.config.mode === EnabledDisabledSchema.Values.enabled)
+      ?.config?.value;
   }
 
   public getMode(): DeviceModeType {
