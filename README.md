@@ -35,13 +35,17 @@ LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Contro
 ## Background
 
 This is a pet project I have created during free time to play with my LED lights at home.
-From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1132187056) I was missing:
+From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1132187056), I was missing:
 
 1. Selection of effects in general.
 2. 1D effects for LED strips which work on the level of individual LEDs.
 3. Long effects which might not fit on the device memory.
 4. Freedom to choose colors randomly.
-5. Adjust for 100+100 strips so it looks natural (reverse one branch) without using 2D mapping.
+5. Ability to adjust for 100+100 strips so it looks natural (reverse one branch) without using 2D mapping.
+
+Most [3rd party tools](https://xled-docs.readthedocs.io/en/latest/readme.html#client-implementations) seemed to be for switching the power, operating modes, brightness but not for rendering their own effects.
+
+In 2020 I implemented an earlier proof-of-concept Twinkly LED controller in Java using Swing UI. However, its internal architecture was quite limited so I decided to restart the project from scratch.
 
 ## Current State
 
