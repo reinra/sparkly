@@ -2,31 +2,50 @@
 
 LED controller for [Twinkly](https://www.twinkly.com/) smart LED devices. Control effects, brightness, and colors through a web interface served from a single executable.
 
+![Screenshot of sample UI.](docs/images/sample_ui.png)
+
 ## Table of Contents
 
 - [Background](#background)
+
 - [Current State](#current-state)
+
 - [Download & Run](#download--run)
+
 - [Using Sparkly](#using-sparkly)
   - [Adding Devices](#adding-devices)
+
   - [Controlling Devices](#controlling-devices)
+
   - [LED Preview](#led-preview)
+
   - [Debug Page](#debug-page)
+
 - [Troubleshooting](#troubleshooting)
+
 - [Requirements](#requirements)
 
 **[Developer Guide](#developer-guide)**
 
 - [Architecture](#architecture)
   - [Colors](#colors)
+
   - [Parameters (Backend-Driven UI)](#parameters-backend-driven-ui)
+
   - [Effects Abstraction](#effects-abstraction)
+
   - [Modules](#modules)
+
 - [Prerequisites](#prerequisites)
+
 - [Getting Started](#getting-started)
+
 - [Scripts](#scripts)
+
 - [Building the Executable](#building-the-executable)
+
 - [API Reference](#api-reference)
+
 - [Further Documentation](#further-documentation)
 
 ## Background
@@ -49,37 +68,49 @@ From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1
 #### Standalone App
 
 - **Web-based UI** — runs in background; access from the same device, another computer, or phone
+
 - **Persistent settings** — saved to disk once per minute and on exit
 
 #### Device Management
 
 - **Auto-discovery** or manual add by IP address
+
 - **Multiple devices** handled in parallel
+
 - Should support all Twinkly devices (tested with 4 device types; RGB+W uses RGB only)
 
 #### Effects
 
 - **Real-time** (app must run) or **uploaded as a looping movie** to device hardware
+
 - **Auto-rotate** effects with a custom interval (real-time mode only)
+
 - **Rename, clone, reset, or delete** effects (built-in effects cannot be deleted)
+
 - **Live LED preview** in the browser
 
 #### Per-Device Settings
 
 - Brightness, saturation, gamma correction, color temperature, RGB gain
+
 - Mirror LEDs, adjust FPS
 
 #### Per-Effect Settings
 
 - **Speed** multiplier (separate from FPS)
+
 - **Geometry** — mirror, 1D→2D mapping mode, 2D rotation, LEDs per pixel
+
 - **Color correction** — gamma, invert
+
 - **Movie config** — loop cycle count (some effects)
 
 #### Palette & Color Options (many effects)
 
 - **Color space** — Static (1 color), Multiple (n colors), Rainbow, Any
+
 - **Order** — Round robin or random
+
 - **Easing** — instant or smooth transitions between colors
 
 ## Download & Run
@@ -87,7 +118,7 @@ From the original [Twinkly mobile app](https://apps.apple.com/us/app/twinkly/id1
 1. **Download** the latest release from [GitHub Releases](../../releases)
 2. **Extract** the zip archive
 3. **Run** `sparkly.exe`
-4. The browser opens automatically to **http://localhost:3001**
+4. The browser opens automatically to **<http://localhost:3001>**
 
 No installation or setup required — the executable is fully self-contained.
 
@@ -98,6 +129,7 @@ No installation or setup required — the executable is fully self-contained.
 When you first open Sparkly, head to the **Devices** page. You can add your Twinkly devices in two ways:
 
 - **Auto-discover** — Click the discover button to scan your network for Twinkly devices
+
 - **Manual add** — Enter the device's IP address directly
 
 Devices are remembered between sessions automatically.
@@ -107,9 +139,13 @@ Devices are remembered between sessions automatically.
 Each device card on the Devices page lets you:
 
 - **Set mode** — Switch between off, color, effect, and other device modes
+
 - **Adjust brightness** — Slide to set brightness (0–100%)
+
 - **Choose an effect** — Pick from the built-in effect library
+
 - **Tune parameters** — Customize effect colors, speed, and other settings
+
 - **Send movie** — Render an effect and upload it directly to the device hardware
 
 ### LED Preview
@@ -117,6 +153,7 @@ Each device card on the Devices page lets you:
 The web interface can mirror your device's LED state in real time. Two viewing modes are available:
 
 - **Sequential** — LEDs shown in order, ideal for LED strips
+
 - **2D mapped** — LEDs positioned using the device's 2D coordinate mapping
 
 ### Debug Page
@@ -136,6 +173,7 @@ The **Debug** page provides detailed device information and effect metadata — 
 ## Requirements
 
 - Windows (the executable is self-contained, no runtime needed)
+
 - Twinkly LED devices on the same local network
 
 ---
@@ -184,6 +222,7 @@ Effects create an `EffectParameterStorage`, register parameters on it, and expos
 **Composable parameter groups** let effects reuse common UI sections:
 
 - **PaletteParameters** — color space + order selection (adds a "Palette" section)
+
 - **FullEasingParameters** — easing function + direction (adds an "Easing" section)
 
 These are combined with the effect's own parameters via `MultiParameterStorageView`, which namespaces each group (e.g. `custom.`, `palette.`, `easing.`) into a single flat parameter list for the API.
@@ -211,7 +250,9 @@ Effects compute colors **directly for the actual LEDs** on the device. There is 
 Every effect declares one of three animation modes which determines what context it receives:
 
 - **Static** — no time input; re-renders each frame to pick up parameter changes
+
 - **Loop** — receives `phase` (0.0–1.0); must define `getLoopDurationSeconds()`
+
 - **Sequence** — receives `time_ms` and `delta_time_ms` for open-ended animations
 
 #### Point Types
@@ -219,6 +260,7 @@ Every effect declares one of three animation modes which determines what context
 Effects are generic over spatial input:
 
 - **1D** — each LED has `id` (hardware buffer index), `position` (sequential integer index along the strip), and `distance` (float 0.0–1.0, normalized position)
+
 - **2D** — each LED has `id`, `x`, and `y` coordinates (floats 0.0–1.0) from the device's 2D mapping. The mapping must be created first using the official [Twinkly app](https://apps.apple.com/us/app/twinkly/id1132187056) (via its mapping scan feature) — the coordinates are persisted on the device itself, and Sparkly reads them from there
 
 1D effects can run on 2D-mapped devices via the wrapper's mapping mode (sequence, horizontal, vertical).
@@ -226,6 +268,7 @@ Effects are generic over spatial input:
 **1D addressing styles:** A 1D effect can work in two ways depending on what spatial property it uses:
 
 - **Discrete (per-LED)** — use `point.id` or `point.position` to treat each LED as an individual pixel. `position` accounts for the "LEDs per pixel" grouping (multiple consecutive hardware LEDs share the same position). Good for dot-based effects like random dots or stars.
+
 - **Continuous (normalized distance)** — use `point.distance` (0.0–1.0) to treat the strip as a smooth space. Better for gradients, waves, and sweeps where the result should scale naturally across any LED count.
 
 #### Base Classes
@@ -245,6 +288,7 @@ For **stateful** effects that need memory between frames (particle systems, etc.
 Effects can compose reusable parameter groups into their parameter view:
 
 - **PaletteParameters** ([Palette.ts](packages/backend/src/effects/util/Palette.ts)) — color space (static, multiple, rainbow, any) + order (round robin, random)
+
 - **FullEasingParameters** ([EasingMode.ts](packages/backend/src/effects/util/EasingMode.ts)) — easing function + direction for smooth transitions
 
 These are combined with the effect's own parameters via `MultiParameterStorageView`.
@@ -263,6 +307,7 @@ These are combined with the effect's own parameters via `MultiParameterStorageVi
 #### Creating a New Effect
 
 1. Create a file in [effects/library/](packages/backend/src/effects/library/)
+
 2. For a simple per-pixel effect, extend `PerPixelEffect`:
 
    ```typescript
@@ -284,6 +329,7 @@ These are combined with the effect's own parameters via `MultiParameterStorageVi
    ```
 
 3. Register in [EffectLibrary.ts](packages/backend/src/effects/EffectLibrary.ts):
+
    ```typescript
    register(MyEffect);
    ```
@@ -311,12 +357,15 @@ EffectLauncher
 When sending an effect as a movie to the device, the renderer needs to produce a finite loop. How this works depends on the animation mode:
 
 - **Loop (phase-based)** — the effect defines a fixed loop duration. The renderer records one full cycle (phase 0.0→1.0). Increasing the **loop cycles** parameter renders multiple consecutive cycles into the movie, which gives palette-based effects more room to show additional colors since each cycle may pick different colors.
+
 - **Sequence (self-terminating)** — the effect runs open-ended and signals when it has completed a natural cycle (via `cycleJustCompleted`). This gives better results for effects with randomness, since the effect itself decides when it has covered enough ground to close the loop.
 
 The resulting movie seamlessness varies:
 
 - Some effects loop **perfectly** (e.g. smooth gradients, waves)
+
 - Some may have a **visible jump** at the loop point (e.g. effects with random state)
+
 - For some it **depends on the palette** — a 2-color palette may loop cleanly while a 5-color one may need more cycles to look seamless. Random palettes (Rainbow, Any color) are especially likely to produce a visible jump since the start and end colors won't match
 
 ### Modules
@@ -355,6 +404,7 @@ docs/                # Developer documentation
 ## Prerequisites
 
 - Node.js v18+
+
 - npm
 
 ## Getting Started
@@ -400,40 +450,61 @@ The backend REST API runs on port 3001.
 **Device Management:**
 
 - `GET /api/info` — Devices and effects list
+
 - `GET /api/system-info` — Build date, version, device modes
+
 - `GET /api/device/discover` — Discover Twinkly devices on the network
+
 - `POST /api/device/add` — Add a device by IP
+
 - `POST /api/device/remove` — Remove a device
+
 - `POST /api/device/reconnect` — Reconnect a device
 
 **Device Control:**
 
 - `POST /api/mode` — Set device mode
+
 - `POST /api/brightness` — Set brightness (0–100)
+
 - `POST /api/effect` — Choose effect
+
 - `POST /api/parameters` — Set effect parameters
+
 - `POST /api/sendMovie` — Render and upload movie to device
+
 - `GET /api/sendMovie/status` — Movie upload progress
+
 - `GET /api/buffer` — Current LED buffer (browser LED mirroring)
+
 - `GET /api/ledMapping` — LED 2D coordinates (browser LED mirroring)
 
 **Effect Management:**
 
 - `POST /api/effect/clone` — Clone an effect
+
 - `POST /api/effect/delete` — Delete an effect
+
 - `POST /api/effect/rename` — Rename an effect
+
 - `POST /api/effect/reset` — Reset effect state
 
 **Debug:**
 
 - `GET /api/hello` — Health check
+
 - `GET /api/debug/device` — Device details
+
 - `GET /api/debug/effects` — All effects with metadata
 
 ## Further Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) — Module structure and boundaries
+
 - [Build Executable](docs/BUILD_EXECUTABLE.md) — Building the self-contained executable
+
 - [Validation Guide](docs/VALIDATION_GUIDE.md) — Testing the distribution package
+
 - [Logging](docs/LOGGING.md) — Logger configuration and usage
+
 - [Noise Effects](docs/NOISE_EFFECTS.md) — Using simplex noise in effects
