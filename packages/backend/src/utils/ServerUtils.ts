@@ -52,16 +52,12 @@ export async function ensurePortAvailable(port: number): Promise<void> {
 
 /**
  * Start an Express app on the given port with proper error handling.
- * 
+ *
  * If the port is already in use, logs a clear error and exits the process
  * instead of silently failing (which would allow two instances to appear
  * to run simultaneously while only the first one actually serves requests).
  */
-export function listenWithPortCheck(
-  app: Express,
-  port: number,
-  onListening: () => void,
-): void {
+export function listenWithPortCheck(app: Express, port: number, onListening: () => void): void {
   const server = app.listen(port, onListening);
 
   server.on('error', (error: NodeJS.ErrnoException) => {
