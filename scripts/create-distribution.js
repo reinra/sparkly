@@ -38,17 +38,6 @@ async function createDistributionPackage() {
     console.log('✓ Documentation copied');
   }
 
-  // 5. Create quick start batch file
-  console.log('📋 Creating startup script...');
-  const startScript = `@echo off
-echo Starting Twinkly Server...
-echo.
-twinkly-server.exe
-pause
-`;
-  fs.writeFileSync(path.join(packageDir, 'start.bat'), startScript);
-  console.log('✓ Startup script created');
-
   // Calculate package size
   const packageSize = getDirectorySize(packageDir);
   const sizeMB = (packageSize / (1024 * 1024)).toFixed(2);
@@ -59,11 +48,10 @@ pause
   console.log('\n📋 Package contents:');
   console.log('   - twinkly-server.exe (self-contained executable)');
   console.log('   - README.md (user documentation)');
-  console.log('   - start.bat (Windows startup script)');
   console.log('\n🚀 Distribution package is ready to deploy!');
   console.log('📦 You can now zip this folder and distribute it.');
   console.log('\n⚠️  Users will need to:');
-  console.log('   1. Run start.bat or twinkly-server.exe');
+  console.log('   1. Run twinkly-server.exe');
   console.log('   2. Access http://localhost:3001 in their browser');
   console.log('   3. Add devices via the web interface');
   

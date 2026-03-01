@@ -22,10 +22,9 @@ This executable bundles:
 ```
 twinkly-server-package/
 ├── twinkly-server.exe       ← Executable must stay here
-├── packages/
-│   └── frontend/
-│       └── build/           ← Frontend files must be in this location
-└── start.bat                ← Optional launcher script
+└── packages/
+    └── frontend/
+        └── build/           ← Frontend files must be in this location
 ```
 
 **Do not move the executable outside of this directory!** The executable uses its own location to find the frontend files in the `packages/` directory relative to itself.
@@ -47,12 +46,6 @@ You can run the executable from any working directory using an absolute or relat
 
    ```bash
    .\path\to\twinkly-server-package\twinkly-server.exe
-   ```
-
-   Option C - Use the provided batch file:
-
-   ```bash
-   start.bat
    ```
 
 2. **Access the web interface**:
