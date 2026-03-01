@@ -70,12 +70,12 @@ pkg packages/backend/dist/server-node.js --targets node20-win-x64,node20-linux-x
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---|---|
+| Problem                | Solution                                   |
+| ---------------------- | ------------------------------------------ |
 | "Bun is not installed" | Install Bun (see Prerequisites) or use pkg |
-| "Frontend not built" | Run `npm run build` first |
-| Port 3001 in use | Stop the conflicting process |
-| Frontend not loading | Rebuild with `npm run build:executable` |
+| "Frontend not built"   | Run `npm run build` first                  |
+| Port 3001 in use       | Stop the conflicting process               |
+| Frontend not loading   | Rebuild with `npm run build:executable`    |
 
 ## Size
 
