@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync, renameSync } from 'fs';
 import { dirname, join } from 'path';
 import { getConfigPath } from './config';
 import { effects, effectClassRegistry, getDefaultEffectOrder } from './effects/EffectLibrary';
+import type { AnyEffect } from './effects/Effect';
 import { EffectWrapper } from './EffectWrapper';
 import type { EffectParameterView } from './EffectParameters';
 import { devices } from './DeviceList';
@@ -10,6 +11,7 @@ import { logger } from './logger';
 
 const STATE_VERSION = 1;
 const AUTO_SAVE_INTERVAL_MS = 60_000; // 1 minute
+const DIRTY_FLUSH_DEBOUNCE_MS = 2_000; // 2 seconds
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -47,9 +49,19 @@ function getStatePaths() {
 
 let dirty = false;
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null;
+let dirtyFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleDirtyFlush(): void {
+  if (dirtyFlushTimer) clearTimeout(dirtyFlushTimer);
+  dirtyFlushTimer = setTimeout(() => {
+    dirtyFlushTimer = null;
+    if (dirty) saveState();
+  }, DIRTY_FLUSH_DEBOUNCE_MS);
+}
 
 export function markDirty(): void {
   dirty = true;
+  scheduleDirtyFlush();
 }
 
 export function startAutoSave(): void {
@@ -95,7 +107,9 @@ function buildState(): PersistedState {
   for (const [id, wrapper] of Object.entries(effects)) {
     effectOrder.push(id);
 
-    const name = wrapper.isDefaultName() ? undefined : wrapper.getName();
+    // Persist names for user-created/cloned effects even if they are "default" for that wrapper.
+    // Their default names are runtime-generated and cannot be reconstructed deterministically.
+    const name = wrapper.canDelete || !wrapper.isDefaultName() ? wrapper.getName() : undefined;
     const effectClassId = wrapper.canDelete ? wrapper.effect.effectClassId : undefined;
     const parameters = snapshotParams(wrapper.getEffectParameters());
 
@@ -148,6 +162,10 @@ export function saveState(): void {
     // Promote: tmp → current
     renameSync(paths.tmp, paths.state);
     dirty = false;
+    if (dirtyFlushTimer) {
+      clearTimeout(dirtyFlushTimer);
+      dirtyFlushTimer = null;
+    }
     logger.info('State saved to disk');
   } catch (error) {
     logger.withError(error as Error).error('Failed to save state');
@@ -236,7 +254,8 @@ function restoreEffects(state: PersistedState): void {
       continue;
     }
 
-    const wrapper = new EffectWrapper(effectId, new EffectClass(), saved.name || 'Restored Effect', true);
+    const effect = new EffectClass();
+    const wrapper = new EffectWrapper(effectId, effect, saved.name || getFallbackCloneName(effect), true);
     restoreParams(wrapper.getEffectParameters(), saved.parameters);
     rebuilt.push([effectId, wrapper]);
     cloneCount++;
@@ -255,6 +274,10 @@ function restoreEffects(state: PersistedState): void {
   for (const [id, wrapper] of rebuilt) effects[id] = wrapper;
 
   logger.info(`Effects restored: ${restoredCount} updated, ${cloneCount} clones recreated, ${skippedCount} skipped`);
+}
+
+function getFallbackCloneName(effect: AnyEffect): string {
+  return effect.effectName ? `Copy of ${effect.effectName}` : 'Restored Effect';
 }
 
 function restoreParams(paramView: EffectParameterView, parameters: Record<string, unknown>): void {
