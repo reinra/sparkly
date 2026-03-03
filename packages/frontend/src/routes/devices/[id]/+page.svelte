@@ -21,6 +21,10 @@
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
   let effectSearchQuery = $state('');
+  let selectedCategories = $state(new Set<string>());
+  let allCategoriesSelected = $derived(
+    selectedCategories.size === 0 || selectedCategories.size === deviceStore.effectCategories.length
+  );
   let showMovieDialog = $state(false);
   let showRemoveDialog = $state(false);
   let showDeleteEffectDialog = $state(false);
@@ -38,11 +42,21 @@
   let filteredEffects = $derived(
     effects
       .map((effect, index) => ({ effect, index }))
-      .filter(
-        ({ effect }) =>
-          !effectSearchQuery.trim() || effect.name.toLowerCase().includes(effectSearchQuery.trim().toLowerCase())
-      )
+      .filter(({ effect }) => {
+        // Category filter (empty set = all visible)
+        if (selectedCategories.size > 0 && !allCategoriesSelected) {
+          const cat = effect.category ?? 'animated';
+          if (!selectedCategories.has(cat)) return false;
+        }
+        // Text search filter
+        if (effectSearchQuery.trim()) {
+          return effect.name.toLowerCase().includes(effectSearchQuery.trim().toLowerCase());
+        }
+        return true;
+      })
   );
+
+  let isFiltering = $derived(!allCategoriesSelected || effectSearchQuery.trim().length > 0);
 
   // Grouped view of filtered effects for rendering with category headers
   let groupedFilteredEffects = $derived(groupIndexedEffectsByCategory(filteredEffects, deviceStore.effectCategories));
@@ -291,9 +305,29 @@
     }
   }
 
+  function toggleCategory(key: string) {
+    const next = new Set(selectedCategories);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    // If all are now selected, clear the set (= show all)
+    if (next.size === deviceStore.effectCategories.length) {
+      selectedCategories = new Set();
+    } else {
+      selectedCategories = next;
+    }
+  }
+
+  function resetCategoryFilter() {
+    selectedCategories = new Set();
+  }
+
   function handleSearchKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       effectSearchQuery = '';
+      selectedCategories = new Set();
       (event.target as HTMLInputElement).blur();
     } else if (event.key === 'ArrowDown' && filteredEffects.length > 0) {
       event.preventDefault();
@@ -503,6 +537,20 @@
 
       <div class="effects-section">
         <h3>Effects</h3>
+        <div class="category-filters">
+          {#each deviceStore.effectCategories as cat (cat.key)}
+            <button
+              class="category-pill"
+              class:active={selectedCategories.size === 0 || selectedCategories.has(cat.key)}
+              onclick={() => toggleCategory(cat.key)}
+            >
+              {cat.label}
+            </button>
+          {/each}
+          {#if !allCategoriesSelected}
+            <button class="category-pill reset" onclick={resetCategoryFilter} title="Show all categories">All</button>
+          {/if}
+        </div>
         <div class="effects-search">
           <input
             type="text"
@@ -514,9 +562,7 @@
           {#if effectSearchQuery.trim()}
             <button class="search-clear-button" onclick={() => (effectSearchQuery = '')} title="Clear filter">✕</button>
           {/if}
-          <span class="effects-count"
-            >{filteredEffects.length}{effectSearchQuery.trim() ? ` / ${effects.length}` : ''}</span
-          >
+          <span class="effects-count">{filteredEffects.length}{isFiltering ? ` / ${effects.length}` : ''}</span>
         </div>
         <p class="hint">↑↓ navigate effects | ←→ adjust params | Escape clears filter</p>
         <div class="effects-list">
@@ -537,8 +583,16 @@
               </button>
             {/each}
           {/each}
-          {#if filteredEffects.length === 0 && effectSearchQuery.trim()}
-            <p class="no-results">No effects match "{effectSearchQuery.trim()}"</p>
+          {#if filteredEffects.length === 0 && isFiltering}
+            <p class="no-results">
+              {#if !allCategoriesSelected && !effectSearchQuery.trim()}
+                No effects in the selected {selectedCategories.size === 1 ? 'category' : 'categories'}
+              {:else if effectSearchQuery.trim()}
+                No effects match "{effectSearchQuery.trim()}"
+              {:else}
+                No categories selected
+              {/if}
+            </p>
           {/if}
         </div>
       </div>
@@ -710,6 +764,60 @@
     background: #b71c1c;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+  }
+
+  .category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .category-pill {
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+    box-shadow: none;
+    width: auto;
+  }
+
+  .category-pill:hover {
+    border-color: #ff3e00;
+    color: #ff3e00;
+    background: transparent;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .category-pill.active {
+    background: #ff3e00;
+    border-color: #ff3e00;
+    color: white;
+  }
+
+  .category-pill.active:hover {
+    background: #e63900;
+    border-color: #e63900;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .category-pill.reset {
+    border-style: dashed;
+    color: #999;
+    width: auto;
+  }
+
+  .category-pill.reset:hover {
+    color: #ff3e00;
+    border-color: #ff3e00;
+    background: transparent;
   }
 
   .effects-search {
