@@ -19,6 +19,7 @@
   let reconnecting = $state(false);
   let selectedEffectIndex = $state(0);
   let effectElements: HTMLButtonElement[] = [];
+  let effectSearchQuery = $state('');
   let showMovieDialog = $state(false);
   let showRemoveDialog = $state(false);
   let showDeleteEffectDialog = $state(false);
@@ -31,6 +32,16 @@
 
   let deviceParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.DEVICE));
   let effectParams = $derived((device?.parameters || []).filter((p) => p.group === ParameterGroup.EFFECT));
+
+  // Filtered effects preserving original indices for selection/operations
+  let filteredEffects = $derived(
+    effects
+      .map((effect, index) => ({ effect, index }))
+      .filter(
+        ({ effect }) =>
+          !effectSearchQuery.trim() || effect.name.toLowerCase().includes(effectSearchQuery.trim().toLowerCase())
+      )
+  );
 
   // Check for active movie task on mount / device change
   $effect(() => {
@@ -250,20 +261,41 @@
   );
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (!effects.length) return;
+    if (!filteredEffects.length) return;
 
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       event.stopPropagation();
 
-      const newIndex =
-        event.key === 'ArrowDown'
-          ? Math.min(selectedEffectIndex + 1, effects.length - 1)
-          : Math.max(selectedEffectIndex - 1, 0);
+      const currentFilteredIndex = filteredEffects.findIndex((f) => f.index === selectedEffectIndex);
+      let newFilteredIndex: number;
 
-      selectEffect(newIndex);
+      if (currentFilteredIndex < 0) {
+        // Selected effect not in filtered list — start from beginning or end
+        newFilteredIndex = event.key === 'ArrowDown' ? 0 : filteredEffects.length - 1;
+      } else {
+        newFilteredIndex =
+          event.key === 'ArrowDown'
+            ? Math.min(currentFilteredIndex + 1, filteredEffects.length - 1)
+            : Math.max(currentFilteredIndex - 1, 0);
+      }
+
+      const newOriginalIndex = filteredEffects[newFilteredIndex].index;
+      selectEffect(newOriginalIndex);
       // Keep focus on the newly selected effect button
-      setTimeout(() => effectElements[newIndex]?.focus(), 0);
+      setTimeout(() => effectElements[newOriginalIndex]?.focus(), 0);
+    }
+  }
+
+  function handleSearchKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      effectSearchQuery = '';
+      (event.target as HTMLInputElement).blur();
+    } else if (event.key === 'ArrowDown' && filteredEffects.length > 0) {
+      event.preventDefault();
+      // Jump focus into the effects list
+      const firstOriginalIndex = filteredEffects[0].index;
+      effectElements[firstOriginalIndex]?.focus();
     }
   }
 
@@ -467,22 +499,40 @@
 
       <div class="effects-section">
         <h3>Effects</h3>
-        <p class="hint">Focus effects: ↑↓ to navigate | Focus params: ↑↓ to switch, ←→ to adjust</p>
+        <div class="effects-search">
+          <input
+            type="text"
+            class="effects-search-input"
+            placeholder="Filter effects…"
+            bind:value={effectSearchQuery}
+            onkeydown={handleSearchKeyDown}
+          />
+          {#if effectSearchQuery.trim()}
+            <button class="search-clear-button" onclick={() => (effectSearchQuery = '')} title="Clear filter">✕</button>
+          {/if}
+          <span class="effects-count"
+            >{filteredEffects.length}{effectSearchQuery.trim() ? ` / ${effects.length}` : ''}</span
+          >
+        </div>
+        <p class="hint">↑↓ navigate effects | ←→ adjust params | Escape clears filter</p>
         <div class="effects-list">
-          {#each effects as effect, index}
+          {#each filteredEffects as { effect, index: originalIndex } (effect.id)}
             <button
-              bind:this={effectElements[index]}
+              bind:this={effectElements[originalIndex]}
               class="effect-item"
-              class:selected={index === selectedEffectIndex}
+              class:selected={originalIndex === selectedEffectIndex}
               class:active={device.effect?.id === effect.id}
-              onclick={() => selectEffect(index)}
+              onclick={() => selectEffect(originalIndex)}
               onkeydown={handleKeyDown}
-              tabindex={index === selectedEffectIndex ? 0 : -1}
+              tabindex={originalIndex === selectedEffectIndex ? 0 : -1}
             >
               <span class="effect-name">{effect.name}</span>
               <span class="active-badge" class:visible={device.effect?.id === effect.id}>Active</span>
             </button>
           {/each}
+          {#if filteredEffects.length === 0 && effectSearchQuery.trim()}
+            <p class="no-results">No effects match "{effectSearchQuery.trim()}"</p>
+          {/if}
         </div>
       </div>
 
@@ -653,6 +703,68 @@
     background: #b71c1c;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+  }
+
+  .effects-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+
+  .effects-search-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #333;
+    background: #f8f8f8;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .effects-search-input:focus {
+    border-color: #ff3e00;
+    background: white;
+  }
+
+  .effects-search-input::placeholder {
+    color: #aaa;
+  }
+
+  .search-clear-button {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    width: auto;
+    line-height: 1;
+    box-shadow: none;
+  }
+
+  .search-clear-button:hover:not(:disabled) {
+    color: #ff3e00;
+    background: transparent;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .effects-count {
+    color: #999;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .no-results {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
   }
 
   .effects-list {
