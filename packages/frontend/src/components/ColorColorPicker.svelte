@@ -7,6 +7,7 @@
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { ColorMode, type ColorValue, type Hsl, type RgbFloat } from '@sparkly/common';
   import { hslToRgbFloat, rgbFloatToHsl } from '../utils/ColorConvert';
+  import { COLOR_PRESETS, handlePresetGridKeydown, type ColorPreset } from '../utils/ColorPresets';
 
   interface Props {
     value: ColorValue;
@@ -213,6 +214,35 @@
     internalValue = next;
     dispatch('change', next);
   }
+
+  // ── Preset selection ──
+
+  let presetButtons: HTMLButtonElement[] = $state([]);
+  let focusedPresetIndex = $state(-1);
+
+  function selectPreset(preset: ColorPreset) {
+    let next: ColorValue;
+    if (activeTab === ColorMode.RGB) {
+      next = { mode: ColorMode.RGB, rgb: hslToRgbFloat(preset.hsl) };
+    } else {
+      next = { mode: ColorMode.HSL, hsl: { ...preset.hsl } };
+    }
+    internalValue = next;
+    dispatch('change', next);
+  }
+
+  function isPresetActive(preset: ColorPreset): boolean {
+    return areHslEqual(hslValue, preset.hsl);
+  }
+
+  function focusPreset(index: number) {
+    focusedPresetIndex = index;
+    presetButtons[index]?.focus();
+  }
+
+  function handlePresetKeydown(event: KeyboardEvent, index: number) {
+    handlePresetGridKeydown(event, index, COLOR_PRESETS.length, focusPreset);
+  }
 </script>
 
 <div class={`color-picker${fullWidth ? '' : ' compact'}`} bind:this={containerElement}>
@@ -235,6 +265,24 @@
 
   {#if isOpen}
     <div class="picker-panel" role="dialog" aria-label="Color picker">
+      <!-- Preset swatches -->
+      <div class="preset-grid" role="toolbar" aria-label="Preset colors">
+        {#each COLOR_PRESETS as preset, i}
+          <button
+            type="button"
+            class="preset-swatch"
+            class:active={isPresetActive(preset)}
+            title={preset.name}
+            aria-label={preset.name}
+            tabindex={focusedPresetIndex === i || (focusedPresetIndex === -1 && i === 0) ? 0 : -1}
+            style="background: {toCssHsl(preset.hsl)};{preset.hsl.lightness >= 0.95 ? ' border-color: #bbb;' : ''}"
+            onclick={() => selectPreset(preset)}
+            onkeydown={(e) => handlePresetKeydown(e, i)}
+            bind:this={presetButtons[i]}
+          ></button>
+        {/each}
+      </div>
+
       <!-- Tab bar -->
       <div class="tab-bar" role="tablist">
         <button
@@ -448,6 +496,47 @@
   }
 
   /* ── Tab bar ── */
+
+  /* ── Preset grid ── */
+
+  .preset-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .preset-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition:
+      transform 0.1s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  }
+
+  .preset-swatch:hover {
+    transform: scale(1.18);
+    border-color: #ff3e00;
+  }
+
+  .preset-swatch.active {
+    border-color: #ff3e00;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 0 0 2px rgba(255, 62, 0, 0.3);
+  }
+
+  .preset-swatch:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.4);
+    outline-offset: 2px;
+  }
 
   .tab-bar {
     display: flex;

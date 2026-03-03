@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import type { RgbFloat } from '@sparkly/common';
+  import type { Hsl, RgbFloat } from '@sparkly/common';
+  import { hslToRgbFloat } from '../utils/ColorConvert';
+  import { COLOR_PRESETS, handlePresetGridKeydown, type ColorPreset } from '../utils/ColorPresets';
 
   interface Props {
     value: RgbFloat;
@@ -110,6 +112,38 @@
   function formatDisplay(color: RgbFloat) {
     return `${Math.round(clamp(color.red) * 255)} / ${Math.round(clamp(color.green) * 255)} / ${Math.round(clamp(color.blue) * 255)}`;
   }
+
+  // ── Preset selection ──
+
+  let presetButtons: HTMLButtonElement[] = $state([]);
+  let focusedPresetIndex = $state(-1);
+
+  const toCssHsl = (color: Hsl) => {
+    const hue = Math.round(clamp(color.hue) * 360);
+    const sat = Math.round(clamp(color.saturation) * 100);
+    const lit = Math.round(clamp(color.lightness) * 100);
+    return `hsl(${hue}deg ${sat}% ${lit}%)`;
+  };
+
+  function selectPreset(preset: ColorPreset) {
+    const nextValue: RgbFloat = hslToRgbFloat(preset.hsl);
+    internalValue = nextValue;
+    dispatch('change', nextValue);
+  }
+
+  function isPresetActive(preset: ColorPreset): boolean {
+    const presetRgb = hslToRgbFloat(preset.hsl);
+    return areRgbEqual(internalValue, presetRgb);
+  }
+
+  function focusPreset(index: number) {
+    focusedPresetIndex = index;
+    presetButtons[index]?.focus();
+  }
+
+  function handlePresetKeydown(event: KeyboardEvent, index: number) {
+    handlePresetGridKeydown(event, index, COLOR_PRESETS.length, focusPreset);
+  }
 </script>
 
 <div class={`rgb-picker${fullWidth ? '' : ' compact'}`} bind:this={containerElement}>
@@ -132,6 +166,23 @@
 
   {#if isOpen}
     <div class="picker-panel" role="dialog" aria-label="RGB color picker">
+      <div class="preset-grid" role="toolbar" aria-label="Preset colors">
+        {#each COLOR_PRESETS as preset, i}
+          <button
+            type="button"
+            class="preset-swatch"
+            class:active={isPresetActive(preset)}
+            title={preset.name}
+            aria-label={preset.name}
+            tabindex={focusedPresetIndex === i || (focusedPresetIndex === -1 && i === 0) ? 0 : -1}
+            style="background: {toCssHsl(preset.hsl)};{preset.hsl.lightness >= 0.95 ? ' border-color: #bbb;' : ''}"
+            onclick={() => selectPreset(preset)}
+            onkeydown={(e) => handlePresetKeydown(e, i)}
+            bind:this={presetButtons[i]}
+          ></button>
+        {/each}
+      </div>
+
       <div class="slider-group">
         <label for="red-slider">Red</label>
         <div class="slider-row">
@@ -244,13 +295,55 @@
     font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
+  /* ── Preset grid ── */
+
+  .preset-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .preset-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition:
+      transform 0.1s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  }
+
+  .preset-swatch:hover {
+    transform: scale(1.18);
+    border-color: #ff3e00;
+  }
+
+  .preset-swatch.active {
+    border-color: #ff3e00;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 0 0 2px rgba(255, 62, 0, 0.3);
+  }
+
+  .preset-swatch:focus-visible {
+    outline: 2px solid rgba(255, 62, 0, 0.4);
+    outline-offset: 2px;
+  }
+
   .picker-panel {
     position: absolute;
     z-index: 10;
     top: calc(100% + 0.35rem);
     left: 0;
     width: min(320px, 100%);
-    padding: 1rem;
+    padding: 0;
+    overflow: hidden;
     border-radius: 0.75rem;
     border: 1px solid #ddd;
     background: #fff;
@@ -259,6 +352,18 @@
 
   .rgb-picker.compact .picker-panel {
     width: min(320px, calc(100vw - 2rem));
+  }
+
+  .slider-group {
+    padding: 0 1rem;
+  }
+
+  .slider-group:first-of-type {
+    padding-top: 1rem;
+  }
+
+  .slider-group:last-of-type {
+    padding-bottom: 1rem;
   }
 
   .slider-group + .slider-group {
