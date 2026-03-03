@@ -1,5 +1,5 @@
 import { ParameterType } from '../../ParameterTypes';
-import { type RgbFloat } from '../../color/ColorFloat';
+import { type RgbFloat, lerp } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, GREEN_HSL_COLOR, RED_HSL_COLOR } from '../../color/Hsl';
 import {
   EffectParameterStorage,
@@ -17,7 +17,12 @@ import {
   type LedPoint1D,
 } from '../Effect';
 import { PaletteParameters, PaletteType, MultipleMode } from '../util/Palette';
-import { type Hsl, hslColorValue } from '../../ParameterTypes';
+import { type Hsl, hslColorValue, type OptionEffectParameter } from '../../ParameterTypes';
+
+export enum WaveBlendMode {
+  FadeToBlack = 'fade_to_black',
+  BlendColors = 'blend_colors',
+}
 
 export class WaveEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
@@ -32,6 +37,30 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
     min: 1,
     max: 10,
   });
+  readonly blendMode = this.customParams.register(
+    {
+      id: 'blend_mode',
+      name: 'Blend mode',
+      description: 'How colors transition: fade through black or blend between adjacent colors',
+      type: ParameterType.OPTION,
+      value: WaveBlendMode.FadeToBlack,
+      options: [
+        {
+          value: WaveBlendMode.FadeToBlack,
+          label: 'Fade to black',
+          description: 'Each wave fades to black at the edges',
+        },
+        {
+          value: WaveBlendMode.BlendColors,
+          label: 'Blend colors',
+          description: 'Smooth gradient between adjacent colors',
+        },
+      ],
+    },
+    (_param: OptionEffectParameter, _oldValue: string, newValue: string) => {
+      this.easing.direction.hidden = newValue === WaveBlendMode.BlendColors;
+    }
+  );
   readonly palette = new PaletteParameters();
   readonly easing = new FullEasingParameters();
   public readonly parameters: EffectParameterView = new MultiParameterStorageView(
@@ -61,6 +90,21 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
         ],
         EasingMode.Sine
       ),
+      WaveEffect.multiplePreset(
+        'wave_rainbow_blend',
+        'Wave: Rainbow Blend',
+        3,
+        [
+          { hue: 0, saturation: 1, lightness: 0.5 },
+          { hue: 60 / 360, saturation: 1, lightness: 0.5 },
+          { hue: 120 / 360, saturation: 1, lightness: 0.5 },
+          { hue: 180 / 360, saturation: 1, lightness: 0.5 },
+          { hue: 240 / 360, saturation: 1, lightness: 0.5 },
+          { hue: 300 / 360, saturation: 1, lightness: 0.5 },
+        ],
+        EasingMode.Linear,
+        WaveBlendMode.BlendColors
+      ),
     ];
   }
 
@@ -80,7 +124,8 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
     name: string,
     numWaves: number,
     colors: Hsl[],
-    easing?: EasingMode
+    easing?: EasingMode,
+    blendMode?: WaveBlendMode
   ): EffectPreset {
     const config = new Map<string, ParameterValue>([
       ['custom.custom.num_waves', numWaves],
@@ -90,6 +135,9 @@ export class WaveEffect implements EffectLoop<LedPoint1D> {
     ]);
     if (easing !== undefined) {
       config.set('custom.easing.type', easing);
+    }
+    if (blendMode !== undefined) {
+      config.set('custom.custom.blend_mode', blendMode);
     }
     return { id, name, config };
   }
@@ -121,7 +169,9 @@ class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 
   renderGlobal(ctx: EffectContextLoop, points: LedPoint1D[]): RgbFloat[] {
     const n = this.config.numWaves.value;
-    const easingFn = this.config.easing.getEasingFunction();
+    const blendColors = this.config.blendMode.value === WaveBlendMode.BlendColors;
+    // In blend mode, use base easing (always 0→1) since direction wrapping doesn't make sense for lerp
+    const easingFn = blendColors ? this.config.easing.getBaseEasingFunction() : this.config.easing.getEasingFunction();
 
     // Track phase wrap-arounds to build an unwrapped total phase
     if (ctx.phase < this.previousPhase) {
@@ -133,7 +183,8 @@ class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
     // Compute the range of visible wave instance IDs and pre-generate colors
     const minWaveId = Math.floor(totalPhase * n);
     const maxWaveId = Math.floor((1 + totalPhase) * n);
-    this.ensureColor(maxWaveId);
+    // In blend mode we also need the next color for interpolation
+    this.ensureColor(maxWaveId + (blendColors ? 1 : 0));
 
     // Trim colors for waves that have fully scrolled off the strip
     const trimCount = minWaveId - this.baseWaveId;
@@ -150,15 +201,22 @@ class WaveEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
       const waveInstanceId = Math.floor(scaledPos);
       const localPhase = scaledPos - waveInstanceId;
 
-      // Easing shapes the brightness envelope of each wave
-      const brightness = easingFn(localPhase);
       const color = this.colorHistory[waveInstanceId - this.baseWaveId];
 
-      result[point.id] = {
-        red: color.red * brightness,
-        green: color.green * brightness,
-        blue: color.blue * brightness,
-      };
+      if (blendColors) {
+        // Lerp between current and next color using the eased phase
+        const nextColor = this.colorHistory[waveInstanceId - this.baseWaveId + 1];
+        const t = easingFn(localPhase);
+        result[point.id] = lerp(color, nextColor, t);
+      } else {
+        // Easing shapes the brightness envelope of each wave (fade to black)
+        const brightness = easingFn(localPhase);
+        result[point.id] = {
+          red: color.red * brightness,
+          green: color.green * brightness,
+          blue: color.blue * brightness,
+        };
+      }
     }
     return result;
   }

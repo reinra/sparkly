@@ -86,7 +86,7 @@ export class EasingParameters {
  */
 export class FullEasingParameters {
   public readonly parameters = new EffectParameterStorage();
-  private readonly direction: OptionEffectParameter = this.parameters.register({
+  public readonly direction: OptionEffectParameter = this.parameters.register({
     id: 'direction',
     name: 'Direction',
     description: 'Easing direction',
@@ -119,5 +119,10 @@ export class FullEasingParameters {
   public getEasingFunction(): EasingFunction {
     const baseFn = getBaseEasingFunction(this.type.value as EasingMode);
     return wrapWithDirection(baseFn, this.direction.value as Direction);
+  }
+
+  /** Returns the base easing function without direction wrapping (always 0→1). */
+  public getBaseEasingFunction(): EasingFunction {
+    return getBaseEasingFunction(this.type.value as EasingMode);
   }
 }
