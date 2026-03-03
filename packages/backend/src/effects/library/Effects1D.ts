@@ -37,18 +37,18 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
   private readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: DEFAULT_HSL_COLOR,
+    description: 'Color value',
+    type: ParameterType.COLOR,
+    value: hslColorValue(DEFAULT_HSL_COLOR),
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.color.id);
     return [
-      factory('red', 'Single Color: Red', RED_HSL_COLOR),
-      factory('green', 'Single Color: Green', GREEN_HSL_COLOR),
-      factory('blue', 'Single Color: Blue', BLUE_HSL_COLOR),
-      factory('white', 'Single Color: White', WHITE_HSL_COLOR),
-      factory('choose_hsl', 'Single Color: Custom', DEFAULT_HSL_COLOR),
+      factory('red', 'Single Color: Red', hslColorValue(RED_HSL_COLOR)),
+      factory('green', 'Single Color: Green', hslColorValue(GREEN_HSL_COLOR)),
+      factory('blue', 'Single Color: Blue', hslColorValue(BLUE_HSL_COLOR)),
+      factory('white', 'Single Color: White', hslColorValue(WHITE_HSL_COLOR)),
+      factory('choose_hsl', 'Single Color: Custom', hslColorValue(DEFAULT_HSL_COLOR)),
     ];
   }
   renderColor(ctx: EffectContextStatic): RgbFloat {
@@ -161,16 +161,16 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMod
   private readonly color1 = this.parameters.register({
     id: 'color1',
     name: 'Color 1',
-    description: 'HSL color value for the first color',
-    type: ParameterType.HSL,
-    value: RED_HSL_COLOR,
+    description: 'Color value for the first color',
+    type: ParameterType.COLOR,
+    value: hslColorValue(RED_HSL_COLOR),
   });
   private readonly color2 = this.parameters.register({
     id: 'color2',
     name: 'Color 2',
-    description: 'HSL color value for the second color',
-    type: ParameterType.HSL,
-    value: BLUE_HSL_COLOR,
+    description: 'Color value for the second color',
+    type: ParameterType.COLOR,
+    value: hslColorValue(BLUE_HSL_COLOR),
   });
   renderPixel(ctx: EffectContextStatic, point: LedPoint1D): RgbFloat {
     // Map point.distance (0.0 to 1.0) to the color gradient
@@ -240,9 +240,9 @@ export class AlternatingColorFadingEffect extends PerPixelEffect<AnimationMode.L
   private readonly colorBg = this.parameters.register({
     id: 'colorBg',
     name: 'Background Color',
-    description: 'HSL color value for the background color',
-    type: ParameterType.HSL,
-    value: BLACK_HSL_COLOR,
+    description: 'Color value for the background color',
+    type: ParameterType.COLOR,
+    value: hslColorValue(BLACK_HSL_COLOR),
   });
   getPresets(): EffectPreset[] {
     const factory = createPresetFactoryForSingleParameter(this.colors.id);
@@ -441,9 +441,9 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
   private readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: WHITE_HSL_COLOR,
+    description: 'Color value',
+    type: ParameterType.COLOR,
+    value: hslColorValue(WHITE_HSL_COLOR),
   });
   renderPixel(ctx: EffectContextSequence, point: LedPoint1D): RgbFloat {
     if (Math.random() < this.probability.value / 100) {
@@ -463,16 +463,16 @@ export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1
   private readonly color1 = this.parameters.register({
     id: 'color1',
     name: 'Forward color',
-    description: 'HSL color value for the first color',
-    type: ParameterType.HSL,
-    value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
+    description: 'Color value for the first color',
+    type: ParameterType.COLOR,
+    value: hslColorValue({ hue: 0.6, saturation: 1.0, lightness: 0.5 }),
   });
   private readonly color2 = this.parameters.register({
     id: 'color2',
     name: 'Backward color',
-    description: 'HSL color value for the second color',
-    type: ParameterType.HSL,
-    value: { hue: 0.0, saturation: 1.0, lightness: 0.5 },
+    description: 'Color value for the second color',
+    type: ParameterType.COLOR,
+    value: hslColorValue({ hue: 0.0, saturation: 1.0, lightness: 0.5 }),
   });
   getLoopDurationSeconds(ledCount: number): number {
     return 5;

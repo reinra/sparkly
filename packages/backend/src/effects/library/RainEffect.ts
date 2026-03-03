@@ -1,7 +1,7 @@
 import { type RgbFloat, BLACK, lerp } from '../../color/ColorFloat';
 import { BLUE_HSL_COLOR, hslToRgbFloat, randomColorMaxSaturation } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../EffectParameters';
-import { ParameterType } from '../../ParameterTypes';
+import { ParameterType, hslColorValue } from '../../ParameterTypes';
 import {
   AnimationMode,
   type EffectSequence,
@@ -38,9 +38,9 @@ export class SingleColorRainEffect extends BaseRainEffect {
   readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: BLUE_HSL_COLOR,
+    description: 'Color value',
+    type: ParameterType.COLOR,
+    value: hslColorValue(BLUE_HSL_COLOR),
   });
   nextColor(): RgbFloat {
     return this.color.color.asRgb();

@@ -1,4 +1,4 @@
-import { ParameterType } from '../../ParameterTypes';
+import { ParameterType, hslColorValue } from '../../ParameterTypes';
 import { BLACK, type RgbFloat, lerp, blend } from '../../color/ColorFloat';
 import { hslToRgbFloat, multiplyIntensity } from '../../color/Hsl';
 import { EffectParameterStorage } from '../../EffectParameters';
@@ -34,9 +34,9 @@ export class PulseScanner implements StatelessEffect<AnimationMode.Loop, LedPoin
   private readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
-    description: 'HSL color value',
-    type: ParameterType.HSL,
-    value: { hue: 0.6, saturation: 1.0, lightness: 0.5 },
+    description: 'Color value',
+    type: ParameterType.COLOR,
+    value: hslColorValue({ hue: 0.6, saturation: 1.0, lightness: 0.5 }),
   });
   getLoopDurationSeconds(ledCount: number): number {
     return 5;
@@ -118,9 +118,9 @@ export class CloudsEffect implements StatelessEffect<AnimationMode.Sequence, Led
   private readonly color = this.parameters.register({
     id: 'color',
     name: 'Color',
-    description: 'HSL color value for the clouds',
-    type: ParameterType.HSL,
-    value: { hue: 0.55, saturation: 0.3, lightness: 0.8 },
+    description: 'Color value for the clouds',
+    type: ParameterType.COLOR,
+    value: hslColorValue({ hue: 0.55, saturation: 0.3, lightness: 0.8 }),
   });
   readonly isStateful: false = false;
   private noise = new NoiseGenerator();
