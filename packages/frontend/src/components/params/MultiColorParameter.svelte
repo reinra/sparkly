@@ -22,6 +22,7 @@
   let containerEl: HTMLElement | null = null;
   let dragFromIndex: number | null = $state(null);
   let dragOverIndex: number | null = $state(null);
+  let mouseDownTarget: HTMLElement | null = null;
 
   function setupContainer(node: HTMLElement) {
     containerEl = node;
@@ -70,9 +71,12 @@
     onchange(colors);
   }
 
+  function handleMouseDown(event: MouseEvent) {
+    mouseDownTarget = event.target as HTMLElement;
+  }
+
   function handleDragStart(event: DragEvent, colorIndex: number) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.drag-handle')) {
+    if (!mouseDownTarget?.closest('.drag-handle')) {
       event.preventDefault();
       return;
     }
@@ -160,6 +164,7 @@
         class="multi-color-row"
         class:drag-over={dragOverIndex === colorIndex}
         draggable="true"
+        onmousedown={handleMouseDown}
         ondragstart={(e) => handleDragStart(e, colorIndex)}
         ondragover={(e) => handleDragOver(e, colorIndex)}
         ondrop={() => handleDrop(colorIndex)}
