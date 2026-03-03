@@ -5,7 +5,14 @@ import {
   MultiParameterStorageView,
   ParameterValue,
 } from './EffectParameters';
-import { AnimationMode, EffectPreset, LedPoint1D, LedPoint2D, type AnyEffect } from './effects/Effect';
+import {
+  AnimationMode,
+  EffectPreset,
+  LedPoint1D,
+  LedPoint2D,
+  type AnyEffect,
+  type EffectCategory,
+} from './effects/Effect';
 import { BaseSameColorEffect } from './effects/BaseEffects';
 import { BooleanEffectParameter, OptionEffectParameter, ParameterType, RangeEffectParameter } from './ParameterTypes';
 
@@ -156,6 +163,10 @@ export class EffectWrapper {
 
   public getName(): string {
     return this.name;
+  }
+
+  public getCategory(): EffectCategory {
+    return this.effect.category ?? 'animated';
   }
 
   public setName(name: string): void {

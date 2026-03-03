@@ -14,6 +14,7 @@ import { createBlackBuffer } from '../util/ArrayUtils';
 abstract class BaseRainEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   abstract readonly effectClassId: string;
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly parameters = new EffectParameterStorage();

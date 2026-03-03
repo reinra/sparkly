@@ -81,6 +81,22 @@ export type EffectUnion<P extends LedPoint> = EffectStatic<P> | EffectLoop<P> | 
 /** Any effect regardless of animation mode or point type. */
 export type AnyEffect = Effect<AnimationMode, LedPoint>;
 
+/** Effect category for grouping in the UI. */
+export type EffectCategory = 'animated' | 'simple' | 'static' | 'test';
+
+export interface EffectCategoryInfo {
+  key: EffectCategory;
+  label: string;
+}
+
+/** All effect categories in display order. Single source of truth for the backend API. */
+export const EFFECT_CATEGORIES: readonly EffectCategoryInfo[] = Object.freeze([
+  { key: 'animated', label: 'Animated' },
+  { key: 'simple', label: 'Simple' },
+  { key: 'static', label: 'Static' },
+  { key: 'test', label: 'Test' },
+]);
+
 export interface Effect<A extends AnimationMode, P extends LedPoint> {
   readonly animationMode: A;
   // Runtime type identifier for the generic parameter
@@ -90,6 +106,9 @@ export interface Effect<A extends AnimationMode, P extends LedPoint> {
 
   // Stable unique identifier for the effect class (used for persistence; must not change when renaming classes)
   readonly effectClassId: string;
+
+  // Category for grouping in the UI (defaults to 'animated' if not specified)
+  readonly category?: EffectCategory;
 
   // Allow to change certain parameters of the effect at runtime (e.g. colors, etc.)
   readonly parameters?: EffectParameterView;

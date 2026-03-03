@@ -1,4 +1,5 @@
 import { effects, cloneEffect, deleteEffect, resetEffect } from './effects/EffectLibrary';
+import { EFFECT_CATEGORIES, type EffectCategoryInfo } from './effects/Effect';
 import { markDirty } from './StateManager';
 import { TaskExecutor } from './TaskExecutor';
 import {
@@ -37,12 +38,14 @@ export interface SystemInfo {
   buildDate: string;
   version: string;
   deviceModes: typeof DEVICE_MODES;
+  effectCategories: EffectCategoryInfo[];
 }
 
 export interface EffectSummary {
   id: string;
   name: string;
   canDelete: boolean;
+  category: string;
 }
 
 export interface InfoResult {
@@ -188,6 +191,7 @@ export class DeviceService {
       buildDate: typeof BUILD_DATE !== 'undefined' ? BUILD_DATE : process.env.BUILD_DATE || new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       deviceModes: DEVICE_MODES,
+      effectCategories: [...EFFECT_CATEGORIES],
     };
   }
 
@@ -265,6 +269,7 @@ export class DeviceService {
         id,
         name: effect.getName(),
         canDelete: effect.canDelete,
+        category: effect.getCategory(),
       })),
     };
   }

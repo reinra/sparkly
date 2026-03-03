@@ -3,6 +3,7 @@ import { EffectParameterView } from '../EffectParameters';
 import {
   AnimationMode,
   type Effect,
+  type EffectCategory,
   type EffectContextGeneric,
   type EffectLogic,
   type LedPoint,
@@ -39,6 +40,7 @@ export abstract class BaseSameColorEffect<A extends AnimationMode>
 {
   abstract readonly animationMode: A;
   abstract readonly effectClassId: string;
+  category?: EffectCategory;
   pointType: '1D' = '1D';
   isStateful: boolean = false;
   parameters?: EffectParameterView;
@@ -53,6 +55,7 @@ export abstract class PerPixelEffect<A extends AnimationMode, P extends LedPoint
 {
   abstract readonly animationMode: A;
   abstract readonly effectClassId: string;
+  category?: EffectCategory;
   abstract readonly pointType: LedPointType;
   isStateful: boolean = false;
   parameters?: EffectParameterView;

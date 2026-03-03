@@ -20,6 +20,7 @@ import { PaletteParameters } from '../util/Palette';
 export class BlocksEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   readonly effectClassId = 'blocks';
+  readonly category = 'animated' as const;
   readonly pointType: '1D' = '1D';
   readonly isStateful: boolean = true;
   readonly hasCycleReset = true;

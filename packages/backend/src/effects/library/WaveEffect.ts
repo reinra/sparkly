@@ -27,6 +27,7 @@ export enum WaveBlendMode {
 export class WaveEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'wave';
+  readonly category = 'animated' as const;
   readonly customParams = new EffectParameterStorage();
   readonly numWaves = this.customParams.register({
     id: 'num_waves',

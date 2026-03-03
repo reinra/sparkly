@@ -16,6 +16,7 @@ const SEGMENT_COUNT = 2;
 export class RandomDotsNewLoopEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'random_dots_new_loop';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
 

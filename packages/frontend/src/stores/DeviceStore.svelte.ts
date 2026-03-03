@@ -1,10 +1,11 @@
 import { backendClient, type GetInfoResponse } from '../FrontendApiClient';
-import { ConnectionStatus, type DeviceMode } from '@sparkly/common';
+import { ConnectionStatus, type DeviceMode, type EffectCategoryInfo } from '@sparkly/common';
 
 // Shared device state
 let devices = $state<GetInfoResponse['devices']>([]);
 let effects = $state<GetInfoResponse['effects']>([]);
 let deviceModes = $state<DeviceMode[]>([]);
+let effectCategories = $state<EffectCategoryInfo[]>([]);
 let loading = $state(false);
 let initialLoadDone = $state(false);
 let error = $state('');
@@ -84,12 +85,16 @@ export const deviceStore = {
   get deviceModes() {
     return deviceModes;
   },
+  get effectCategories() {
+    return effectCategories;
+  },
 
   async fetchSystemInfo() {
     try {
       const response = await backendClient.getSystemInfo();
       if (response.status === 200) {
         deviceModes = response.body.deviceModes;
+        effectCategories = response.body.effectCategories;
       }
     } catch (e) {
       console.error('Failed to fetch system info:', e);
@@ -98,6 +103,10 @@ export const deviceStore = {
 
   setDeviceModes(modes: DeviceMode[]) {
     deviceModes = modes;
+  },
+
+  setEffectCategories(categories: EffectCategoryInfo[]) {
+    effectCategories = categories;
   },
 
   async fetchAllDevices() {

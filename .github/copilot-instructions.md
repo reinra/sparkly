@@ -20,6 +20,8 @@ TypeScript monorepo using npm workspaces with three packages:
 
 **Always verify compilation after changes:** After making any code changes, always run `npm run build` to ensure the project compiles successfully. Do not leave the codebase in a broken state.
 
+**Backend-driven UI:** The frontend must not hardcode static metadata such as category labels, option lists, or display order. Instead, define these constants in the backend and expose them via the `getSystemInfo` endpoint (see `DeviceModes` as the reference pattern). The frontend fetches this data on startup and stores it in `DeviceStore` for use throughout the UI.
+
 **Formatting:** The project uses Prettier with Husky + lint-staged. Code is auto-formatted on commit. Do not add manual formatting changes.
 
 ### Build & Run

@@ -5,6 +5,7 @@
   import SendMovieDialog from './SendMovieDialog.svelte';
   import RemoveDeviceDialog from './RemoveDeviceDialog.svelte';
   import { deviceStore } from '../stores/DeviceStore.svelte';
+  import { groupEffectsByCategory } from '../utils/EffectGrouping';
 
   interface Props {
     device: GetInfoResponse['devices'][0];
@@ -189,8 +190,12 @@
         <strong>Effect:</strong>
         <select value={effect?.id} onchange={updateEffect} disabled={updating}>
           <option value={null}>(None)</option>
-          {#each effects as eff}
-            <option value={eff.id}>{eff.name}</option>
+          {#each groupEffectsByCategory(effects, deviceStore.effectCategories) as group}
+            <optgroup label={group.label}>
+              {#each group.effects as eff}
+                <option value={eff.id}>{eff.name}</option>
+              {/each}
+            </optgroup>
           {/each}
         </select>
       </p>

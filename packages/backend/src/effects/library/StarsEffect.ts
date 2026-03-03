@@ -19,6 +19,7 @@ import { createBlackBuffer } from '../util/ArrayUtils';
 export class StarsEffect implements EffectSequence<LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   readonly effectClassId = 'stars';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly effectId = 'stars';

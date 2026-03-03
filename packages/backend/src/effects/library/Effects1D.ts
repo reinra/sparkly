@@ -33,6 +33,7 @@ import { PaletteParameters } from '../util/Palette';
 export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.Static> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'static_single_color';
+  readonly category = 'static' as const;
   readonly parameters = new EffectParameterStorage();
   private readonly color = this.parameters.register({
     id: 'color',
@@ -59,6 +60,7 @@ export class StaticSingleColorEffect extends BaseSameColorEffect<AnimationMode.S
 export class StaticAlternatingColorEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'static_alternating_color';
+  readonly category = 'static' as const;
   pointType: LedPointType = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -95,6 +97,7 @@ export class StaticAlternatingColorEffect extends PerPixelEffect<AnimationMode.S
 export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'static_color_gradient';
+  readonly category = 'static' as const;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -154,6 +157,7 @@ export class StaticColorGradientEffect extends PerPixelEffect<AnimationMode.Stat
 export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMode.Static, LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'static_custom_color_gradient';
+  readonly category = 'static' as const;
   pointType: '1D' = '1D';
   readonly effectId = 'gradient_custom';
   readonly effectName = 'Static Custom Color Gradient';
@@ -181,6 +185,7 @@ export class StaticCustomColorGradientEffect extends PerPixelEffect<AnimationMod
 export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'rotating_color_gradient';
+  readonly category = 'simple' as const;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -228,6 +233,7 @@ export class RotatingColorGradientEffect extends PerPixelEffect<AnimationMode.Lo
 export class AlternatingColorFadingEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'alternating_color_fading';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   readonly parameters = new EffectParameterStorage();
   private readonly colors = this.parameters.register({
@@ -281,6 +287,7 @@ export class AlternatingColorFadingEffect extends PerPixelEffect<AnimationMode.L
 export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'test_per_led';
+  readonly category = 'test' as const;
   pointType: '1D' = '1D';
   isStateful: false = false;
   readonly effectId = 'test_per_led';
@@ -302,6 +309,7 @@ export class TestPerLedEffect implements StatelessEffect<AnimationMode.Loop, Led
 export class TestAllLedsFlash implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'test_all_leds_flash';
+  readonly category = 'test' as const;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly effectId = 'test_all_leds_flash';
@@ -326,6 +334,7 @@ class TestAllLedsFlashLogic implements EffectLogic<AnimationMode.Loop, LedPoint1
 export class RainbowGradientEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'rainbow_gradient';
+  readonly category = 'simple' as const;
   pointType: '1D' = '1D';
   readonly effectId = 'rainbow';
   readonly effectName = 'Rainbow Gradient 1D';
@@ -342,6 +351,7 @@ export class RainbowGradientEffect extends PerPixelEffect<AnimationMode.Loop, Le
 export class MeteorEffect implements EffectLoop<LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'meteor';
+  readonly category = 'animated' as const;
   readonly customParams = new EffectParameterStorage();
   readonly fadeFactor = this.customParams.register({
     id: 'fade_factor',
@@ -424,6 +434,7 @@ class MeteorEffectLogic implements EffectLogic<AnimationMode.Loop, LedPoint1D> {
 export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoint1D> {
   readonly animationMode = AnimationMode.Sequence;
   readonly effectClassId = 'twinkle';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   readonly effectId = 'twinkle';
   readonly effectName = 'Twinkle';
@@ -456,6 +467,7 @@ export class TwinkleEffect extends PerPixelEffect<AnimationMode.Sequence, LedPoi
 export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1D> {
   readonly animationMode = AnimationMode.Loop;
   readonly effectClassId = 'ping_pong';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   readonly effectId = 'ping_pong';
   readonly effectName = 'Ping Pong';
@@ -499,6 +511,7 @@ export class PingPongEffect extends PerPixelEffect<AnimationMode.Loop, LedPoint1
 export class TestRgbPickerEffect extends BaseSameColorEffect<AnimationMode.Static> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'test_rgb_picker';
+  readonly category = 'test' as const;
   readonly effectId = 'test_rgb_picker';
   readonly effectName = 'Test RGB Picker';
   readonly skipInAutoRotate = true;
@@ -518,6 +531,7 @@ export class TestRgbPickerEffect extends BaseSameColorEffect<AnimationMode.Stati
 export class TestColorPickerEffect extends BaseSameColorEffect<AnimationMode.Static> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'test_color_picker';
+  readonly category = 'test' as const;
   readonly effectId = 'test_color_picker';
   readonly effectName = 'Test Color Picker';
   readonly skipInAutoRotate = true;

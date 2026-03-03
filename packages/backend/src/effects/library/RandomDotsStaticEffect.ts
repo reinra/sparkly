@@ -18,6 +18,7 @@ import { PaletteParameters } from '../util/Palette';
 export class RandomDotsStaticEffect implements EffectStatic<LedPoint1D> {
   readonly animationMode = AnimationMode.Static;
   readonly effectClassId = 'random_dots_static';
+  readonly category = 'animated' as const;
   pointType: '1D' = '1D';
   isStateful: boolean = true;
   readonly effectId = 'random_dots_static';

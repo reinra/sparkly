@@ -7,6 +7,7 @@
   import DeleteEffectDialog from '../../../components/DeleteEffectDialog.svelte';
   import RemoveDeviceDialog from '../../../components/RemoveDeviceDialog.svelte';
   import { deviceStore } from '../../../stores/DeviceStore.svelte';
+  import { groupIndexedEffectsByCategory } from '../../../utils/EffectGrouping';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { ParameterGroup } from '@sparkly/common';
@@ -42,6 +43,9 @@
           !effectSearchQuery.trim() || effect.name.toLowerCase().includes(effectSearchQuery.trim().toLowerCase())
       )
   );
+
+  // Grouped view of filtered effects for rendering with category headers
+  let groupedFilteredEffects = $derived(groupIndexedEffectsByCategory(filteredEffects, deviceStore.effectCategories));
 
   // Check for active movie task on mount / device change
   $effect(() => {
@@ -516,19 +520,22 @@
         </div>
         <p class="hint">↑↓ navigate effects | ←→ adjust params | Escape clears filter</p>
         <div class="effects-list">
-          {#each filteredEffects as { effect, index: originalIndex } (effect.id)}
-            <button
-              bind:this={effectElements[originalIndex]}
-              class="effect-item"
-              class:selected={originalIndex === selectedEffectIndex}
-              class:active={device.effect?.id === effect.id}
-              onclick={() => selectEffect(originalIndex)}
-              onkeydown={handleKeyDown}
-              tabindex={originalIndex === selectedEffectIndex ? 0 : -1}
-            >
-              <span class="effect-name">{effect.name}</span>
-              <span class="active-badge" class:visible={device.effect?.id === effect.id}>Active</span>
-            </button>
+          {#each groupedFilteredEffects as group}
+            <div class="effect-category-header">{group.label}</div>
+            {#each group.entries as { effect, index: originalIndex } (effect.id)}
+              <button
+                bind:this={effectElements[originalIndex]}
+                class="effect-item"
+                class:selected={originalIndex === selectedEffectIndex}
+                class:active={device.effect?.id === effect.id}
+                onclick={() => selectEffect(originalIndex)}
+                onkeydown={handleKeyDown}
+                tabindex={originalIndex === selectedEffectIndex ? 0 : -1}
+              >
+                <span class="effect-name">{effect.name}</span>
+                <span class="active-badge" class:visible={device.effect?.id === effect.id}>Active</span>
+              </button>
+            {/each}
           {/each}
           {#if filteredEffects.length === 0 && effectSearchQuery.trim()}
             <p class="no-results">No effects match "{effectSearchQuery.trim()}"</p>
@@ -788,6 +795,20 @@
     text-align: left;
     font-size: 1rem;
     color: #333;
+  }
+
+  .effect-category-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    padding: 0.5rem 0.25rem 0.15rem;
+    margin-top: 0.25rem;
+  }
+
+  .effect-category-header:first-child {
+    margin-top: 0;
   }
 
   .effect-item:hover:not(:disabled) {

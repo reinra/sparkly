@@ -8,11 +8,16 @@ Add a text input above the effects list that filters effects by name as the user
 
 **Status:** Implemented
 
-## 2. Categories/tags on effects
+## 2. Categories/tags on effects ✅
 
-Add an optional `category` (or `tags`) field to each effect (e.g. `"static"`, `"animated"`, `"test"`, `"rain/dots"`, `"2D"`, `"gradient"`). Expose it in the API response and show filter tabs in the UI. Category data already partially exists in the registration comments in `EffectLibrary.ts` (`// Simple effects`, `// Static effects`, `// Test effects`).
+Each effect class declares a `category` field (`'animated'`, `'simple'`, `'static'`, or `'test'`). The `EffectCategory` type and display labels are defined in `Effect.ts`. The category is exposed in the `getInfo` API response and used in the UI:
 
-**Status:** Not started
+- **Device card** (`DeviceCard.svelte`): effect `<select>` uses `<optgroup>` per category.
+- **Device detail page** (`devices/[id]/+page.svelte`): effect list shows category headers between groups.
+
+Category is code-level metadata on the effect class, so it flows through persistence naturally — built-in effects always have it, and cloned effects inherit it via `new EffectClass()`.
+
+**Status:** Implemented
 
 ## 3. Collapsible groups
 

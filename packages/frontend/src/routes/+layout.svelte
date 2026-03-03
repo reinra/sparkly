@@ -15,6 +15,7 @@
           buildDate = new Date(body.buildDate).toISOString().replace('T', ' ').split('.')[0];
         }
         deviceStore.setDeviceModes(body.deviceModes);
+        deviceStore.setEffectCategories(body.effectCategories);
       }
     } catch (e) {
       console.error('Failed to fetch system info', e);

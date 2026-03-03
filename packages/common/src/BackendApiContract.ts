@@ -174,6 +174,7 @@ const GetInfoResponseSchema = z.object({
       id: z.string(),
       name: z.string(),
       canDelete: z.boolean(),
+      category: z.string().optional(),
     })
   ),
 });
@@ -417,10 +418,18 @@ const DeviceModeSchema = z.object({
 
 export type DeviceMode = z.infer<typeof DeviceModeSchema>;
 
+const EffectCategorySchema = z.object({
+  key: z.string(),
+  label: z.string(),
+});
+
+export type EffectCategoryInfo = z.infer<typeof EffectCategorySchema>;
+
 const SystemInfoResponseSchema = z.object({
   buildDate: z.string().optional(),
   version: z.string().optional(),
   deviceModes: z.array(DeviceModeSchema),
+  effectCategories: z.array(EffectCategorySchema),
 });
 
 export type SystemInfoResponse = z.infer<typeof SystemInfoResponseSchema>;
