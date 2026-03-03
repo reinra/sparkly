@@ -96,30 +96,45 @@
 
   let lastSeqCols = 0;
   let lastSeqRows = 0;
+  let lastSeqDpr = 0;
 
   function renderSequenceCanvas() {
-    if (!sequenceCanvas || colors.length === 0) return;
+    if (!sequenceCanvas || !canvasContainerEl || colors.length === 0) return;
 
-    // Compute grid layout based on container width
-    const containerWidth = canvasContainerEl?.clientWidth ?? 400;
-    const availableWidth = containerWidth - SEQ_PAD * 2;
+    const dpr = window.devicePixelRatio || 1;
+
+    // Get the container's content width (clientWidth includes padding — subtract it)
+    const style = getComputedStyle(canvasContainerEl);
+    const contentWidth = canvasContainerEl.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+    // Compute grid layout based on actual content width
+    const availableWidth = contentWidth - SEQ_PAD * 2;
     const cols = Math.max(1, Math.floor((availableWidth + SEQ_GAP) / (SEQ_BOX + SEQ_GAP)));
     const rows = Math.ceil(colors.length / cols);
 
-    // Only resize canvas when grid dimensions change (resizing resets GPU state)
-    if (cols !== lastSeqCols || rows !== lastSeqRows) {
-      const canvasW = SEQ_PAD * 2 + cols * SEQ_BOX + (cols - 1) * SEQ_GAP;
-      const canvasH = SEQ_PAD * 2 + rows * SEQ_BOX + (rows - 1) * SEQ_GAP;
-      sequenceCanvas.width = canvasW;
-      sequenceCanvas.height = canvasH;
+    // CSS (logical) display size
+    const displayW = SEQ_PAD * 2 + cols * SEQ_BOX + (cols - 1) * SEQ_GAP;
+    const displayH = SEQ_PAD * 2 + rows * SEQ_BOX + (rows - 1) * SEQ_GAP;
+
+    // Only resize canvas when grid dimensions or DPR change (resizing resets GPU state)
+    if (cols !== lastSeqCols || rows !== lastSeqRows || dpr !== lastSeqDpr) {
+      // Backing-store size scaled for HiDPI
+      sequenceCanvas.width = Math.round(displayW * dpr);
+      sequenceCanvas.height = Math.round(displayH * dpr);
+      // Explicit CSS size so the browser doesn't scale the canvas
+      sequenceCanvas.style.width = displayW + 'px';
+      sequenceCanvas.style.height = displayH + 'px';
       lastSeqCols = cols;
       lastSeqRows = rows;
+      lastSeqDpr = dpr;
     }
 
     const ctx = sequenceCanvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, sequenceCanvas.width, sequenceCanvas.height);
+    // Scale drawing commands so we can keep using logical pixels
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, displayW, displayH);
 
     for (let i = 0; i < colors.length; i++) {
       const col = i % cols;
@@ -289,6 +304,7 @@
     if (mode === 'sequence') {
       lastSeqCols = 0;
       lastSeqRows = 0;
+      lastSeqDpr = 0;
     }
 
     // Wait for DOM to update — the canvas element for the new mode may not be mounted yet
@@ -475,8 +491,7 @@
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 3px;
-    width: 100%;
-    height: auto;
+    /* width & height set explicitly via JS to match the canvas backing store */
   }
 
   .mode-toggle {
