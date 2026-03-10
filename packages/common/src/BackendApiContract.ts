@@ -430,6 +430,7 @@ const SystemInfoResponseSchema = z.object({
   version: z.string().optional(),
   deviceModes: z.array(DeviceModeSchema),
   effectCategories: z.array(EffectCategorySchema),
+  changelog: z.string().optional(),
 });
 
 export type SystemInfoResponse = z.infer<typeof SystemInfoResponseSchema>;

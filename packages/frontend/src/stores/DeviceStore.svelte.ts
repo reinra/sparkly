@@ -6,6 +6,7 @@ let devices = $state<GetInfoResponse['devices']>([]);
 let effects = $state<GetInfoResponse['effects']>([]);
 let deviceModes = $state<DeviceMode[]>([]);
 let effectCategories = $state<EffectCategoryInfo[]>([]);
+let changelog = $state<string | undefined>(undefined);
 let loading = $state(false);
 let initialLoadDone = $state(false);
 let error = $state('');
@@ -88,6 +89,9 @@ export const deviceStore = {
   get effectCategories() {
     return effectCategories;
   },
+  get changelog() {
+    return changelog;
+  },
 
   async fetchSystemInfo() {
     try {
@@ -107,6 +111,10 @@ export const deviceStore = {
 
   setEffectCategories(categories: EffectCategoryInfo[]) {
     effectCategories = categories;
+  },
+
+  setChangelog(value: string | undefined) {
+    changelog = value;
   },
 
   async fetchAllDevices() {

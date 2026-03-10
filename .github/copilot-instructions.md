@@ -56,6 +56,8 @@ TypeScript monorepo using npm workspaces with three packages:
 
 You can also use VS Code tasks (Terminal > Run Task) to build or run individual packages.
 
+**Changelog:** When making user-facing changes (new features, bug fixes, UI improvements), add an entry to `CHANGELOG.md` in the root. Group entries by week using the Monday date (e.g. `## Week of 2026-03-09`). Skip internal refactorings, code cleanup, and build tooling changes.
+
 ### Documentation
 
 See the `docs/` folder for detailed guides: architecture, logging, effects, validation, and executable build instructions.

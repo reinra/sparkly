@@ -63,6 +63,16 @@ async function createDistributionPackage() {
     console.warn('⚠️ EXECUTABLE_README.md not found at', readmeSrc);
   }
 
+  // 6. Copy CHANGELOG
+  console.log('📋 Copying changelog...');
+  const changelogSrc = path.join(rootDir, 'CHANGELOG.md');
+  if (fs.existsSync(changelogSrc)) {
+    fs.copyFileSync(changelogSrc, path.join(packageDir, 'CHANGELOG.md'));
+    console.log('✓ Changelog copied');
+  } else {
+    console.warn('⚠️ CHANGELOG.md not found at', changelogSrc);
+  }
+
   // Calculate package size
   const packageSize = getDirectorySize(packageDir);
   const sizeMB = (packageSize / (1024 * 1024)).toFixed(2);
@@ -77,6 +87,7 @@ async function createDistributionPackage() {
   console.log('   - download-latest.ps1 (update engine)');
   console.log('   - version.txt (version tracking)');
   console.log('   - README.md (user documentation)');
+  console.log('   - CHANGELOG.md (changelog)');
   console.log('\n🚀 Distribution package is ready to deploy!');
   console.log('📦 You can now zip this folder and distribute it.');
   console.log('\n⚠️  Users will need to:');

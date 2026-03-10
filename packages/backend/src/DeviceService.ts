@@ -31,6 +31,39 @@ import {
   failMovieTask,
   type MovieTaskProgress,
 } from './MovieTaskTracker';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ── Changelog ─────────────────────────────────────────────────────────
+
+const isDev = process.env.NODE_ENV !== 'production';
+let changelogCache: string | undefined;
+
+function loadChangelog(): string | undefined {
+  if (!isDev && changelogCache !== undefined) return changelogCache;
+  // Try several locations: project root (dev), same dir as executable (dist)
+  const candidates = [
+    path.resolve(process.cwd(), 'CHANGELOG.md'),
+    path.resolve(__dirname, '..', '..', '..', 'CHANGELOG.md'),
+    path.resolve(process.execPath, '..', 'CHANGELOG.md'),
+  ];
+  for (const filePath of candidates) {
+    try {
+      if (fs.existsSync(filePath)) {
+        changelogCache = fs.readFileSync(filePath, 'utf-8');
+        return changelogCache;
+      }
+    } catch {
+      // ignore and try next
+    }
+  }
+  changelogCache = '';
+  return undefined;
+}
 
 // ── Result types ──────────────────────────────────────────────────────
 
@@ -39,6 +72,7 @@ export interface SystemInfo {
   version: string;
   deviceModes: typeof DEVICE_MODES;
   effectCategories: EffectCategoryInfo[];
+  changelog?: string;
 }
 
 export interface EffectSummary {
@@ -192,6 +226,7 @@ export class DeviceService {
       version: process.env.npm_package_version || '1.0.0',
       deviceModes: DEVICE_MODES,
       effectCategories: [...EFFECT_CATEGORIES],
+      changelog: loadChangelog(),
     };
   }
 

@@ -18,6 +18,7 @@
         }
         deviceStore.setDeviceModes(body.deviceModes);
         deviceStore.setEffectCategories(body.effectCategories);
+        deviceStore.setChangelog(body.changelog);
       }
     } catch (e) {
       console.error('Failed to fetch system info', e);
@@ -42,6 +43,9 @@
         </li>
         <li>
           <a href="/debug" class:active={page.url.pathname === '/debug'}> Debug </a>
+        </li>
+        <li>
+          <a href="/about" class:active={page.url.pathname === '/about'}> About </a>
         </li>
         <li class="theme-toggle-item">
           <ThemeToggle />
