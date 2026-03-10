@@ -230,7 +230,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--color-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -248,7 +248,7 @@
   }
 
   .dialog {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 12px;
     padding: 2rem;
     min-width: 360px;
@@ -256,7 +256,7 @@
     width: 90vw;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-dialog);
     animation: slideUp 0.2s ease-out;
   }
 
@@ -273,7 +273,7 @@
 
   h3 {
     margin: 0 0 0.75rem 0;
-    color: #ff3e00;
+    color: var(--color-accent);
     font-size: 1.3rem;
   }
 
@@ -284,7 +284,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #888;
+    color: var(--color-text-muted);
     margin-bottom: 0.5rem;
   }
 
@@ -300,15 +300,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.6rem 0.75rem;
-    border: 1px solid #e8e8e8;
+    border: 1px solid var(--color-border-lighter);
     border-radius: 8px;
-    background: #fafafa;
+    background: var(--color-bg-card-hover);
     transition: background 0.15s;
   }
 
   .device-row:not(.already-added):hover {
-    background: #fff3ef;
-    border-color: #ffc9b8;
+    background: var(--color-accent-bg-hover);
+    border-color: var(--color-accent);
   }
 
   .device-row.already-added {
@@ -325,7 +325,7 @@
   .device-name {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #333;
+    color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -339,31 +339,31 @@
 
   .device-ip {
     font-size: 0.8rem;
-    color: #999;
+    color: var(--color-text-dim);
     font-family: monospace;
   }
 
   .device-leds {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--color-text-muted);
     padding: 0.1rem 0.4rem;
-    background: #f0f0f0;
+    background: var(--color-badge-leds-bg);
     border-radius: 4px;
   }
 
   .badge-added {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #4caf50;
+    color: var(--color-success);
     padding: 0.2rem 0.6rem;
-    border: 1px solid #a5d6a7;
+    border: 1px solid var(--color-success-border);
     border-radius: 12px;
-    background: #e8f5e9;
+    background: var(--color-success-bg);
     white-space: nowrap;
   }
 
   .add-row-button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -376,31 +376,31 @@
   }
 
   .add-row-button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(255, 62, 0, 0.25);
+    box-shadow: 0 2px 6px var(--color-accent-focus);
   }
 
   .add-row-button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .rescan-button {
     background: none;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 0.35rem 1rem;
     font-size: 0.85rem;
-    color: #666;
+    color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.15s;
     margin-top: 0.25rem;
   }
 
   .rescan-button:hover:not(:disabled) {
-    border-color: #ff3e00;
-    color: #ff3e00;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .rescan-button:disabled {
@@ -409,7 +409,7 @@
   }
 
   .empty-message {
-    color: #999;
+    color: var(--color-text-dim);
     font-size: 0.9rem;
     padding: 0.75rem 0;
   }
@@ -428,12 +428,12 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: #e0e0e0;
+    background: var(--color-border-light);
   }
 
   .divider-text {
     font-size: 0.8rem;
-    color: #aaa;
+    color: var(--color-text-faint);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
@@ -445,21 +445,23 @@
     width: 100%;
     padding: 0.75rem 1rem;
     font-size: 1.1rem;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--color-border-input);
     border-radius: 8px;
     outline: none;
     transition: border-color 0.2s;
     box-sizing: border-box;
     font-family: monospace;
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
   }
 
   .ip-input:focus {
-    border-color: #ff3e00;
+    border-color: var(--color-accent);
   }
 
   .ip-input:disabled {
-    background: #f5f5f5;
-    color: #999;
+    background: var(--color-bg-inset);
+    color: var(--color-text-dim);
   }
 
   .result-message {
@@ -473,15 +475,15 @@
   }
 
   .result-message.success {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
+    background: var(--color-success-bg);
+    color: var(--color-success-dark);
+    border: 1px solid var(--color-success-border);
   }
 
   .result-message.error {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border: 1px solid var(--color-danger-border);
   }
 
   .result-icon {
@@ -508,7 +510,7 @@
 
   .status-icon.spinning {
     animation: spin 1.5s linear infinite;
-    color: #ff3e00;
+    color: var(--color-accent);
   }
 
   .status-icon.spinning.small {
@@ -527,7 +529,7 @@
   }
 
   .status-label {
-    color: #333;
+    color: var(--color-text-primary);
     font-weight: 500;
   }
 
@@ -539,8 +541,8 @@
 
   .cancel-button {
     flex: 1;
-    background: #e0e0e0;
-    color: #333;
+    background: var(--color-btn-neutral);
+    color: var(--color-btn-neutral-text);
     border: none;
     border-radius: 6px;
     padding: 0.6rem 1.5rem;
@@ -551,7 +553,7 @@
   }
 
   .cancel-button:hover:not(:disabled) {
-    background: #d0d0d0;
+    background: var(--color-btn-neutral-hover);
   }
 
   .cancel-button:disabled {
@@ -561,7 +563,7 @@
 
   .action-button {
     flex: 1;
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -573,9 +575,9 @@
   }
 
   .action-button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 62, 0, 0.3);
+    box-shadow: 0 2px 8px var(--color-accent-focus);
   }
 
   .action-button:active:not(:disabled) {
@@ -583,7 +585,7 @@
   }
 
   .action-button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
     opacity: 0.6;
   }

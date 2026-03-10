@@ -418,7 +418,7 @@
 <style>
   .buffer-section {
     margin-top: 1rem;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--color-border-subtle);
   }
 
   .button-group {
@@ -428,7 +428,7 @@
   }
 
   .fetch-buffer-btn {
-    background-color: #ff3e00;
+    background-color: var(--color-accent);
     color: white;
     border: none;
     border-radius: 4px;
@@ -439,16 +439,16 @@
   }
 
   .fetch-buffer-btn:hover:not(:disabled) {
-    background-color: #cc3200;
+    background-color: var(--color-accent-hover);
   }
 
   .fetch-buffer-btn:disabled {
-    background-color: #ccc;
+    background-color: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .live-toggle-btn {
-    background-color: #4caf50;
+    background-color: var(--color-success);
     color: white;
     border: none;
     border-radius: 4px;
@@ -460,21 +460,21 @@
   }
 
   .live-toggle-btn:hover {
-    background-color: #45a049;
+    background-color: var(--color-success-dark);
   }
 
   .live-toggle-btn.active {
-    background-color: #f44336;
+    background-color: var(--color-danger);
   }
 
   .live-toggle-btn.active:hover {
-    background-color: #da190b;
+    background-color: var(--color-danger-dark);
   }
 
   .fps-indicator {
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
-    color: #666;
+    color: var(--color-text-secondary);
     align-self: center;
     padding: 0 0.25rem;
   }
@@ -482,14 +482,14 @@
   .buffer-data {
     margin-top: 0.5rem;
     padding: 0.5rem;
-    background-color: #f5f5f5;
+    background-color: var(--color-bg-inset);
     border-radius: 4px;
     font-size: 0.85rem;
   }
 
   .sequence-canvas {
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
     border-radius: 3px;
     /* width & height set explicitly via JS to match the canvas backing store */
   }
@@ -501,7 +501,7 @@
   }
 
   .mode-btn {
-    background-color: #2196f3;
+    background-color: var(--color-info);
     color: white;
     border: none;
     border-radius: 4px;
@@ -513,24 +513,24 @@
   }
 
   .mode-btn:hover:not(:disabled) {
-    background-color: #1976d2;
+    background-color: var(--color-info-hover);
   }
 
   .mode-btn:disabled {
-    background-color: #ccc;
+    background-color: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .mode-btn.active {
-    background-color: #0d47a1;
+    background-color: var(--color-info-active);
     font-weight: bold;
   }
 
   .canvas-container {
     margin-top: 0.5rem;
     padding: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
     border-radius: 3px;
     display: flex;
     justify-content: center;
@@ -538,7 +538,7 @@
   }
 
   canvas {
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     background-color: #000;
   }
 
@@ -553,14 +553,14 @@
   .phase-track {
     flex: 1;
     height: 12px;
-    background-color: #e0e0e0;
+    background-color: var(--color-border-light);
     border-radius: 6px;
     overflow: hidden;
   }
 
   .phase-fill {
     height: 100%;
-    background-color: #4caf50;
+    background-color: var(--color-success);
     border-radius: 6px;
     transition: width 0.1s linear;
   }

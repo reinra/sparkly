@@ -15,7 +15,7 @@
     return {
       destroy() {
         onregister?.(null);
-      }
+      },
     };
   }
 
@@ -26,13 +26,7 @@
 
 <div class="control-group checkbox-group" title={param.description}>
   <label for={param.id}>
-    <input
-      use:registerElement
-      id={param.id}
-      type="checkbox"
-      checked={value}
-      onchange={handleChange}
-    />
+    <input use:registerElement id={param.id} type="checkbox" checked={value} onchange={handleChange} />
     <strong>{param.name}</strong>
   </label>
 </div>
@@ -58,7 +52,7 @@
   }
 
   input[type='checkbox']:focus {
-    outline: 2px solid #ff3e00;
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 </style>

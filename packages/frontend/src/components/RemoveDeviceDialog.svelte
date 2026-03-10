@@ -92,7 +92,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--color-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -110,12 +110,12 @@
   }
 
   .dialog {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 12px;
     padding: 2rem;
     min-width: 360px;
     max-width: 460px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-dialog);
     animation: slideUp 0.2s ease-out;
   }
 
@@ -132,18 +132,18 @@
 
   h3 {
     margin: 0 0 0.5rem 0;
-    color: #d32f2f;
+    color: var(--color-danger);
     font-size: 1.3rem;
   }
 
   .description {
-    color: #333;
+    color: var(--color-text-primary);
     font-size: 0.95rem;
     margin: 0 0 0.5rem 0;
   }
 
   .warning {
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin: 0 0 1.25rem 0;
   }
@@ -156,9 +156,9 @@
     border-radius: 6px;
     font-size: 0.95rem;
     margin-top: 1rem;
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border: 1px solid var(--color-danger-border);
   }
 
   .error-icon {
@@ -185,7 +185,7 @@
 
   .status-icon.spinning {
     animation: spin 1.5s linear infinite;
-    color: #d32f2f;
+    color: var(--color-danger);
   }
 
   @keyframes spin {
@@ -198,7 +198,7 @@
   }
 
   .status-label {
-    color: #333;
+    color: var(--color-text-primary);
     font-weight: 500;
   }
 
@@ -210,8 +210,8 @@
 
   .cancel-button {
     flex: 1;
-    background: #e0e0e0;
-    color: #333;
+    background: var(--color-btn-neutral);
+    color: var(--color-btn-neutral-text);
     border: none;
     border-radius: 6px;
     padding: 0.6rem 1.5rem;
@@ -222,7 +222,7 @@
   }
 
   .cancel-button:hover:not(:disabled) {
-    background: #d0d0d0;
+    background: var(--color-btn-neutral-hover);
   }
 
   .cancel-button:disabled {
@@ -232,7 +232,7 @@
 
   .remove-button {
     flex: 1;
-    background: #d32f2f;
+    background: var(--color-danger);
     color: white;
     border: none;
     border-radius: 6px;
@@ -244,7 +244,7 @@
   }
 
   .remove-button:hover:not(:disabled) {
-    background: #b71c1c;
+    background: var(--color-danger-dark);
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
   }
@@ -254,7 +254,7 @@
   }
 
   .remove-button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
     opacity: 0.6;
   }

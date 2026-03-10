@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    ColorMode,
-    type MultiColorEffectParameter,
-    type ColorValue,
-    type Hsl,
-    type RgbFloat,
-  } from '@sparkly/common';
+  import { ColorMode, type MultiColorEffectParameter, type ColorValue, type Hsl, type RgbFloat } from '@sparkly/common';
   import ColorColorPicker from '../ColorColorPicker.svelte';
   import { formatHslDisplay } from '../../utils/HslUtils';
   import { formatRgbDisplay } from '../../utils/RgbUtils';
@@ -224,7 +218,7 @@
   }
 
   .multi-color-label {
-    color: #666;
+    color: var(--color-text-secondary);
     margin-bottom: 0.4rem;
   }
 
@@ -246,18 +240,18 @@
   }
 
   .multi-color-row:hover {
-    background: #f8f8f8;
+    background: var(--color-bg-subtle);
   }
 
   .multi-color-row.drag-over {
-    background: #fff4f0;
-    outline: 2px dashed #ff3e00;
+    background: var(--color-accent-bg-light);
+    outline: 2px dashed var(--color-accent);
     outline-offset: -2px;
   }
 
   .drag-handle {
     cursor: grab;
-    color: #bbb;
+    color: var(--color-drag-handle);
     font-size: 1.1rem;
     line-height: 1;
     user-select: none;
@@ -265,7 +259,7 @@
   }
 
   .drag-handle:hover {
-    color: #888;
+    color: var(--color-text-muted);
   }
 
   .color-picker-cell {
@@ -282,8 +276,8 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #888;
-    background: #f0f0f0;
+    color: var(--color-text-muted);
+    background: var(--color-mode-badge-bg);
     border-radius: 0.3rem;
     padding: 0.1rem 0.35rem;
     line-height: 1.2;
@@ -292,7 +286,7 @@
 
   .color-readout {
     font-size: 0.85rem;
-    color: #444;
+    color: var(--color-text-strong);
     font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     white-space: nowrap;
     justify-self: end;
@@ -303,7 +297,7 @@
     background: none;
     border: 1px solid transparent;
     border-radius: 0.3rem;
-    color: #bbb;
+    color: var(--color-drag-handle);
     cursor: pointer;
     font-size: 0.85rem;
     padding: 0.15rem 0.35rem;
@@ -312,9 +306,9 @@
   }
 
   .multi-color-remove:hover {
-    color: #e03500;
-    border-color: #e03500;
-    background: #fff4f0;
+    color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    background: var(--color-accent-bg-light);
   }
 
   .multi-color-remove-spacer {
@@ -324,23 +318,23 @@
   .multi-color-add {
     margin-top: 0.35rem;
     padding: 0.3rem 0.7rem;
-    border: 1px dashed #ccc;
+    border: 1px dashed var(--color-border-swatch);
     border-radius: 999px;
-    background: #fafafa;
-    color: #888;
+    background: var(--color-bg-card-hover);
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
   .multi-color-add:hover {
-    border-color: #ff3e00;
-    color: #ff3e00;
-    background: #fff4f0;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-bg-light);
   }
 
   .multi-color-add:focus-visible {
-    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline: 2px solid var(--color-accent-focus);
     outline-offset: 2px;
   }
 </style>

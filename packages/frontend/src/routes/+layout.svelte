@@ -3,6 +3,8 @@
   import { onMount } from 'svelte';
   import { backendClient } from '../FrontendApiClient';
   import { deviceStore } from '../stores/DeviceStore.svelte';
+  import ThemeToggle from '../components/ThemeToggle.svelte';
+  import '../styles/global.css';
 
   let { children } = $props();
   let buildDate = $state<string | undefined>(undefined);
@@ -41,6 +43,9 @@
         <li>
           <a href="/debug" class:active={page.url.pathname === '/debug'}> Debug </a>
         </li>
+        <li class="theme-toggle-item">
+          <ThemeToggle />
+        </li>
       </ul>
     </div>
   </nav>
@@ -51,13 +56,6 @@
 </div>
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: #f5f5f5;
-  }
-
   .app {
     min-height: 100vh;
     display: flex;
@@ -65,9 +63,9 @@
   }
 
   nav {
-    background: #ff3e00;
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--color-bg-nav);
+    color: var(--color-text-nav);
+    box-shadow: var(--shadow-nav);
   }
 
   .nav-container {
@@ -115,10 +113,11 @@
     padding: 0;
     display: flex;
     gap: 2rem;
+    align-items: center;
   }
 
   .menu a {
-    color: white;
+    color: var(--color-text-nav);
     text-decoration: none;
     padding: 1.5rem 0;
     display: block;
@@ -132,7 +131,12 @@
   }
 
   .menu a.active {
-    border-bottom-color: white;
+    border-bottom-color: currentColor;
+  }
+
+  .theme-toggle-item {
+    display: flex;
+    align-items: center;
   }
 
   main {

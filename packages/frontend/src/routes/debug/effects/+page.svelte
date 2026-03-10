@@ -123,7 +123,7 @@
   }
 
   .back-link {
-    color: #ff3e00;
+    color: var(--color-accent);
     text-decoration: none;
     font-weight: 600;
     display: inline-block;
@@ -135,21 +135,21 @@
   }
 
   h2 {
-    color: #333;
+    color: var(--color-text-heading);
     font-size: 2rem;
     margin-bottom: 2rem;
   }
 
   .card {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
   }
 
   button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -160,30 +160,30 @@
   }
 
   button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
   }
 
   button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .loading {
-    color: #666;
+    color: var(--color-text-secondary);
     font-style: italic;
   }
 
   .error {
-    color: #d32f2f;
-    background: #ffebee;
+    color: var(--color-danger-text);
+    background: var(--color-danger-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
   }
 
   .success {
-    color: #2e7d32;
-    background: #e8f5e9;
+    color: var(--color-success-dark);
+    background: var(--color-success-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
@@ -198,15 +198,15 @@
   }
 
   thead {
-    background: #f5f5f5;
+    background: var(--color-bg-inset);
   }
 
   th {
     text-align: left;
     padding: 0.4rem 0.75rem;
     font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #ddd;
+    color: var(--color-text-heading);
+    border-bottom: 2px solid var(--color-border);
     white-space: nowrap;
   }
 
@@ -216,17 +216,17 @@
   }
 
   th.sortable:hover {
-    background: #eee;
+    background: var(--color-tab-bg-hover);
   }
 
   td {
     padding: 0.3rem 0.75rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-subtle);
     white-space: nowrap;
   }
 
   tbody tr:hover {
-    background: #f9f9f9;
+    background: var(--color-bg-subtle);
   }
 
   tbody tr:last-child td {

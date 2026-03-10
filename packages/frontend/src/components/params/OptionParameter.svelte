@@ -19,7 +19,7 @@
       destroy() {
         containerEl = null;
         onregister?.(null);
-      }
+      },
     };
   }
 
@@ -37,9 +37,7 @@
     if (currentIdx === -1) return;
     event.preventDefault();
     const nextIdx =
-      event.key === 'ArrowRight'
-        ? Math.min(currentIdx + 1, buttons.length - 1)
-        : Math.max(currentIdx - 1, 0);
+      event.key === 'ArrowRight' ? Math.min(currentIdx + 1, buttons.length - 1) : Math.max(currentIdx - 1, 0);
     buttons[nextIdx]?.focus();
   }
 </script>
@@ -82,7 +80,7 @@
   }
 
   .option-group strong {
-    color: #666;
+    color: var(--color-text-secondary);
     white-space: nowrap;
   }
 
@@ -94,10 +92,10 @@
 
   .option-tag {
     padding: 0.25rem 0.6rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 999px;
-    background: #f5f5f5;
-    color: #555;
+    background: var(--color-bg-tag);
+    color: var(--color-text-label);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -105,25 +103,25 @@
   }
 
   .option-tag:hover {
-    border-color: #ff3e00;
-    color: #ff3e00;
-    background: #fff4f0;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-bg-light);
   }
 
   .option-tag:focus-visible {
-    outline: 2px solid rgba(255, 62, 0, 0.3);
+    outline: 2px solid var(--color-accent-focus);
     outline-offset: 2px;
   }
 
   .option-tag.active {
-    background: #ff3e00;
-    border-color: #ff3e00;
-    color: #fff;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg-card);
   }
 
   .option-tag.active:hover {
-    background: #e03500;
-    border-color: #e03500;
-    color: #fff;
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: var(--color-bg-card);
   }
 </style>

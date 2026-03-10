@@ -327,7 +327,7 @@
 
 <style>
   .parameters-section {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--color-border-subtle);
     padding-top: 0.25rem;
     margin-top: 0.25rem;
   }

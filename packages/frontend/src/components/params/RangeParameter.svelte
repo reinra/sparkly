@@ -15,7 +15,7 @@
     return {
       destroy() {
         onregister?.(null);
-      }
+      },
     };
   }
 
@@ -49,22 +49,22 @@
   .control-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   input[type='range'] {
     width: 100%;
     height: 6px;
     border-radius: 3px;
-    background: #ddd;
+    background: var(--color-border);
     outline: none;
     margin-top: 0.5rem;
     transition: background 0.2s ease;
   }
 
   input[type='range']:focus {
-    background: #ff3e00;
-    outline: 2px solid rgba(255, 62, 0, 0.3);
+    background: var(--color-accent);
+    outline: 2px solid var(--color-accent-focus);
     outline-offset: 2px;
   }
 </style>

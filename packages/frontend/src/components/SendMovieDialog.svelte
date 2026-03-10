@@ -215,7 +215,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--color-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -233,12 +233,12 @@
   }
 
   .dialog {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 12px;
     padding: 2rem;
     min-width: 360px;
     max-width: 460px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-dialog);
     animation: slideUp 0.2s ease-out;
   }
 
@@ -255,12 +255,12 @@
 
   h3 {
     margin: 0 0 0.75rem 0;
-    color: #ff3e00;
+    color: var(--color-accent);
     font-size: 1.3rem;
   }
 
   .effect-name {
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.95rem;
     margin-bottom: 1.25rem;
     font-style: italic;
@@ -285,17 +285,17 @@
 
   .status-icon.spinning {
     animation: spin 1.5s linear infinite;
-    color: #ff3e00;
+    color: var(--color-accent);
   }
 
   .status-icon.success {
-    color: #4caf50;
+    color: var(--color-success);
     font-size: 1.6rem;
     font-weight: bold;
   }
 
   .status-icon.error {
-    color: #d32f2f;
+    color: var(--color-danger);
     font-size: 1.6rem;
     font-weight: bold;
   }
@@ -310,7 +310,7 @@
   }
 
   .status-label {
-    color: #333;
+    color: var(--color-text-primary);
     font-weight: 500;
   }
 
@@ -324,14 +324,14 @@
   .progress-track {
     flex: 1;
     height: 14px;
-    background-color: #e0e0e0;
+    background-color: var(--color-border-light);
     border-radius: 7px;
     overflow: hidden;
   }
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff3e00, #ff6e40);
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
     border-radius: 7px;
     transition: width 0.3s ease-out;
   }
@@ -341,28 +341,28 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-    color: #ff3e00;
+    color: var(--color-accent);
   }
 
   .frame-info {
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
     font-variant-numeric: tabular-nums;
   }
 
   .error-message {
-    background: #ffebee;
-    color: #c62828;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
     padding: 0.75rem 1rem;
     border-radius: 6px;
     font-size: 0.9rem;
     margin: 0.75rem 0;
-    border: 1px solid #ef9a9a;
+    border: 1px solid var(--color-danger-border);
   }
 
   .close-button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -376,9 +376,9 @@
   }
 
   .close-button:hover {
-    background: #e63900;
+    background: var(--color-accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 62, 0, 0.3);
+    box-shadow: 0 2px 8px var(--color-accent-focus);
   }
 
   .close-button:active {

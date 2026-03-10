@@ -91,13 +91,13 @@
   }
 
   .color-trigger:focus-visible {
-    outline: 2px solid rgba(255, 62, 0, 0.4);
+    outline: 2px solid var(--color-accent-focus-strong);
     border-radius: 4px;
     padding: 0 0.15rem;
   }
 
   .color-name {
-    color: #333;
+    color: var(--color-text-primary);
   }
 
   .color-picker-cell {
@@ -111,7 +111,7 @@
 
   .color-readout {
     font-size: 0.85rem;
-    color: #444;
+    color: var(--color-text-strong);
     font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     white-space: nowrap;
     justify-self: end;

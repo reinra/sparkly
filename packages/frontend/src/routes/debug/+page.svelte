@@ -90,27 +90,27 @@
   }
 
   h2 {
-    color: #333;
+    color: var(--color-text-heading);
     font-size: 2rem;
     margin-bottom: 2rem;
   }
 
   h3 {
-    color: #333;
+    color: var(--color-text-heading);
     margin-top: 0;
     font-size: 1.3rem;
   }
 
   .card {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
   }
 
   button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -121,30 +121,30 @@
   }
 
   button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
   }
 
   button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .loading {
-    color: #666;
+    color: var(--color-text-secondary);
     font-style: italic;
   }
 
   .error {
-    color: #d32f2f;
-    background: #ffebee;
+    color: var(--color-danger-text);
+    background: var(--color-danger-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
   }
 
   .success {
-    color: #2e7d32;
-    background: #e8f5e9;
+    color: var(--color-success-dark);
+    background: var(--color-success-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
@@ -162,7 +162,7 @@
   }
 
   .device-link {
-    color: #ff3e00;
+    color: var(--color-accent);
     text-decoration: none;
     font-weight: 600;
   }

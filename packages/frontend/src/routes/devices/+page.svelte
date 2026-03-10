@@ -53,7 +53,7 @@
   }
 
   h2 {
-    color: #333;
+    color: var(--color-text-heading);
     font-size: 2rem;
     margin-bottom: 2rem;
   }
@@ -72,7 +72,7 @@
   }
 
   button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -83,43 +83,43 @@
   }
 
   button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
   }
 
   button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 
   .add-button {
-    background: #0f9d58;
+    background: var(--color-secondary);
   }
 
   .add-button:hover {
-    background: #0a7d45;
+    background: var(--color-secondary-hover);
   }
 
   .loading {
-    color: #666;
+    color: var(--color-text-secondary);
     font-style: italic;
     padding: 2rem;
     text-align: center;
   }
 
   .error {
-    color: #d32f2f;
-    background: #ffebee;
+    color: var(--color-danger-text);
+    background: var(--color-danger-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
   }
 
   .no-devices {
-    color: #666;
+    color: var(--color-text-secondary);
     padding: 2rem;
     text-align: center;
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
   }
 </style>

@@ -105,13 +105,13 @@
   }
 
   .color-trigger:focus-visible {
-    outline: 2px solid rgba(255, 62, 0, 0.4);
+    outline: 2px solid var(--color-accent-focus-strong);
     border-radius: 4px;
     padding: 0 0.15rem;
   }
 
   .color-name {
-    color: #333;
+    color: var(--color-text-primary);
   }
 
   .color-picker-cell {
@@ -127,10 +127,10 @@
     font-size: 0.7rem;
     font-weight: 600;
     padding: 0.15rem 0.4rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
-    background: #f9f9f9;
-    color: #888;
+    background: var(--color-mode-label-bg);
+    color: var(--color-text-muted);
     user-select: none;
     line-height: 1.2;
     white-space: nowrap;
@@ -138,7 +138,7 @@
 
   .color-readout {
     font-size: 0.85rem;
-    color: #444;
+    color: var(--color-text-strong);
     font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     white-space: nowrap;
     justify-self: end;

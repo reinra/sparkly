@@ -91,19 +91,19 @@
   }
 
   h2 {
-    color: #333;
+    color: var(--color-text-heading);
     font-size: 2rem;
     margin-bottom: 0.5rem;
   }
 
   .device-meta {
-    color: #666;
+    color: var(--color-text-secondary);
     margin-bottom: 1.5rem;
   }
 
   .back-button {
     background: transparent;
-    color: #ff3e00;
+    color: var(--color-accent);
     border: none;
     font-weight: 600;
     cursor: pointer;
@@ -116,13 +116,13 @@
 
   .loading,
   .empty-state {
-    color: #666;
+    color: var(--color-text-secondary);
     font-style: italic;
   }
 
   .error {
-    color: #d32f2f;
-    background: #ffebee;
+    color: var(--color-danger-text);
+    background: var(--color-danger-bg);
     padding: 1rem;
     border-radius: 4px;
     margin: 1rem 0;
@@ -135,7 +135,7 @@
   }
 
   .debug-section {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 8px;
     padding: 1.25rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
@@ -144,11 +144,11 @@
   .debug-section h3 {
     margin-top: 0;
     margin-bottom: 0.75rem;
-    color: #333;
+    color: var(--color-text-heading);
   }
 
   pre {
-    background: #f5f5f5;
+    background: var(--color-bg-inset);
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
@@ -163,7 +163,7 @@
   }
 
   button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -174,11 +174,11 @@
   }
 
   button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
   }
 
   button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
   }
 </style>

@@ -14,6 +14,6 @@
   .home {
     text-align: center;
     padding: 2rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 </style>

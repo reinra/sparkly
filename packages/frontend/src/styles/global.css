@@ -1,0 +1,227 @@
+/* ── Theme: CSS Custom Properties ── */
+
+:root {
+  /* Page & surface backgrounds */
+  --color-bg-page: #f5f5f5;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #fafafa;
+  --color-bg-input: #ffffff;
+  --color-bg-subtle: #f8f8f8;
+  --color-bg-muted: #f0f0f0;
+  --color-bg-inset: #f5f5f5;
+  --color-bg-tag: #f5f5f5;
+
+  /* Nav */
+  --color-bg-nav: #ff3e00;
+  --color-text-nav: #ffffff;
+
+  /* Text */
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-muted: #888888;
+  --color-text-dim: #999999;
+  --color-text-faint: #aaaaaa;
+  --color-text-strong: #444444;
+  --color-text-label: #555555;
+  --color-text-heading: #333333;
+
+  /* Borders */
+  --color-border: #dddddd;
+  --color-border-light: #e0e0e0;
+  --color-border-lighter: #e8e8e8;
+  --color-border-subtle: #eeeeee;
+  --color-border-input: #e0e0e0;
+  --color-border-swatch: #cccccc;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-nav: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --shadow-picker: 0 12px 30px rgba(0, 0, 0, 0.15);
+  --shadow-swatch: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --color-swatch-ring: rgba(0, 0, 0, 0.12);
+
+  /* Overlay */
+  --color-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Accent (brand orange) */
+  --color-accent: #ff3e00;
+  --color-accent-hover: #e63900;
+  --color-accent-focus: rgba(255, 62, 0, 0.3);
+  --color-accent-focus-strong: rgba(255, 62, 0, 0.4);
+  --color-accent-bg: #fff5f3;
+  --color-accent-bg-hover: #fff3ef;
+  --color-accent-bg-light: #fff4f0;
+
+  /* Success / green */
+  --color-success: #4caf50;
+  --color-success-dark: #2e7d32;
+  --color-success-bg: #e8f5e9;
+  --color-success-border: #a5d6a7;
+
+  /* Danger / red */
+  --color-danger: #d32f2f;
+  --color-danger-dark: #b71c1c;
+  --color-danger-text: #c62828;
+  --color-danger-bg: #ffebee;
+  --color-danger-border: #ef9a9a;
+
+  /* Warning / yellow */
+  --color-warning: #f9a825;
+
+  /* Info / blue */
+  --color-info: #1976d2;
+  --color-info-hover: #1565c0;
+  --color-info-active: #0d47a1;
+  --color-info-disabled: #90caf9;
+
+  /* Secondary action */
+  --color-secondary: #0f9d58;
+  --color-secondary-hover: #0a7d45;
+
+  /* Button neutral */
+  --color-btn-neutral: #e0e0e0;
+  --color-btn-neutral-hover: #d0d0d0;
+  --color-btn-neutral-text: #333333;
+  --color-btn-disabled: #cccccc;
+
+  /* Slider / range track */
+  --color-range-track: #dddddd;
+
+  /* Tabs */
+  --color-tab-bg: #f7f7f7;
+  --color-tab-bg-hover: #eeeeee;
+  --color-tab-text: #777777;
+  --color-tab-active-text: #333333;
+  --color-tab-active-bg: #ffffff;
+
+  /* Drag handle */
+  --color-drag-handle: #bbbbbb;
+  --color-drag-handle-hover: #888888;
+
+  /* Misc */
+  --color-badge-leds-bg: #f0f0f0;
+  --color-mode-label-bg: #f9f9f9;
+  --color-mode-badge-bg: #f0f0f0;
+
+  color-scheme: light;
+}
+
+:root.dark {
+  /* Page & surface backgrounds */
+  --color-bg-page: #121212;
+  --color-bg-card: #1e1e1e;
+  --color-bg-card-hover: #252525;
+  --color-bg-input: #2a2a2a;
+  --color-bg-subtle: #252525;
+  --color-bg-muted: #2a2a2a;
+  --color-bg-inset: #181818;
+  --color-bg-tag: #2a2a2a;
+
+  /* Nav */
+  --color-bg-nav: #1e1e1e;
+  --color-text-nav: #e0e0e0;
+
+  /* Text */
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #b0b0b0;
+  --color-text-muted: #808080;
+  --color-text-dim: #707070;
+  --color-text-faint: #606060;
+  --color-text-strong: #cccccc;
+  --color-text-label: #aaaaaa;
+  --color-text-heading: #e0e0e0;
+
+  /* Borders */
+  --color-border: #3a3a3a;
+  --color-border-light: #333333;
+  --color-border-lighter: #2e2e2e;
+  --color-border-subtle: #2a2a2a;
+  --color-border-input: #404040;
+  --color-border-swatch: #555555;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-nav: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-picker: 0 12px 30px rgba(0, 0, 0, 0.4);
+  --shadow-swatch: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --color-swatch-ring: rgba(255, 255, 255, 0.15);
+
+  /* Overlay */
+  --color-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Accent (brand orange — same hue, adjusted for dark) */
+  --color-accent: #ff5722;
+  --color-accent-hover: #ff6e40;
+  --color-accent-focus: rgba(255, 87, 34, 0.35);
+  --color-accent-focus-strong: rgba(255, 87, 34, 0.45);
+  --color-accent-bg: #2a1a14;
+  --color-accent-bg-hover: #33201a;
+  --color-accent-bg-light: #2e1c15;
+
+  /* Success / green */
+  --color-success: #66bb6a;
+  --color-success-dark: #81c784;
+  --color-success-bg: #1b2e1b;
+  --color-success-border: #2e5a2e;
+
+  /* Danger / red */
+  --color-danger: #ef5350;
+  --color-danger-dark: #e53935;
+  --color-danger-text: #ef9a9a;
+  --color-danger-bg: #2e1515;
+  --color-danger-border: #5a2e2e;
+
+  /* Warning / yellow */
+  --color-warning: #fdd835;
+
+  /* Info / blue */
+  --color-info: #42a5f5;
+  --color-info-hover: #64b5f6;
+  --color-info-active: #1e88e5;
+  --color-info-disabled: #1e3a5f;
+
+  /* Secondary action */
+  --color-secondary: #4caf50;
+  --color-secondary-hover: #66bb6a;
+
+  /* Button neutral */
+  --color-btn-neutral: #333333;
+  --color-btn-neutral-hover: #404040;
+  --color-btn-neutral-text: #e0e0e0;
+  --color-btn-disabled: #404040;
+
+  /* Slider / range track */
+  --color-range-track: #3a3a3a;
+
+  /* Tabs */
+  --color-tab-bg: #252525;
+  --color-tab-bg-hover: #2e2e2e;
+  --color-tab-text: #888888;
+  --color-tab-active-text: #e0e0e0;
+  --color-tab-active-bg: #1e1e1e;
+
+  /* Drag handle */
+  --color-drag-handle: #555555;
+  --color-drag-handle-hover: #888888;
+
+  /* Misc */
+  --color-badge-leds-bg: #2a2a2a;
+  --color-mode-label-bg: #252525;
+  --color-mode-badge-bg: #2a2a2a;
+
+  color-scheme: dark;
+}
+
+/* ── Global Resets & Defaults ── */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+}

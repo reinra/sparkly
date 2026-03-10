@@ -232,10 +232,10 @@
 
 <style>
   .device-card {
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
     transition:
       transform 0.2s,
       box-shadow 0.2s;
@@ -243,16 +243,16 @@
 
   .device-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-card-hover);
   }
 
   .device-card.device-offline {
-    border-left: 4px solid #d32f2f;
+    border-left: 4px solid var(--color-danger);
     opacity: 0.85;
   }
 
   .device-card.device-connecting {
-    border-left: 4px solid #d32f2f;
+    border-left: 4px solid var(--color-danger);
     opacity: 0.85;
   }
 
@@ -264,17 +264,17 @@
   }
 
   .status-indicator.online {
-    background: #4caf50;
+    background: var(--color-success);
     box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
   }
 
   .status-indicator.offline {
-    background: #d32f2f;
+    background: var(--color-danger);
     box-shadow: 0 0 4px rgba(211, 47, 47, 0.5);
   }
 
   .status-indicator.connecting {
-    background: #f9a825;
+    background: var(--color-warning);
     box-shadow: 0 0 4px rgba(249, 168, 37, 0.5);
     animation: pulse 1.5s ease-in-out infinite;
   }
@@ -288,13 +288,13 @@
 
   .status-label.offline,
   .status-label.connecting {
-    background: #d32f2f;
+    background: var(--color-danger);
     color: white;
   }
 
   .status-label.online {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--color-success-bg);
+    color: var(--color-success-dark);
   }
 
   @keyframes pulse {
@@ -310,21 +310,21 @@
   .offline-banner {
     text-align: center;
     padding: 1rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   .offline-banner p {
     margin: 0 0 0.75rem 0;
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   .offline-banner p:last-of-type {
-    color: #d32f2f;
+    color: var(--color-danger);
   }
 
   .reconnect-button {
-    background: #1976d2;
+    background: var(--color-info);
     color: white;
     border: none;
     border-radius: 6px;
@@ -335,11 +335,11 @@
   }
 
   .reconnect-button:hover:not(:disabled) {
-    background: #1565c0;
+    background: var(--color-info-hover);
   }
 
   .reconnect-button:disabled {
-    background: #90caf9;
+    background: var(--color-info-disabled);
     cursor: not-allowed;
   }
 
@@ -363,7 +363,7 @@
   }
 
   .device-card h3 {
-    color: #ff3e00;
+    color: var(--color-accent);
     margin: 0;
     font-size: 1.3rem;
     transition: color 0.2s;
@@ -384,7 +384,7 @@
   .details-button {
     text-decoration: none;
     color: white;
-    background: #0f9d58;
+    background: var(--color-secondary);
     padding: 0.35rem 0.9rem;
     border-radius: 999px;
     font-size: 0.85rem;
@@ -393,13 +393,13 @@
   }
 
   .details-button:hover {
-    background: #0a7d45;
+    background: var(--color-secondary-hover);
   }
 
   .remove-icon-button {
     background: none;
     border: none;
-    color: #999;
+    color: var(--color-text-dim);
     font-size: 1.1rem;
     cursor: pointer;
     padding: 0.25rem 0.5rem;
@@ -412,23 +412,23 @@
   }
 
   .remove-icon-button:hover {
-    color: #d32f2f;
-    background: #ffebee;
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
     transform: none;
     box-shadow: none;
   }
 
   .device-title:hover {
-    color: #e63900;
+    color: var(--color-accent-hover);
   }
 
   .device-info p {
     margin: 0.5rem 0;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   button {
-    background: #ff3e00;
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -441,9 +441,9 @@
   }
 
   button:hover:not(:disabled) {
-    background: #e63900;
+    background: var(--color-accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 62, 0, 0.3);
+    box-shadow: 0 2px 8px var(--color-accent-focus);
   }
 
   button:active:not(:disabled) {
@@ -451,13 +451,13 @@
   }
 
   button:disabled {
-    background: #ccc;
+    background: var(--color-btn-disabled);
     cursor: not-allowed;
     opacity: 0.6;
   }
 
   .effect-info {
-    background: #f8f8f8;
+    background: var(--color-bg-subtle);
     border-radius: 6px;
     padding: 0.75rem 1rem;
     margin-top: 0.5rem;
@@ -465,7 +465,7 @@
 
   .effect-info h4 {
     margin: 0 0 0.5rem 0;
-    color: #ff3e00;
+    color: var(--color-accent);
     font-size: 1rem;
   }
 
