@@ -4,10 +4,14 @@ LED controller for Twinkly smart LED devices. Control effects, brightness, and c
 
 ## Getting Started
 
-1. **Run** `sparkly.exe`
+1. **Run** `start.cmd` (auto-updates and launches Sparkly)
 2. **Open** your browser to **http://localhost:3001**
 
 That's it — no installation required.
+
+To run without checking for updates, launch `sparkly.exe` directly.
+
+To check for updates without starting, run `update.cmd`.
 
 ## Using Sparkly
 

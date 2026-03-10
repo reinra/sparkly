@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +31,29 @@ async function createDistributionPackage() {
   // 2. Frontend files are now embedded in the executable - no need to copy
   console.log('✓ Frontend files are embedded in the executable');
 
-  // 3. Copy README
+  // 3. Generate version.txt
+  console.log('📋 Generating version.txt...');
+  const commitSha = process.env.GITHUB_SHA || execSync('git rev-parse HEAD').toString().trim();
+  const builtTimestamp = new Date().toISOString();
+  const versionContent = `commit=${commitSha}\nbuilt=${builtTimestamp}\n`;
+  fs.writeFileSync(path.join(packageDir, 'version.txt'), versionContent);
+  console.log(`✓ version.txt generated (commit=${commitSha.substring(0, 8)})`);
+
+  // 4. Copy update scripts
+  console.log('📋 Copying update scripts...');
+  const updateScripts = ['start.cmd', 'update.cmd', 'download-latest.ps1'];
+  const scriptsDir = path.join(rootDir, 'scripts');
+  for (const script of updateScripts) {
+    const src = path.join(scriptsDir, script);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, path.join(packageDir, script));
+      console.log(`✓ ${script} copied`);
+    } else {
+      console.warn(`⚠️ ${script} not found at ${src}`);
+    }
+  }
+
+  // 5. Copy README
   console.log('📋 Copying documentation...');
   const readmeSrc = path.join(rootDir, 'docs', 'EXECUTABLE_README.md');
   if (fs.existsSync(readmeSrc)) {
@@ -49,6 +72,10 @@ async function createDistributionPackage() {
   console.log(`📦 Total size: ${sizeMB} MB`);
   console.log('\n📋 Package contents:');
   console.log('   - sparkly.exe (self-contained executable)');
+  console.log('   - start.cmd (auto-update + launch)');
+  console.log('   - update.cmd (check for updates)');
+  console.log('   - download-latest.ps1 (update engine)');
+  console.log('   - version.txt (version tracking)');
   console.log('   - README.md (user documentation)');
   console.log('\n🚀 Distribution package is ready to deploy!');
   console.log('📦 You can now zip this folder and distribute it.');
