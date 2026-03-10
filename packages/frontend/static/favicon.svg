@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+  </defs>
+  <!-- Main four-point sparkle -->
+  <path d="M32 4 L36 26 L58 32 L36 38 L32 60 L28 38 L6 32 L28 26 Z" fill="url(#g)"/>
+  <!-- Small sparkle top-right -->
+  <path d="M50 6 L51.5 12 L58 14 L51.5 16 L50 22 L48.5 16 L42 14 L48.5 12 Z" fill="#facc15"/>
+  <!-- Small sparkle bottom-left -->
+  <path d="M14 42 L15.5 48 L22 50 L15.5 52 L14 58 L12.5 52 L6 50 L12.5 48 Z" fill="#facc15"/>
+</svg>
