@@ -7,6 +7,7 @@ Grouped by week, labeled with the Monday date.
 
 - Added dark mode / light mode theme toggle
 - Updated favicon to SVG format for better quality
+- Added auto-update support for distribution package
 
 ## Week of 2026-03-02
 
